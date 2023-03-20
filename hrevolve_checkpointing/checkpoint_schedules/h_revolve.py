@@ -20,7 +20,7 @@
 
 from .schedule import CheckpointSchedule, Clear, Configure, Forward, Reverse, \
     Read, Write, EndForward, EndReverse
-
+import hrevolve_checkpointing.hrevolve as hrevolve
 import logging
 
 __all__ = \
@@ -38,9 +38,12 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
         self._exhausted = False
 
         cvect = (snapshots_in_ram, snapshots_on_disk)
-        import hrevolve
+        # import hrevolve
+        
         schedule = hrevolve.hrevolve(max_n - 1, cvect, wvect, rvect,
                                      uf=uf, ub=ub, **kwargs)
+        
+        
         self._schedule = list(schedule)
 
         logger = logging.getLogger("tlm_adjoint.checkpointing")
