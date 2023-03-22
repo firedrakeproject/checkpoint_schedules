@@ -215,6 +215,7 @@ class CheckpointSchedule(ABC):
         self._n = 0
         self._r = 0
         self._max_n = max_n
+       
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)

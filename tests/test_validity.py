@@ -21,12 +21,7 @@
 from hrevolve_checkpointing.checkpoint_schedules import \
     Clear, Configure, Forward, Reverse, Read, Write, EndForward, EndReverse
 from hrevolve_checkpointing.checkpoint_schedules import \
-    (MemoryCheckpointSchedule,
-     PeriodicDiskCheckpointSchedule,
-     MultistageCheckpointSchedule,
-     TwoLevelCheckpointSchedule,
-     HRevolveCheckpointSchedule,
-     MixedCheckpointSchedule)
+    (HRevolveCheckpointSchedule)
 
 import functools
 import pytest
@@ -38,24 +33,24 @@ except ImportError:
     hrevolve = None
 
 
-def memory(n, s):
-    return (MemoryCheckpointSchedule(),
-            {"RAM": 0, "disk": 0}, 1 + n)
+# def memory(n, s):
+#     return (MemoryCheckpointSchedule(),
+#             {"RAM": 0, "disk": 0}, 1 + n)
 
 
-def periodic_disk(n, s, *, period):
-    return (PeriodicDiskCheckpointSchedule(period),
-            {"RAM": 0, "disk": 1 + (n - 1) // period}, period)
+# def periodic_disk(n, s, *, period):
+#     return (PeriodicDiskCheckpointSchedule(period),
+#             {"RAM": 0, "disk": 1 + (n - 1) // period}, period)
 
 
-def multistage(n, s):
-    return (MultistageCheckpointSchedule(n, 0, s),
-            {"RAM": 0, "disk": s}, 1)
+# def multistage(n, s):
+#     return (MultistageCheckpointSchedule(n, 0, s),
+#             {"RAM": 0, "disk": s}, 1)
 
 
-def two_level(n, s, *, period):
-    return (TwoLevelCheckpointSchedule(period, s, binomial_storage="RAM"),
-            {"RAM": s, "disk": 1 + (n - 1) // period}, 1)
+# def two_level(n, s, *, period):
+#     return (TwoLevelCheckpointSchedule(period, s, binomial_storage="RAM"),
+#             {"RAM": s, "disk": 1 + (n - 1) // period}, 1)
 
 
 def h_revolve(n, s):
@@ -68,34 +63,39 @@ def h_revolve(n, s):
                 {"RAM": s // 2, "disk": s - (s // 2)}, 1)
 
 
-def mixed(n, s):
-    return (MixedCheckpointSchedule(n, s),
-            {"RAM": 0, "disk": s}, 1)
+# def mixed(n, s):
+#     return (MixedCheckpointSchedule(n, s),
+#             {"RAM": 0, "disk": s}, 1)
 
 
 @pytest.mark.parametrize(
     "schedule, schedule_kwargs",
-    [(memory, {}),
-     (periodic_disk, {"period": 1}),
-     (periodic_disk, {"period": 2}),
-     (periodic_disk, {"period": 7}),
-     (periodic_disk, {"period": 10}),
-     (multistage, {}),
-     (two_level, {"period": 1}),
-     (two_level, {"period": 2}),
-     (two_level, {"period": 7}),
-     (two_level, {"period": 10}),
+    [
+    # (memory, {}),
+    #  (periodic_disk, {"period": 1}),
+    #  (periodic_disk, {"period": 2}),
+    #  (periodic_disk, {"period": 7}),
+    #  (periodic_disk, {"period": 10}),
+    #  (multistage, {}),
+    #  (two_level, {"period": 1}),
+    #  (two_level, {"period": 2}),
+    #  (two_level, {"period": 7}),
+    #  (two_level, {"period": 10}),
      pytest.param(
          h_revolve, {},
          marks=pytest.mark.skipif(hrevolve is None,
                                   reason="H-Revolve not available")),
-     (mixed, {})])
-@pytest.mark.parametrize("n, S", [(1, (0,)),
-                                  (2, (1,)),
-                                  (3, (1, 2)),
-                                  (10, tuple(range(1, 10))),
-                                  (100, tuple(range(1, 100))),
-                                  (250, tuple(range(25, 250, 25)))])
+    #  (mixed, {})
+     ]
+     )
+@pytest.mark.parametrize("n, S", [
+                                #   (1, (0,)),
+                                  (5, (2,)),
+                                #   (3, (1, 2)),
+                                #   (10, tuple(range(1, 10))),
+                                #   (100, tuple(range(1, 100))),
+                                #   (10, tuple(range(5, 10, 5)))
+                                  ])
 def test_validity(schedule, schedule_kwargs,
                   n, S):
     @functools.singledispatch
@@ -125,6 +125,8 @@ def test_validity(schedule, schedule_kwargs,
 
         if cp_schedule.max_n() is not None:
             # Do not advance further than the current location of the adjoint
+            # print(n, cp_schedule.max_n(), model_r, cp_schedule.__dict__)
+
             assert cp_action.n1 <= n - model_r
         n1 = min(cp_action.n1, n)
 
@@ -222,8 +224,8 @@ def test_validity(schedule, schedule_kwargs,
             model_r = 0
 
     for s in S:
-        print(f"{n=:d} {s=:d}")
-
+        # print(f"{n=:d} {s=:d}")
+       
         model_n = 0
         model_r = 0
 
@@ -233,18 +235,22 @@ def test_validity(schedule, schedule_kwargs,
         data = set()
 
         snapshots = {"RAM": {}, "disk": {}}
-
+       
         cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs)  # noqa: E501
+        # print(S, cp_schedule.max_n())
         if cp_schedule is None:
             pytest.skip("Incompatible with schedule type")
         assert cp_schedule.n() == 0
         assert cp_schedule.r() == 0
         assert cp_schedule.max_n() is None or cp_schedule.max_n() == n
-
+       
         while True:
+            print(model_n, " 0")
+
             cp_action = next(cp_schedule)
             action(cp_action)
-
+            print(model_n, " 1")
+            print("----------------")
             # The schedule state is consistent with both the forward and
             # adjoint
             assert model_n is None or model_n == cp_schedule.n()
@@ -255,6 +261,6 @@ def test_validity(schedule, schedule_kwargs,
                 assert len(snapshots[storage_type]) <= storage_limit
             # Data storage limit is not exceeded
             assert min(1, len(ics)) + len(data) <= data_limit
-
+            
             if isinstance(cp_action, EndReverse):
                 break

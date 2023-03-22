@@ -39,7 +39,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
 
         cvect = (snapshots_in_ram, snapshots_on_disk)
         # import hrevolve
-        
+      
         schedule = hrevolve.hrevolve(max_n - 1, cvect, wvect, rvect,
                                      uf=uf, ub=ub, **kwargs)
         
@@ -51,6 +51,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
 
     def iter(self):
         def action(i):
+            
             assert i >= 0 and i < len(self._schedule)
             action = self._schedule[i]
             cp_action = action.type
@@ -79,7 +80,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
 
         if self._max_n is None:
             raise RuntimeError("Invalid checkpointing state")
-
+    
         snapshots = set()
         deferred_cp = None
 
