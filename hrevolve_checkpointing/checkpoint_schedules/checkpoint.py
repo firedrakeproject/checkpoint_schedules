@@ -1,15 +1,17 @@
-from ..checkpoint_schedules import \
+from . import \
     (HRevolveCheckpointSchedule, Write, Clear, Configure, 
      Forward, EndForward)
 import functools
 
-class manager():
+class manage():
     def __init__(self, steps, save_chk):
         self.steps = steps
         self.save_chk = save_chk
+        self.forward_equation = None
+        self.checkppoint = []
+        self.forward = None
 
     def actions(self):
-        print("aqui")
         n = self.steps
         @functools.singledispatch
         def action(cp_action):
@@ -46,7 +48,7 @@ class manager():
                 assert cp_action.n == min(data)
 
             snapshots[cp_action.storage][cp_action.n] = (set(ics), set(data))
-            # print(snapshots)
+            # print(cp_action.storage, cp_action.n)
         
         
         @action.register(Forward)
@@ -78,10 +80,12 @@ class manager():
                 hrev.finalize(n1)
 
         
-        # @action.register(EndForward)
-        # def action_end_forward(cp_action):
-        #     # The correct number of forward steps has been taken
-        #     assert model_n is not None and model_n == n
+        @action.register(EndForward)
+        def action_end_forward(cp_action):
+        
+            # The correct number of forward steps has been taken
+            assert model_n is not None and model_n == n
+            quit()
 
         S = (self.save_chk,)
         for s in S:
@@ -94,26 +98,59 @@ class manager():
             data = set()
 
             snapshots = {"RAM": {}, "disk": {}}
+            # provide the ...
             hrev = HRevolveCheckpointSchedule(self.steps, self.save_chk, 0)
-            print(hrev.__dict__)
+
             assert hrev.n() == 0
             assert hrev.r() == 0
             assert hrev.max_n() is None or hrev.max_n() == n
             
-        
             while True:
+
+                # ----------------------- 
+                # First comments 
+                # cp_action provides the actions in an iteration,
+                # eg, action Write(n_write, str(type)) provides the steps (n_write) that 
+                # will be saved in RAM (type) or Disk (type)
+                # action Forward(n0, n1) gives the intercal that the fwd problem will run, 
+                # where n0 is the initial step and n1 is the final step
+                # Configure (boolean, boolean)? What it means?
+                # Clear(boolean, boolean)? What it means
+                # ----------------------- 
+
+                # ask hrevolve what to do next.
                 cp_action = next(hrev)
+                if not isinstance (cp_action, EndForward):
+                    self.execute_forward(cp_action)
+
+
+                print(cp_action.__class__)
+               
                 action(cp_action)
-                print(action)
+                print(n, self.save_chk, cp_action)
                 assert model_n is None or model_n == hrev.n()
                 assert model_r == hrev.r()
+        
                 
-                # action_clear(cp_action)
-        # print(cp_action)
-        # action(cp_action)
-
-        # iter = hrev.iter()
-
-        # print( HRevolveCheckpointSchedule.iter.action(10))
-        # print(len(y), len(t))
-        # fwd.plotting(t, y)
+    def execute_forward(self, action):
+        """Executes the forward solver."""
+        if isinstance(action, Write):
+            print("aqui0")
+            quit()
+            save_checkpoint = True
+            write_id = 0
+            if self.forward!=None:
+                self.forward_equation.checkpoint(save_checkpoint, write_id)
+        
+        elif isinstance(action, Forward):
+            print(dir(self.forward.advance))
+            self.forward.advance(self.equation, action.n0, action.n1)
+            quit()
+            
+        else:
+            print("I do not know")
+       
+    def get_forward_equation(self, forward_equation):
+        """Get the forward solver"""
+        self.equation = forward_equation
+          
