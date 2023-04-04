@@ -1,54 +1,18 @@
-from hrevolve_checkpointing.checkpoint_schedules import manage
-from hrevolve_checkpointing.Forward import forward
-
-import matplotlib.pyplot as plt
-import numpy as np
-import functools
+from hrevolve_checkpointing import checkpoint_schedules, Forward, Backward, function
 
 
-
-
-tstart = 0 
-tstop = 1 
-increment = 0.05
-steps = int(tstop/increment)
-save_chk = 3
-# t = np.arange(tstart, tstop, increment)
-y_init = 0
-fwd = forward(y_init, increment, tstop)
-# Solve ODE
-# y = fwd.mydiff()
-manage = manage(steps, save_chk)
-manage.forward = forward
-forward.def_equation
-forward.advance(0, 0, 10)
-
-actions = manage.actions()
+TS = 0
+TF = 1
+H = 0.05
+S = int(TF/H)
+SCHK = 3
+I = 0
+fwd = Forward(S)
+fwd.def_equation()
+bwd = Backward()
+bwd.def_equation()
+manage = checkpoint_schedules.Manage(fwd, bwd, function.Backend(), SCHK)
+manage.actions()
 
 
 
-
-
-# def mydiff(self):
-#     c = 4 
-#     alpha = 3 
-#     ym = []
-#     y = self.y_init
-#     t = 0
-#     while t < self.final_t :
-#         F = c * np.cos(alpha * t)
-#         sol = y + self.h * F
-#         t += self.h
-#         ym.append(sol)
-#         y = sol
-#     return ym
-
-
-# def plotting(self, t, y):
-#     plt.plot(t, y)
-#     plt.title('solution') 
-#     plt.xlabel('t')
-#     plt.ylabel('y(t)') 
-#     # plt.legend(["x1", "x2"]) 
-#     plt.grid()
-#     plt.show()

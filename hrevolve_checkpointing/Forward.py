@@ -1,25 +1,69 @@
 import sympy as sp
-from hrevolve_checkpointing.Function import Function
 
-class forward():
-    def __init__(self, y_init, h, final_t):
-        self.y_init = y_init  # Initial condition 
-        self.h = h
-        self.final_t = final_t
-        self.equation = None
+class Forward():
+    """This object define the a forward solver.
 
-
+    """
+    def __init__(self, steps):
+        self.exp = None
+        self.chk = None
+        self.output_1 = None 
+        self.n_0 = None
+        self.steps = steps
     def def_equation(self):
+        """Define the symbolic equation.
+
+        """
         # Create a symbol x
         x = sp.symbols("x")
-        self.equation = sp.Eq(x-1, 0)
+        self.exp = x + 1
+      
 
-    def advance(self, n0, n1):
-        for s in range(n0, n1):
-            solution = sp.solveset(self.equation, s)
-            print(solution)
+    def advance(self, n_0: int, n_1: int) -> None:
+        """Advance the foward equation.
+
+        Parameters
+        ----------
+        n0
+            Initial time step.
+        n1
+            Final time step.
+
+        """
+        for s in range(n_0, n_1):
+            self.n_0 = n_0
+            out = self.exp.subs("x", s)
+            if s==self.n_0:
+                self.chk = out
+    
+    def get_timesteps(self) -> int:
+        """Return time steps.
+
+        """
+        return self.steps
+    
+    # def checkpointing(self, n_write) -> None:
+    #     """Verify if is checkpointed.
+        
+    #     Parameters
+    #     ----------
+    #     is_checkpointed
+    #         If `True`, the checkpoint data is saved.
+
+    #     """ 
+    #     assert n_write==self.n_0
+    #     self.func.save_checkpoint(self.chk)
+    
+    # def save_checkpoint(self, data) -> None:
+    #     """Append the checkpoint data.
+
+    #     """
+    #     self.chk_data.append(data)
+    
+    # def get_checkpoint_id(self, n_write: int) -> None:
+    #     """Collect the checkpoint identity.
+    
+    #     """
+    #     self.chk_id = n_write
 
 
-    def checkpointing(self, is_checkpointed):
-        if is_checkpointed:
-            Function.save_checkpoint()
