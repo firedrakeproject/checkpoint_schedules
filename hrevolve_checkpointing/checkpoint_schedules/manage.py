@@ -174,12 +174,16 @@ class Manage():
                         assert self.forward.chk is not None
                 elif isinstance (cp_action, Forward):
                     self.forward.advance(cp_action.n0, cp_action.n1)
+                    if cp_action.n1==steps:
+                        # store the latest time step
+                        self.chk_function.store_checkpoint(self.forward.chk)
                 elif isinstance(cp_action, Reverse):
-                    print(cp_action, self.chk_function.chk_data)
-                    self.reverse.advance(cp_action.n1, cp_action.n0)
-                
-                # elif isinstance(cp_action, Read):
-                #     print(cp_action, cp_action.__dict__)
+                    fwd_checkpoint = self.chk_function.get_checkpoint()
+                    self.reverse.advance(cp_action.n1, cp_action.n0, fwd_checkpoint)
+                    self.chk_function.pop_checkpoint()  
+                elif isinstance(cp_action, Read):
+                    print(cp_action, cp_action.__dict__)
+                    quit()
 
                 assert model_n is None or model_n == hrev_schedule.n()
                 assert model_r == hrev_schedule.r()

@@ -17,7 +17,7 @@ class Backward():
         self.exp = x + 1 - y
       
 
-    def advance(self, n_1: int, n_0: int) -> None:
+    def advance(self, n_1: int, n_0: int, chk) -> None:
         """Advance the backward equation.
 
         Parameters
@@ -29,8 +29,9 @@ class Backward():
 
         """
         for s in range(n_0, n_1):
-            out = self.exp.subs("x", s)
-            # out = self.exp.subs([("x", s), ("y", chk)])
+            # out = self.exp.subs("x", s)
+            out = self.exp.subs([("x", s), ("y", chk)])
+            print(out)
             
 
     # def read_checkpoint(self) -> None:
