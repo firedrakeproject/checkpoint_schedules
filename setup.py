@@ -8,6 +8,6 @@ setup(
     description="Checkpointing method using hrevolve",
     # url="https://github.com/...",
     license="GNU LGPL version 3",
-    packages=["checkpoint_schedules",
-              "hrevolve"],
-    python_requires="...")
+    packages=["hrevolve_checkpointing"],
+    # python_requires="..."
+    )

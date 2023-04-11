@@ -1,5 +1,6 @@
 import sympy as sp
 
+
 class Backward():
     """This object define the a forward solver.
 
@@ -7,46 +8,30 @@ class Backward():
     def __init__(self):
         self.exp = None
 
-    def def_equation(self):
+    def DefEquation(self):
         """Define the symbolic equation.
 
         """
         # Create a symbol x
         x = sp.symbols("x")
         y = sp.symbols("y")
-        self.exp = x + 1 - y
+        self.exp = x - y
       
-
-    def advance(self, n_1: int, n_0: int, chk) -> None:
-        """Advance the backward equation.
+    def Advance(self, n_1: int, n_0: int, fwd_chk) -> None:
+        """Execute the backward equation.
 
         Parameters
         ----------
-        n0
-            Initial time step.
         n1
-            Final time step.
+            Initial time step in reverse state.
+        n0
+            Final time step in reverse state.
 
         """
-        for s in range(n_0, n_1):
+        for s in range(n_1, n_0, -1):
             # out = self.exp.subs("x", s)
-            out = self.exp.subs([("x", s), ("y", chk)])
-            print(out)
+            out = self.exp.subs([("x", s), ("y", fwd_chk)])
             
-
-    # def read_checkpoint(self) -> None:
-    #     """Verify if is checkpointed.
-        
-    #     Parameters
-    #     ----------
-    #     is_checkpointed
-    #         If `True`, the checkpoint data is saved.
-
-    #     """
-    #     print("bwd")
-        # if is_checkpointed:
-        #     self.func.get_checkpoint_id(n_write)
-        #     assert n_write==self.n_0
-        #     self.func.save_checkpoint(self.output_0)
-        #     print(self.func.chk_data)
+            
+ 
 

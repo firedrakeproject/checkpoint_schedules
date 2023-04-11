@@ -1,28 +1,26 @@
 import sympy as sp
 
+
 class Forward():
-    """This object define the a forward solver.
+    """Define the a forward solver.
 
     """
-    def __init__(self, steps):
+    def __init__(self, steps, initial_condition):
         self.exp = None
-        self.chk = None
-        self.output_1 = None 
-        self.n_0 = None
+        self.chk_id = None
         self.steps = steps
+        self.ic = initial_condition
+        self.chk = self.ic
 
-
-    def def_equation(self):
+    def DefEquation(self):
         """Define the symbolic equation.
 
         """
         # Create a symbol x
         x = sp.symbols("x")
-        self.exp = x + 1
-      
+        self.exp = x
 
-
-    def advance(self, n_0: int, n_1: int) -> None:
+    def Advance(self, n_0: int, n_1: int) -> None:
         """Advance the foward equation.
 
         Parameters
@@ -33,16 +31,14 @@ class Forward():
             Final time step.
 
         """
-        for s in range(n_0, n_1):
-            self.n_0 = n_0
-            out = self.exp.subs("x", s)
-            print(n_1, self.steps)
-            if s==self.n_0 or n_1==self.steps:
-                self.get_checkpoint(out)
+        print(self.ic)
+        counter = self.ic
+        while counter <= n_1:
+            self.chk = self.exp.subs("x", counter)
+            counter += 1
+            print(self.chk)
 
-
-
-    def get_timesteps(self) -> int:
+    def GetTimesteps(self) -> int:
         """Return time steps.
 
         """
@@ -56,32 +52,18 @@ class Forward():
         """
         self.chk = forward_output
     
-    def get_initial_condition():
-        print("here")
-
-            
-    # def checkpointing(self, n_write) -> None:
-    #     """Verify if is checkpointed.
+    def UpdateInitialCondition(self, data) -> None:
+        """Update the initial Condition.
         
-    #     Parameters
-    #     ----------
-    #     is_checkpointed
-    #         If `True`, the checkpoint data is saved.
-
-    #     """ 
-    #     assert n_write==self.n_0
-    #     self.func.save_checkpoint(self.chk)
-    
-    # def save_checkpoint(self, data) -> None:
-    #     """Append the checkpoint data.
-
-    #     """
-    #     self.chk_data.append(data)
-    
-    # def get_checkpoint_id(self, n_write: int) -> None:
-    #     """Collect the checkpoint identity.
-    
-    #     """
-    #     self.chk_id = n_write
-
-
+        Parameters
+        ----------
+        data
+            Initial condition data.
+        
+        Notes
+        -----
+        This method is called for time > t_0, where t_0 is the initial time.
+        
+        """
+        self.ic = data
+      

@@ -8,6 +8,7 @@ __all__ = \
         "Manage"
     ]
 
+
 class Manage():
     """This object manage the checkpointing.
 
@@ -19,7 +20,7 @@ class Manage():
         self.chk_function = checkpoint_function
 
     def actions(self):
-        n = self.forward.get_timesteps()
+        n = self.forward.GetTimesteps()
         @functools.singledispatch
         def action(cp_action):
             raise TypeError("Unexpected action")
@@ -150,10 +151,11 @@ class Manage():
             store_data = False
             data = set()
 
+            fwd_chk = None
             snapshots = {"RAM": {}, "disk": {}}
 
             # H revolve schedule
-            steps = self.forward.get_timesteps()
+            steps = self.forward.GetTimesteps()
             hrev_schedule = HRevolveCheckpointSchedule(steps, self.save_chk, 0)
         
             if hrev_schedule is None:
@@ -162,29 +164,27 @@ class Manage():
             assert hrev_schedule.n() == 0
             assert hrev_schedule.r() == 0
             assert hrev_schedule.max_n() is None or hrev_schedule.max_n() == n
-
+        
             while True:
                 cp_action = next(hrev_schedule)
                 action(cp_action)
                 print(cp_action)
-                if isinstance (cp_action, Write):
-                    if self.forward.chk is not None:
-                        self.chk_function.store_checkpoint(self.forward.chk)
-                    else:
-                        assert self.forward.chk is not None
-                elif isinstance (cp_action, Forward):
-                    self.forward.advance(cp_action.n0, cp_action.n1)
-                    if cp_action.n1==steps:
-                        # store the latest time step
-                        self.chk_function.store_checkpoint(self.forward.chk)
+                if isinstance(cp_action, Write):
+                    self.chk_function.StoreCheckpoint(self.forward.ic, cp_action.n)
+                    self.forward.UpdateInitialCondition(self.forward.chk)
+                elif isinstance(cp_action, Forward):
+                    self.forward.Advance(cp_action.n0, cp_action.n1)
                 elif isinstance(cp_action, Reverse):
-                    fwd_checkpoint = self.chk_function.get_checkpoint()
-                    self.reverse.advance(cp_action.n1, cp_action.n0, fwd_checkpoint)
-                    self.chk_function.pop_checkpoint()  
+                    self.reverse.Advance(cp_action.n1, cp_action.n0, self.forward.chk)
                 elif isinstance(cp_action, Read):
-                    print(cp_action, cp_action.__dict__)
-                    quit()
-
+                    fwd_chk = self.chk_function.GetCheckpoint()
+                    self.forward.UpdateInitialCondition(fwd_chk[0])
+                    if cp_action.delete:
+                        self.chk_function.DeleteCheckpoint()
+                elif isinstance(cp_action, Configure):
+                    if cp_action.store_data:
+                        self.forward.UpdateInitialCondition(self.forward.chk)
+                
                 assert model_n is None or model_n == hrev_schedule.n()
                 assert model_r == hrev_schedule.r()
             

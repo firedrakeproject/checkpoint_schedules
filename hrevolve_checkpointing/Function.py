@@ -2,32 +2,47 @@ class Backend:
     """Backend function.
 
     """
-    def __init__(self):
-        self.chk_data = []
+    def __init__(self, num_chk):
+        self.checkpoint = []
         self.chk_id = []
+        self.num_chk = num_chk
 
-    def store_checkpoint(self, data) -> None:
+    def StoreCheckpoint(self, data, n_write: int) -> None:
         """Append the checkpoint data.
 
         """
-        self.chk_data.append(data)
+        self.checkpoint.append((data, n_write))
+
+    def GetCheckpoint(self):
+        """Return the checkpoint data.
+
+        """
+        return self.checkpoint[self.num_chk-1]
     
-    def get_checkpoint_id(self, n_write: int) -> None:
-        """Collect the checkpoint identity.
+    def DeleteCheckpoint(self):
+        self.checkpoint.pop(self.num_chk-1)
     
-        """
-        self.chk_id = n_write
+    # def SetInitialCheckpoint(self, data) -> None:
+    #     """Set the initial data to be used as initial condition.
 
-    def pop_checkpoint(self) -> None:
-        """Employ the pop method to remove the latest checkpoint data.
+    #     data
+    #         Initial condition
 
-        """
-        l = len(self.chk_data)
-        self.chk_data.pop(l-1)
+    #     """
+    #     self.initial_data = data
+    
+    # def GetInitialCheckpoint(self):
+    #     """Return the initial data.
 
-    def get_checkpoint(self):
-        """Return the latest checkpoint data stored in the list.
+    #     data
+    #         Initial condition set in Backend.SetInitialCheckpoint.
+        
+    #     See Also
+    #     --------
+    #     Backend.SetInitialCheckpoint
+        
+    #     """
+    #     return self.initial_data
 
-        """
-        l = len(self.chk_data)
-        return self.chk_data[l-1]
+
+
