@@ -10,7 +10,7 @@ class Forward():
         self.chk_id = None
         self.steps = steps
         self.ic = initial_condition
-        self.chk = None
+        self.chk = self.ic
 
     def DefEquation(self):
         """Define the symbolic equation.
@@ -31,16 +31,13 @@ class Forward():
             Final time step.
 
         """
-        
-        if self.chk is None:
-            counter = self.ic
-        else:
-            counter = self.chk
-        self.ic = counter
+        print(self.ic)
+        counter = self.ic
         while counter <= n_1:
             self.chk = self.exp.subs("x", counter)
             counter += 1
-           
+            print(self.chk)
+
     def GetTimesteps(self) -> int:
         """Return time steps.
 
@@ -48,7 +45,7 @@ class Forward():
         return self.steps
    
     
-    def ReadCheckpoint(self, data) -> None:
+    def UpdateInitialCondition(self, data) -> None:
         """Update the initial Condition.
         
         Parameters
@@ -62,15 +59,4 @@ class Forward():
         
         """
         self.ic = data
-    
-    def ClearCheckpoint(self) -> None:
-        """Clear the initial condition data.
-
-        """
-        self.chk = None
-
-    def UpdateInitCondition(self, data) -> None:
-        """Clear the initial condition data.
-
-        """
-        self.chk = data
+      

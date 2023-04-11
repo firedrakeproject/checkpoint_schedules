@@ -168,24 +168,21 @@ class Manage():
             while True:
                 cp_action = next(hrev_schedule)
                 action(cp_action)
-                print(cp_action)
                 if isinstance(cp_action, Write):
-                    self.chk_function.StoreCheckpoint(self.forward.ic, cp_action.n)
-                    self.forward.UpdateInitialCondition(self.forward.chk)
+                    self.chk_function.StoreCheckpoint(self.forward.ic)
                 elif isinstance(cp_action, Forward):
                     self.forward.Advance(cp_action.n0, cp_action.n1)
                 elif isinstance(cp_action, Reverse):
                     self.reverse.Advance(cp_action.n1, cp_action.n0, self.forward.chk)
                 elif isinstance(cp_action, Read):
                     fwd_chk = self.chk_function.GetCheckpoint()
-                    self.forward.UpdateInitialCondition(fwd_chk[0])
+                    self.forward.UpdateInitCondition(fwd_chk)
                     if cp_action.delete:
                         self.chk_function.DeleteCheckpoint()
-                elif isinstance(cp_action, Configure):
-                    if cp_action.store_data:
-                        self.forward.UpdateInitialCondition(self.forward.chk)
-                
+
                 assert model_n is None or model_n == hrev_schedule.n()
                 assert model_r == hrev_schedule.r()
-            
+
+                if isinstance(cp_action, EndReverse):
+                    break
    

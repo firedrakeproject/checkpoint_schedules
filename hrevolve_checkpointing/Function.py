@@ -1,48 +1,28 @@
-class Backend:
+class Function:
     """Backend function.
 
     """
-    def __init__(self, num_chk):
+    def __init__(self):
         self.checkpoint = []
         self.chk_id = []
-        self.num_chk = num_chk
-
-    def StoreCheckpoint(self, data, n_write: int) -> None:
+        
+    def StoreCheckpoint(self, data) -> None:
         """Append the checkpoint data.
 
         """
-        self.checkpoint.append((data, n_write))
+        self.checkpoint.append(data)
 
     def GetCheckpoint(self):
         """Return the checkpoint data.
 
         """
-        return self.checkpoint[self.num_chk-1]
+        len_chk = len(self.checkpoint)
+
+        return self.checkpoint[len_chk-1]
     
-    def DeleteCheckpoint(self):
-        self.checkpoint.pop(self.num_chk-1)
-    
-    # def SetInitialCheckpoint(self, data) -> None:
-    #     """Set the initial data to be used as initial condition.
+    def DeleteCheckpoint(self) -> None:
+        """Delete checkpoint data.
 
-    #     data
-    #         Initial condition
-
-    #     """
-    #     self.initial_data = data
-    
-    # def GetInitialCheckpoint(self):
-    #     """Return the initial data.
-
-    #     data
-    #         Initial condition set in Backend.SetInitialCheckpoint.
-        
-    #     See Also
-    #     --------
-    #     Backend.SetInitialCheckpoint
-        
-    #     """
-    #     return self.initial_data
-
-
-
+        """
+        len_chk = len(self.checkpoint)
+        self.checkpoint.pop(len_chk-1)
