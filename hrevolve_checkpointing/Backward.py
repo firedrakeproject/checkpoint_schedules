@@ -31,7 +31,7 @@ class Backward():
         for s in range(n_1, n_0, -1):
             # out = self.exp.subs("x", s)
             out = self.exp.subs([("x", s), ("y", fwd_chk)])
-            print(out)
+            assert out == 0
             
             
  

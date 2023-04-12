@@ -31,7 +31,6 @@ class Forward():
             Final time step.
 
         """
-        
         if self.chk is None:
             counter = self.ic
         else:
@@ -40,26 +39,28 @@ class Forward():
         while counter <= n_1:
             self.chk = self.exp.subs("x", counter)
             counter += 1
+            print(self.chk)
            
     def GetTimesteps(self) -> int:
-        """Return time steps.
+        """Return the total time steps.
 
         """
         return self.steps
    
-    
     def ReadCheckpoint(self, data) -> None:
         """Update the initial Condition.
         
         Parameters
         ----------
-        data
+        data : type?
             Initial condition data.
         
         Notes
         -----
         This method is called for time > t_0, where t_0 is the initial time.
-        
+        Hence, self.ic is also used to execute a foward solver with any time,
+        where the initial condition is given by self.ic
+
         """
         self.ic = data
     

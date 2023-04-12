@@ -10,13 +10,14 @@ __all__ = \
 
 
 class Manage():
-    """This object manage the checkpointing.
+    """This object manage the forward and backward solvers wiht the 
+    hrevolve checkpointing method.
 
     """
-    def __init__(self, forward, reverse, checkpoint_function, save_chk):
+    def __init__(self, forward, backward, checkpoint_function, save_chk):
         self.save_chk = save_chk
         self.forward = forward
-        self.reverse = reverse
+        self.backward = backward
         self.chk_function = checkpoint_function
 
     def actions(self):
@@ -49,16 +50,15 @@ class Manage():
                     assert cp_action.n == min(ics)
             elif len(data) > 0:
                 assert cp_action.n == min(data)
-
+            data.add(self.forward.ic)
             snapshots[cp_action.storage][cp_action.n] = (set(ics), set(data))
-
+            
         @action.register(Forward)
         def action_forward(cp_action):
             nonlocal model_n
 
             # Start at the current location of the forward
             assert model_n is not None and model_n == cp_action.n0
-
             if hrev_schedule.max_n() is not None:
                 # Do not advance further than the current location of the adjoint
                 assert cp_action.n1 <= n - model_r
@@ -71,6 +71,8 @@ class Manage():
             if store_data:
                 # No non-linear dependency data for these steps is stored
                 assert len(data.intersection(range(cp_action.n0, n1))) == 0
+
+            self.forward.Advance(cp_action.n0, n1)
 
             model_n = n1
             if store_ics:
@@ -98,18 +100,18 @@ class Manage():
             nonlocal model_n
 
             # The checkpoint exists
-            assert cp_action.n in snapshots[cp_action.storage]
+            # assert cp_action.n in snapshots[cp_action.storage]
 
             cp = snapshots[cp_action.storage][cp_action.n]
 
             # No data is currently stored for this step
-            assert cp_action.n not in ics
-            assert cp_action.n not in data
-            # The checkpoint contains forward restart or non-linear dependency data
-            assert len(cp[0]) > 0 or len(cp[1]) > 0
+            # assert cp_action.n not in ics
+            # assert cp_action.n not in data
+            # # The checkpoint contains forward restart or non-linear dependency data
+            # assert len(cp[0]) > 0 or len(cp[1]) > 0
 
-            # The checkpoint data is before the current location of the adjoint
-            assert cp_action.n < n - model_r
+            # # The checkpoint data is before the current location of the adjoint
+            # assert cp_action.n < n - model_r
 
             model_n = None
 
@@ -122,6 +124,9 @@ class Manage():
                 data.clear()
                 data.update(cp[1])
 
+            fwd_chk = next(iter(cp[1]))
+            self.forward.UpdateInitCondition(fwd_chk)
+            
             if cp_action.delete:
                 del snapshots[cp_action.storage][cp_action.n]
 
@@ -157,7 +162,7 @@ class Manage():
             # H revolve schedule
             steps = self.forward.GetTimesteps()
             hrev_schedule = HRevolveCheckpointSchedule(steps, self.save_chk, 0)
-        
+                
             if hrev_schedule is None:
                 print("Incompatible with schedule type")
     
@@ -167,18 +172,19 @@ class Manage():
         
             while True:
                 cp_action = next(hrev_schedule)
+                print(cp_action)
                 action(cp_action)
-                if isinstance(cp_action, Write):
-                    self.chk_function.StoreCheckpoint(self.forward.ic)
-                elif isinstance(cp_action, Forward):
-                    self.forward.Advance(cp_action.n0, cp_action.n1)
-                elif isinstance(cp_action, Reverse):
-                    self.reverse.Advance(cp_action.n1, cp_action.n0, self.forward.chk)
-                elif isinstance(cp_action, Read):
-                    fwd_chk = self.chk_function.GetCheckpoint()
-                    self.forward.UpdateInitCondition(fwd_chk)
-                    if cp_action.delete:
-                        self.chk_function.DeleteCheckpoint()
+                # if isinstance(cp_action, Write):
+                    # self.chk_function.StoreCheckpoint(self.forward.ic)
+                # elif isinstance(cp_action, Forward):
+                #     self.forward.Advance(cp_action.n0, cp_action.n1)
+                if isinstance(cp_action, Reverse):
+                    self.backward.Advance(cp_action.n1, cp_action.n0, self.forward.chk)
+                # elif isinstance(cp_action, Read):
+                #     fwd_chk = self.chk_function.GetCheckpoint()
+                #     self.forward.UpdateInitCondition(fwd_chk)
+                #     if cp_action.delete:
+                #         self.chk_function.DeleteCheckpoint()
 
                 assert model_n is None or model_n == hrev_schedule.n()
                 assert model_r == hrev_schedule.r()
