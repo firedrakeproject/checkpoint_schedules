@@ -1,5 +1,8 @@
 import sympy as sp
-
+__all__ = \
+    [
+        "Backward"
+    ]
 
 class Backward():
     """This object define the a forward solver.
@@ -7,6 +10,7 @@ class Backward():
     """
     def __init__(self):
         self.exp = None
+        self.sol = None
 
     def DefEquation(self):
         """Define the symbolic equation.
@@ -15,8 +19,7 @@ class Backward():
         # Create a symbol x
         x = sp.symbols("x")
         y = sp.symbols("y")
-        self.exp = x - y
-      
+        self.exp = (x - y)
     def Advance(self, n_1: int, n_0: int, fwd_chk) -> None:
         """Execute the backward equation.
 
@@ -31,6 +34,7 @@ class Backward():
         for s in range(n_1, n_0, -1):
             # out = self.exp.subs("x", s)
             out = self.exp.subs([("x", s), ("y", fwd_chk)])
+            print(out)
             
             
  

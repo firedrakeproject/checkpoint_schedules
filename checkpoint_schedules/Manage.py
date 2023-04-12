@@ -1,3 +1,14 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# This file is a part of tlm_adjoint.
+# It is modified under the terms of the GNU Lesser General Public License 
+# as published by the Free Software Foundation, version 3 of the License.
+# tlm_adjoint is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+
 from . import \
     (HRevolveCheckpointSchedule, Write, Clear, Configure, 
      Forward, EndForward, Reverse, Read, EndReverse)
@@ -14,18 +25,18 @@ class Manage():
     hrevolve checkpointing method.
 
     """
-    def __init__(self, forward, backward, checkpoint_function, save_chk):
+    def __init__(self, forward, backward, save_chk):
         self.save_chk = save_chk
         self.forward = forward
         self.backward = backward
-        self.chk_function = checkpoint_function
 
     def actions(self):
         n = self.forward.GetTimesteps()
+
         @functools.singledispatch
         def action(cp_action):
             raise TypeError("Unexpected action")
-        
+
         @action.register(Clear)
         def action_clear(cp_action):
             if cp_action.clear_ics:
@@ -39,41 +50,19 @@ class Manage():
 
             store_ics = cp_action.store_ics
             store_data = cp_action.store_data
-            
+
         @action.register(Write)
         def action_write(cp_action):
-            assert len(ics) > 0 or len(data) > 0
-            if len(ics) > 0:
-                if len(data) > 0:
-                    assert cp_action.n == min(min(ics), min(data))
-                else:
-                    assert cp_action.n == min(ics)
-            elif len(data) > 0:
-                assert cp_action.n == min(data)
             data.add(self.forward.ic)
             snapshots[cp_action.storage][cp_action.n] = (set(ics), set(data))
-            
+
         @action.register(Forward)
         def action_forward(cp_action):
             nonlocal model_n
 
-            # Start at the current location of the forward
-            assert model_n is not None and model_n == cp_action.n0
-            if hrev_schedule.max_n() is not None:
-                # Do not advance further than the current location of the adjoint
-                assert cp_action.n1 <= n - model_r
+            self.forward.Advance(cp_action.n0, cp_action.n1)
+
             n1 = min(cp_action.n1, n)
-
-            if store_ics:
-                # No forward restart data for these steps is stored
-                assert len(ics.intersection(range(cp_action.n0, n1))) == 0
-
-            if store_data:
-                # No non-linear dependency data for these steps is stored
-                assert len(data.intersection(range(cp_action.n0, n1))) == 0
-
-            self.forward.Advance(cp_action.n0, n1)
-
             model_n = n1
             if store_ics:
                 ics.update(range(cp_action.n0, n1))
@@ -92,27 +81,13 @@ class Manage():
             assert cp_action.n0 < cp_action.n1
             # Non-linear dependency data for these steps is stored
             assert data.issuperset(range(cp_action.n0, cp_action.n1))
-
+            self.backward.Advance(cp_action.n1, cp_action.n0, self.forward.chk)
             model_r += cp_action.n1 - cp_action.n0
 
         @action.register(Read)
         def action_read(cp_action):
             nonlocal model_n
-
-            # The checkpoint exists
-            # assert cp_action.n in snapshots[cp_action.storage]
-
             cp = snapshots[cp_action.storage][cp_action.n]
-
-            # No data is currently stored for this step
-            # assert cp_action.n not in ics
-            # assert cp_action.n not in data
-            # # The checkpoint contains forward restart or non-linear dependency data
-            # assert len(cp[0]) > 0 or len(cp[1]) > 0
-
-            # # The checkpoint data is before the current location of the adjoint
-            # assert cp_action.n < n - model_r
-
             model_n = None
 
             if len(cp[0]) > 0:
@@ -156,39 +131,25 @@ class Manage():
             store_data = False
             data = set()
 
-            fwd_chk = None
             snapshots = {"RAM": {}, "disk": {}}
 
             # H revolve schedule
             steps = self.forward.GetTimesteps()
             hrev_schedule = HRevolveCheckpointSchedule(steps, self.save_chk, 0)
-                
+
             if hrev_schedule is None:
                 print("Incompatible with schedule type")
-    
+
             assert hrev_schedule.n() == 0
             assert hrev_schedule.r() == 0
             assert hrev_schedule.max_n() is None or hrev_schedule.max_n() == n
-        
+
             while True:
                 cp_action = next(hrev_schedule)
-                print(cp_action)
                 action(cp_action)
-                # if isinstance(cp_action, Write):
-                    # self.chk_function.StoreCheckpoint(self.forward.ic)
-                # elif isinstance(cp_action, Forward):
-                #     self.forward.Advance(cp_action.n0, cp_action.n1)
-                if isinstance(cp_action, Reverse):
-                    self.backward.Advance(cp_action.n1, cp_action.n0, self.forward.chk)
-                # elif isinstance(cp_action, Read):
-                #     fwd_chk = self.chk_function.GetCheckpoint()
-                #     self.forward.UpdateInitCondition(fwd_chk)
-                #     if cp_action.delete:
-                #         self.chk_function.DeleteCheckpoint()
 
                 assert model_n is None or model_n == hrev_schedule.n()
                 assert model_r == hrev_schedule.r()
 
                 if isinstance(cp_action, EndReverse):
                     break
-   

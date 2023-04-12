@@ -4,10 +4,10 @@ from setuptools import setup, find_packages
 
 
 setup(
-    name="hrevolve_checkpointing",
-    description="Checkpointing method using hrevolve",
+    name="checkpoint_schedules",
+    description="Checkpointing method.",
     # url="https://github.com/...",
     license="GNU LGPL version 3",
-    packages=["hrevolve_checkpointing"],
+    packages=["checkpoint_schedules"],
     # python_requires="..."
     )

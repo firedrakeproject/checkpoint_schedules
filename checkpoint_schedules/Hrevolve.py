@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# This file is part of tlm_adjoint.
+# This file is a part of tlm_adjoint.
 # It is modified under the terms of the GNU Lesser General Public License 
 # as published by the Free Software Foundation, version 3 of the License.
 # tlm_adjoint is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
-
-from .schedule import CheckpointSchedule, Clear, Configure, Forward, Reverse, \
+from .Schedule import CheckpointSchedule, Clear, Configure, Forward, Reverse, \
     Read, Write, EndForward, EndReverse
-import hrevolve_checkpointing.hrevolve as hrevolve
+import hrevolve
 import logging
 
 __all__ = \
@@ -32,7 +31,6 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
       
         schedule = hrevolve.hrevolve(max_n - 1, cvect, wvect, rvect,
                                      uf=uf, ub=ub, **kwargs)
-        
         
         self._schedule = list(schedule)
 

@@ -1,4 +1,8 @@
 import sympy as sp
+__all__ = \
+    [
+        "Forward"
+    ]
 
 
 class Forward():
@@ -10,7 +14,7 @@ class Forward():
         self.chk_id = None
         self.steps = steps
         self.ic = initial_condition
-        self.chk = self.ic
+        self.chk = None
 
     def DefEquation(self):
         """Define the symbolic equation.
@@ -31,32 +35,47 @@ class Forward():
             Final time step.
 
         """
-        print(self.ic)
-        counter = self.ic
+        if self.chk is None:
+            counter = self.ic
+        else:
+            counter = self.chk
+        self.ic = counter
         while counter <= n_1:
             self.chk = self.exp.subs("x", counter)
             counter += 1
-            print(self.chk)
-
+            # print(self.chk)
+           
     def GetTimesteps(self) -> int:
-        """Return time steps.
+        """Return the total time steps.
 
         """
         return self.steps
    
-    
-    def UpdateInitialCondition(self, data) -> None:
+    def ReadCheckpoint(self, data) -> None:
         """Update the initial Condition.
         
         Parameters
         ----------
-        data
+        data : type?
             Initial condition data.
         
         Notes
         -----
         This method is called for time > t_0, where t_0 is the initial time.
-        
+        Hence, self.ic is also used to execute a foward solver with any time,
+        where the initial condition is given by self.ic
+
         """
         self.ic = data
-      
+    
+    def ClearCheckpoint(self) -> None:
+        """Clear the initial condition data.
+
+        """
+        self.chk = None
+
+    def UpdateInitCondition(self, data) -> None:
+        """Clear the initial condition data.
+
+        """
+        self.chk = data

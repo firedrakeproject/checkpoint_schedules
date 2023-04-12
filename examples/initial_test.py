@@ -1,4 +1,4 @@
-from hrevolve_checkpointing import Function, Forward, Backward, checkpoint_schedules
+from checkpoint_schedules import Forward, Backward, Manage
 
 t_s = 0
 t_f = 1
@@ -11,9 +11,5 @@ fwd = Forward(s, fwd_ic)
 fwd.DefEquation()
 bwd = Backward()
 bwd.DefEquation()
-f = Function()
-manage = checkpoint_schedules.Manage(fwd, bwd, f, schk)
+manage = Manage(fwd, bwd, schk)
 manage.actions()
-
-
-
