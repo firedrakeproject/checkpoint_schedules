@@ -1,26 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# For tlm_adjoint copyright information see ACKNOWLEDGEMENTS in the tlm_adjoint
-# root directory
-
-# This file is part of tlm_adjoint.
-#
-# tlm_adjoint is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, version 3 of the License.
-#
+# This file is a part of tlm_adjoint.
+# It is modified under the terms of the GNU Lesser General Public License 
+# as published by the Free Software Foundation, version 3 of the License.
 # tlm_adjoint is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with tlm_adjoint.  If not, see <https://www.gnu.org/licenses/>.
-
-from .schedule import CheckpointSchedule, Clear, Configure, Forward, Reverse, \
+from .Schedule import CheckpointSchedule, Clear, Configure, Forward, Reverse, \
     Read, Write, EndForward, EndReverse
-import hrevolve_checkpointing.hrevolve as hrevolve
+import hrevolve
 import logging
 
 __all__ = \
@@ -38,11 +28,9 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
         self._exhausted = False
 
         cvect = (snapshots_in_ram, snapshots_on_disk)
-        # import hrevolve
-        
+      
         schedule = hrevolve.hrevolve(max_n - 1, cvect, wvect, rvect,
                                      uf=uf, ub=ub, **kwargs)
-        
         
         self._schedule = list(schedule)
 
@@ -51,6 +39,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
 
     def iter(self):
         def action(i):
+            
             assert i >= 0 and i < len(self._schedule)
             action = self._schedule[i]
             cp_action = action.type
@@ -79,13 +68,12 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
 
         if self._max_n is None:
             raise RuntimeError("Invalid checkpointing state")
-
+    
         snapshots = set()
         deferred_cp = None
 
         def write_deferred_cp():
             nonlocal deferred_cp
-
             if deferred_cp is not None:
                 snapshots.add(deferred_cp[0])
                 yield Write(*deferred_cp)

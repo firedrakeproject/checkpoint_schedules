@@ -32,7 +32,6 @@ __all__ = \
         "Write",
         "EndForward",
         "EndReverse",
-
         "CheckpointSchedule"
     ]
 
