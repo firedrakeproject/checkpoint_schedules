@@ -8,9 +8,8 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
-
 from . import \
-    (HRevolveCheckpointSchedule, Write, Clear, Configure, 
+    (HRevolveCheckpointSchedule, Write, Clear, Configure,
      Forward, EndForward, Reverse, Read, EndReverse)
 import functools
 
@@ -21,18 +20,30 @@ __all__ = \
 
 
 class Manage():
-    """This object manage the forward and backward solvers wiht the 
-    hrevolve checkpointing method.
+    """Manage the forward and backward solvers.
+
+    This object manage the solvers with the employment of the
+    hrevolve checkpointing.
+
+    Attributes
+    ----------
+    forward : object
+        The forward solver.
+    backward : object
+        The backward solver.
+    save_chk : int
+        Number of checkpoint that will be stored.
+    total_steps : int
+        Total steps used to execute the solvers.
 
     """
-    def __init__(self, forward, backward, save_chk):
+    def __init__(self, forward, backward, save_chk, total_steps):
         self.save_chk = save_chk
         self.forward = forward
         self.backward = backward
+        self.tot_steps = total_steps
 
     def actions(self):
-        n = self.forward.GetTimesteps()
-
         @functools.singledispatch
         def action(cp_action):
             raise TypeError("Unexpected action")
@@ -62,25 +73,18 @@ class Manage():
 
             self.forward.Advance(cp_action.n0, cp_action.n1)
 
-            n1 = min(cp_action.n1, n)
+            n1 = min(cp_action.n1, self.tot_steps)
             model_n = n1
             if store_ics:
                 ics.update(range(cp_action.n0, n1))
             if store_data:
                 data.update(range(cp_action.n0, n1))
-            if n1 == n:
+            if n1 == self.tot_steps:
                 hrev_schedule.finalize(n1)
 
         @action.register(Reverse)
         def action_reverse(cp_action):
             nonlocal model_r
-
-            # Start at the current location of the adjoint
-            assert cp_action.n1 == n - model_r
-            # Advance at least one step
-            assert cp_action.n0 < cp_action.n1
-            # Non-linear dependency data for these steps is stored
-            assert data.issuperset(range(cp_action.n0, cp_action.n1))
             self.backward.Advance(cp_action.n1, cp_action.n0, self.forward.chk)
             model_r += cp_action.n1 - cp_action.n0
 
@@ -107,16 +111,15 @@ class Manage():
 
         @action.register(EndForward)
         def action_end_forward(cp_action):
-        
             # The correct number of forward steps has been taken
-            assert model_n is not None and model_n == n
-           
+            assert model_n is not None and model_n == self.tot_steps
+
         @action.register(EndReverse)
         def action_end_reverse(cp_action):
             nonlocal model_r
 
             # The correct number of adjoint steps has been taken
-            assert model_r == n
+            assert model_r == self.tot_steps
 
             if not cp_action.exhausted:
                 model_r = 0
@@ -133,16 +136,17 @@ class Manage():
 
             snapshots = {"RAM": {}, "disk": {}}
 
-            # H revolve schedule
-            steps = self.forward.GetTimesteps()
-            hrev_schedule = HRevolveCheckpointSchedule(steps, self.save_chk, 0)
+            hrev_schedule = HRevolveCheckpointSchedule(self.tot_steps, self.save_chk, 0)
 
             if hrev_schedule is None:
                 print("Incompatible with schedule type")
 
             assert hrev_schedule.n() == 0
             assert hrev_schedule.r() == 0
-            assert hrev_schedule.max_n() is None or hrev_schedule.max_n() == n
+            assert (
+                    hrev_schedule.max_n() is None
+                    or hrev_schedule.max_n() == self.tot_steps
+                   )
 
             while True:
                 cp_action = next(hrev_schedule)
