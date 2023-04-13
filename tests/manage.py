@@ -8,7 +8,7 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
-from . import \
+from checkpoint_schedules import \
     (HRevolveCheckpointSchedule, Write, Clear, Configure,
      Forward, EndForward, Reverse, Read, EndReverse)
 import functools

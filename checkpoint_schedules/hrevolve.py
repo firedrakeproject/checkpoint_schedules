@@ -8,7 +8,7 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
-from .Schedule import CheckpointSchedule, Clear, Configure, Forward, Reverse, \
+from .schedule import CheckpointSchedule, Clear, Configure, Forward, Reverse, \
     Read, Write, EndForward, EndReverse
 import hrevolve
 import logging

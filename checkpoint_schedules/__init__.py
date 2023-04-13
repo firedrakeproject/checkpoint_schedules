@@ -1,4 +1,3 @@
-from .Schedule import *  # noqa: F401
-from .Hrevolve import *  # noqa: F401
-from .Manage import *  # noqa: F401
+from .schedule import *  # noqa: F401
+from .hrevolve import *  # noqa: F401
 
