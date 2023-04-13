@@ -1,3 +1,36 @@
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["checkpoint_schedules"]
+
+[project]
+name = "checkpoint_schedules"
+version = "0.0.1"
+# authors = [
+#     {name = "Daiane I. Dolci, David Ham"}, 
+#     {email = "d.dolci@imperial.ac.uk, david.ham@imperial.ac.uk"},
+# ]
+authors = [
+  {email = "d.dolci@imperial.ac.uk"},
+  {name = "Daiane I. Dolci"}
+]
+description = "Schedules for incremental checkpointing of adjoint simulations."
+readme = "README.md"
+# requires-python = ">=3.7"
+keywords = ["checkpointing", "adjoint"]
+# license = {text = "BSD-3-Clause"}
+# classifiers = [
+#     "Framework :: Django",
+#     "Programming Language :: Python :: 3",
+# ]
+# dependencies = [
+#     # "requests",
+#     # 'importlib-metadata; python_version<"3.8"',
+# ]
+[project.urls]
+# homepage = "https://example.com"
+# documentation = "https://readthedocs.org"
+repository = "https://github.com/firedrakeproject/checkpoint_schedules"
+# changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"

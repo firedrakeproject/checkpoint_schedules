@@ -1,13 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# This file is a part of tlm_adjoint.
-# It is modified under the terms of the GNU Lesser General Public License 
-# as published by the Free Software Foundation, version 3 of the License.
-# tlm_adjoint is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
+# Add corect license text
 from .schedule import CheckpointSchedule, Clear, Configure, Forward, Reverse, \
     Read, Write, EndForward, EndReverse
 import hrevolve
