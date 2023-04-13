@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Add corect license text
 from abc import ABC, abstractmethod
 import functools
 
@@ -21,6 +20,8 @@ __all__ = \
 
 
 class CheckpointAction:
+    """_summary_
+    """
     def __init__(self, *args):
         self.args = args
 
@@ -32,6 +33,13 @@ class CheckpointAction:
 
 
 class Clear(CheckpointAction):
+    """_summary_
+
+    Parameters
+    ----------
+    CheckpointAction : _type_
+        _description_
+    """
     def __init__(self, clear_ics, clear_data):
         super().__init__(clear_ics, clear_data)
 
@@ -145,15 +153,14 @@ class EndReverse(CheckpointAction):
 
 
 class CheckpointSchedule(ABC):
-    """
-    A checkpointing schedule.
+    """A checkpointing schedule.
 
     The schedule is defined by iter, which yields actions in a similar manner
     to the approach used in
-       A. Griewank and A. Walther, "Algorithm 799: Revolve: An implementation
-       of checkpointing for the reverse or adjoint mode of computational
-       differentiation", ACM Transactions on Mathematical Software, 26(1), pp.
-       19--45, 2000
+        A. Griewank and A. Walther, "Algorithm 799: Revolve: An implementation
+        of checkpointing for the reverse or adjoint mode of computational
+        differentiation", ACM Transactions on Mathematical Software, 26(1), pp.
+        19--45, 2000
     e.g. 'forward', 'read', and 'write' correspond to ADVANCE, RESTORE, and
     TAKESHOT respectively in Griewank and Walther 2000 (although here 'write'
     actions occur *after* forward advancement from snapshots).
@@ -189,6 +196,11 @@ class CheckpointSchedule(ABC):
     EndReverse(exhausted)
     End a reverse calculation. If exhausted is False then a further reverse
     calculation can be performed.
+
+    Atributes
+    ----------
+    mas_n : int
+        Max.
     """
 
     def __init__(self, max_n=None):

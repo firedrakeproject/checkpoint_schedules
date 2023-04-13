@@ -14,8 +14,34 @@ __all__ = \
 
 
 class HRevolveCheckpointSchedule(CheckpointSchedule):
+    """_summary_
+
+    Parameters
+    ----------
+    CheckpointSchedule : _type_
+        _description_
+    """
     def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk, *,
                  wvect=(0.0, 0.1), rvect=(0.0, 0.1), uf=1.0, ub=2.0, **kwargs):
+        """_summary_
+
+        Parameters
+        ----------
+        max_n : _type_
+            _description_
+        snapshots_in_ram : _type_
+            _description_
+        snapshots_on_disk : _type_
+            _description_
+        wvect : tuple, optional
+            _description_, by default (0.0, 0.1)
+        rvect : tuple, optional
+            _description_, by default (0.0, 0.1)
+        uf : float, optional
+            _description_, by default 1.0
+        ub : float, optional
+            _description_, by default 2.0
+        """
         super().__init__(max_n)
         self._snapshots_in_ram = snapshots_in_ram
         self._snapshots_on_disk = snapshots_on_disk
@@ -32,8 +58,28 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
         logger.debug(f"H-Revolve schedule: {str(self._schedule):s}")
 
     def iter(self):
+        """_summary_
+        """
         def action(i):
-            
+            """_summary_
+
+            Parameters
+            ----------
+            i : _type_
+                _description_
+
+            Returns
+            -------
+            _type_
+                _description_
+
+            Raises
+            ------
+            RuntimeError
+                _description_
+            RuntimeError
+                _description_
+            """
             assert i >= 0 and i < len(self._schedule)
             action = self._schedule[i]
             cp_action = action.type
