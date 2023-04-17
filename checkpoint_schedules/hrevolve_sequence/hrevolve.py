@@ -55,7 +55,7 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub=1, uf=1, **params):
     -------
     tuple(list, list)
         _description_
-        
+
     """
     K = len(cvect)
     assert len(wvect) == len(rvect) == len(cvect)
@@ -107,18 +107,18 @@ def HRevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
     if cmem == 0:
         raise KeyError("HRevolve_aux should not be call with cmem = 0. Contact developers.")
     if l == 0:
-        sequence.insert(Operation("Backward", my_buddy(-1, l-1)))
+        sequence.insert(Operation("Backward", my_buddy(-1)))
         return sequence
     if l == 1:
         if wvect[0] + rvect[0] < rvect[K]:
             sequence.insert(Operation("Write", [0, 0]))
         sequence.insert(Operation("Forward", 0))
-        sequence.insert(Operation("Backward", my_buddy(0, l - 1)))
+        sequence.insert(Operation("Backward", my_buddy(0)))
         if wvect[0] + rvect[0] < rvect[K]:
             sequence.insert(Operation("Read", [0, 0]))
         else:
             sequence.insert(Operation("Read", [K, 0]))
-        sequence.insert(Operation("Backward", my_buddy(-1, l - 1)))
+        sequence.insert(Operation("Backward", my_buddy(-1)))
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if K == 0 and cmem == 1:
@@ -126,9 +126,9 @@ def HRevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
             if index != l - 1:
                 sequence.insert(Operation("Read", [0, 0]))
             sequence.insert(Operation("Forwards", [0, index]))
-            sequence.insert(Operation("Backward", my_buddy(index, l - 1)))
+            sequence.insert(Operation("Backward", my_buddy(index)))
         sequence.insert(Operation("Read", [0, 0]))
-        sequence.insert(Operation("Backward", my_buddy(-1, l - 1)))
+        sequence.insert(Operation("Backward", my_buddy(-1)))
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if K == 0:
@@ -203,16 +203,16 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
                         levels=len(cvect), concat=parameters["concat"])
     Operation = partial(Op, params=parameters)
     if l == 0:
-        sequence.insert(Operation("Backward", my_buddy(-1, l-1)))
+        sequence.insert(Operation("Backward", my_buddy(-1)))
         return sequence
     if K == 0 and cmem == 0:
         raise KeyError("It's impossible to execute an AC graph of size > 0 with no memory.")
     if l == 1:
         sequence.insert(Operation("Write", [0, 0]))
         sequence.insert(Operation("Forward", 0))
-        sequence.insert(Operation("Backward", my_buddy(0, l - 1)))
+        sequence.insert(Operation("Backward", my_buddy(0)))
         sequence.insert(Operation("Read", [0, 0]))
-        sequence.insert(Operation("Backward", my_buddy(-1, l - 1)))
+        sequence.insert(Operation("Backward", my_buddy(-1)))
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if K == 0:

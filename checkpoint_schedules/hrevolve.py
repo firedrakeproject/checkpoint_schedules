@@ -41,9 +41,8 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
         self._exhausted = False
 
         cvect = (snapshots_in_ram, snapshots_on_disk)
-        print(max_n)
         schedule = hrevolve(max_n-1, cvect, wvect, rvect,
-                                     uf=uf, ub=ub, **kwargs)
+                            uf=uf, ub=ub, **kwargs)
         
         self._schedule = list(schedule)
 
@@ -122,10 +121,12 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                 yield Forward(n_0, n_1)
             elif cp_action == "Backward":
                 if n_0 != self._n:
+                    print("aqui0")
                     raise RuntimeError("Invalid checkpointing state")
                 if n_0 != self._max_n - self._r - 1:
+                    print(n_0, self._max_n, self._r + 1)
                     raise RuntimeError("Invalid checkpointing state")
-
+                    
                 yield from write_deferred_cp()
 
                 yield Clear(True, True)

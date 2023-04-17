@@ -31,14 +31,21 @@ class Forward():
             Final time step.
 
         """
-        if self.chk is None:
-            counter = self.ic
-        else:
-            counter = self.chk
-        self.ic = counter
-        while counter <= n_1:
-            self.chk = self.exp.subs("x", counter)
-            counter += 1
+        print((">"*(n_1-n_0)).rjust(n_1))
+        i_n = n_0
+        while i_n < n_1:
+            i_np1 = i_n + 1
+            i_n = i_np1
+            print(i_n)
+        
+        # if self.chk is None:
+        #     counter = self.ic
+        # else:
+        #     counter = self.chk
+        # self.ic = counter
+        # while counter <= n_1:
+        self.chk = i_n
+            # counter += 1
            
     def GetSteps(self) -> int:
         """Return the total time steps.
@@ -81,10 +88,12 @@ class Backward():
             Final time step in reverse state.
 
         """
-        for s in range(n_1, n_0, -1):
-            # out = self.exp.subs("x", s)
-            out = self.exp.subs([("x", s), ("y", fwd_chk)])
-            assert out == 0
+        i_n = n_1
+        while i_n > n_0:
+            i_np1 = i_n - 1
+            print(i_n-fwd_chk)
+            i_n = i_np1
+            
 
 
 fwd_ic = 0

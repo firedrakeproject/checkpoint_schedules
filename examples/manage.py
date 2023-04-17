@@ -104,6 +104,7 @@ class Manage():
 
         @action.register(EndForward)
         def action_end_forward(cp_action):
+            quit()
             # The correct number of forward steps has been taken
             assert model_n is not None and model_n == self.tot_steps
 

@@ -16,6 +16,7 @@ official_names = {
     "Read": "R",
     "Write": "W",
     "Discard": "D",
+    # "ForwardMode": "FM",
     "Forward_branch": "F",
     "Forwards_branch": "F",
     "Backward_branch": "B",
@@ -25,7 +26,7 @@ official_names = {
 }
 
 
-def my_buddy(index, last_index):
+def my_buddy(index):
     return index + 1
 
 
@@ -99,6 +100,8 @@ class Operation:
         elif type(self.index) is list:
             if self.type == "Forwards":
                 return official_names[self.type] + "_" + str(self.index[0]) + "->" + str(self.index[1])
+            # if self.type == "ForwardMode":
+            #     return official_names[self.type] + "_" + str(self.index[0]) + "->" + str(self.index[1])
             elif self.type == "Forwards_branch":
                 return official_names[self.type] + "^" + str(self.index[0]) + "_" + str(self.index[1]) + "->" + str(self.index[2])
             else:
@@ -108,7 +111,10 @@ class Operation:
         if self.type == "Forward":
             return self.params["uf"]
         if self.type == "Forwards":
+            a = (self.index[1] - self.index[0] + 1) * self.params["uf"]
             return (self.index[1] - self.index[0] + 1) * self.params["uf"]
+        # if self.type == "ForwardMode":
+        #     return (self.index[1] - self.index[0] + 1) * self.params["uf"]
         if self.type == "Backward":
             return self.params["ub"]
         if self.type == "Checkpoint":
@@ -202,14 +208,14 @@ class Sequence:
     def __iter__(self):
         return iter(self.concat_sequence(self.concat))
 
-    def canonical(self):
-        if self.function.name == "Disk-Revolve":
-            concat = 2
-        if self.function.name == "1D-Revolve" or self.function.name == "Revolve":
-            concat = 1
-        l = [x.l + 1 for x in self.concat_sequence(concat=concat) if x.__class__.__name__ == "Function"]
-        l.reverse()
-        return l
+    # def canonical(self):
+    #     if self.function.name == "Disk-Revolve":
+    #         concat = 2
+    #     if self.function.name == "1D-Revolve" or self.function.name == "Revolve":
+    #         concat = 1
+    #     l = [x.l + 1 for x in self.concat_sequence(concat=concat) if x.__class__.__name__ == "Function"]
+    #     l.reverse()
+    #     return l
 
     def concat_sequence(self, concat):
         l = []
@@ -328,82 +334,82 @@ class Sequence:
         else:
             return self.sequence[i+1]
 
-    def convert_old_to_branch(self, index):
-        for (i, x) in enumerate(self.memory):
-            if type(x) is int:
-                self.memory[i] = (index, x)
-        to_remove = []
-        for (i, op) in enumerate(self.sequence):
-            if op.type == "Function":
-                self.sequence[i] = self.sequence[i].convert_old_to_branch(index)
-            elif op.type == "Forward":
-                op.type = "Forward_branch"
-                op.index = [index, op.index]
-            elif op.type == "Forwards":
-                op.type = "Forwards_branch"
-                op.index = [index] + op.index
-            elif op.type == "Backward":
-                op.type = "Backward_branch"
-                op.index = [index, op.index]
-            elif op.type == "Read":
-                if self.next_operation(i).type == "Backward":
-                    to_remove.append(i)
-                else:
-                    op.type = "Checkpoint_branch"
-                    op.index = [index, op.index]
-            elif op.type == "Write":
-                op.type = "Checkpoint_branch"
-                op.index = [index, op.index]
-            elif op.type == "Discard":
-                to_remove.append(i)
-            elif op.type == "Read_memory":
-                if self.next_operation(i).type == "Backward":
-                    to_remove.append(i)
-                else:
-                    op.type = "Checkpoint_branch"
-                    op.index = [index, op.index]
-            elif op.type == "Write_memory":
-                op.type = "Checkpoint_branch"
-                op.index = [index, op.index]
-            elif op.type == "Discard_memory":
-                to_remove.append(i)
-            elif op.type in ["Read_disk", "Write_disk", "Discard_disk"]:
-                ValueError("Cannot use convert_old_to_branch on sequences from two-memory architecture")
-            else:
-                ValueError("Unknown data type %s in convert_old_to_branch" % op.type)
-        for (i, index) in enumerate(to_remove):
-            self.remove(index-i)
-        return self
+    # def convert_old_to_branch(self, index):
+    #     for (i, x) in enumerate(self.memory):
+    #         if type(x) is int:
+    #             self.memory[i] = (index, x)
+    #     to_remove = []
+    #     for (i, op) in enumerate(self.sequence):
+    #         if op.type == "Function":
+    #             self.sequence[i] = self.sequence[i].convert_old_to_branch(index)
+    #         elif op.type == "Forward":
+    #             op.type = "Forward_branch"
+    #             op.index = [index, op.index]
+    #         elif op.type == "Forwards":
+    #             op.type = "Forwards_branch"
+    #             op.index = [index] + op.index
+    #         elif op.type == "Backward":
+    #             op.type = "Backward_branch"
+    #             op.index = [index, op.index]
+    #         elif op.type == "Read":
+    #             if self.next_operation(i).type == "Backward":
+    #                 to_remove.append(i)
+    #             else:
+    #                 op.type = "Checkpoint_branch"
+    #                 op.index = [index, op.index]
+    #         elif op.type == "Write":
+    #             op.type = "Checkpoint_branch"
+    #             op.index = [index, op.index]
+    #         elif op.type == "Discard":
+    #             to_remove.append(i)
+    #         elif op.type == "Read_memory":
+    #             if self.next_operation(i).type == "Backward":
+    #                 to_remove.append(i)
+    #             else:
+    #                 op.type = "Checkpoint_branch"
+    #                 op.index = [index, op.index]
+    #         elif op.type == "Write_memory":
+    #             op.type = "Checkpoint_branch"
+    #             op.index = [index, op.index]
+    #         elif op.type == "Discard_memory":
+    #             to_remove.append(i)
+    #         elif op.type in ["Read_disk", "Write_disk", "Discard_disk"]:
+    #             ValueError("Cannot use convert_old_to_branch on sequences from two-memory architecture")
+    #         else:
+    #             ValueError("Unknown data type %s in convert_old_to_branch" % op.type)
+    #     for (i, index) in enumerate(to_remove):
+    #         self.remove(index-i)
+    #     return self
 
-    def convert_new_to_branch(self, index):
-        for (i, x) in enumerate(self.memory):
-            if type(x) is int:
-                self.memory[i] = (index, x)
-        to_remove = []
-        for (i, op) in enumerate(self.sequence):
-            if op.type == "Function":
-                self.sequence[i] = self.sequence[i].convert_new_to_branch(index)
-            elif op.type == "Forward":
-                op.type = "Forward_branch"
-                op.index = [index, op.index]
-            elif op.type == "Forwards":
-                op.type = "Forwards_branch"
-                op.index = [index] + op.index
-            elif op.type == "Backward":
-                op.type = "Backward_branch"
-                op.index = [index, op.index]
-            elif op.type == "Checkpoint":
-                op.type = "Checkpoint_branch"
-                op.index = [index, op.index]
-            elif op.type in ["Forward_branch", "Forwards_branch", "Turn", "Discard_branch", "Checkpoint", "Backward_branch"]:
-                continue
-            elif op.type in ["Read_disk", "Write_disk", "Discard_disk"]:
-                ValueError("Cannot use convert_new_to_branch on sequences from two-memory architecture")
-            else:
-                ValueError("Unknown data type %s in convert_new_to_branch" % op.type)
-        for (i, index) in enumerate(to_remove):
-            self.remove(index-i)
-        return self
+    # def convert_new_to_branch(self, index):
+    #     for (i, x) in enumerate(self.memory):
+    #         if type(x) is int:
+    #             self.memory[i] = (index, x)
+    #     to_remove = []
+    #     for (i, op) in enumerate(self.sequence):
+    #         if op.type == "Function":
+    #             self.sequence[i] = self.sequence[i].convert_new_to_branch(index)
+    #         elif op.type == "Forward":
+    #             op.type = "Forward_branch"
+    #             op.index = [index, op.index]
+    #         elif op.type == "Forwards":
+    #             op.type = "Forwards_branch"
+    #             op.index = [index] + op.index
+    #         elif op.type == "Backward":
+    #             op.type = "Backward_branch"
+    #             op.index = [index, op.index]
+    #         elif op.type == "Checkpoint":
+    #             op.type = "Checkpoint_branch"
+    #             op.index = [index, op.index]
+    #         elif op.type in ["Forward_branch", "Forwards_branch", "Turn", "Discard_branch", "Checkpoint", "Backward_branch"]:
+    #             continue
+    #         elif op.type in ["Read_disk", "Write_disk", "Discard_disk"]:
+    #             ValueError("Cannot use convert_new_to_branch on sequences from two-memory architecture")
+    #         else:
+    #             ValueError("Unknown data type %s in convert_new_to_branch" % op.type)
+    #     for (i, index) in enumerate(to_remove):
+    #         self.remove(index-i)
+    #     return self
 
 
 class Table:

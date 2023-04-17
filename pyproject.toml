@@ -8,13 +8,9 @@ packages = ["checkpoint_schedules"]
 [project]
 name = "checkpoint_schedules"
 version = "0.0.1"
-# authors = [
-#     {name = "Daiane I. Dolci, David Ham"}, 
-#     {email = "d.dolci@imperial.ac.uk, david.ham@imperial.ac.uk"},
-# ]
 authors = [
-  {email = "d.dolci@imperial.ac.uk"},
-  {name = "Daiane I. Dolci"}
+  {email = "....."},
+  {name = "....."}
 ]
 description = "Schedules for incremental checkpointing of adjoint simulations."
 readme = "README.md"
