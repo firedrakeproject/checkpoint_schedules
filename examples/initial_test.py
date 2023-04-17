@@ -1,4 +1,4 @@
-from checkpoint_schedules import Manage
+from manage import Manage
 import sympy as sp
 
 class Forward():
@@ -88,7 +88,7 @@ class Backward():
 
 
 fwd_ic = 0
-steps = 20
+steps = 10
 schk = 3
 fwd = Forward(steps, fwd_ic)
 fwd.DefEquation()

@@ -1,14 +1,62 @@
 #!/usr/bin/python
+"""
+This module includes classes and function definitions
+provided as part of the H-Revolve python implementation.
+The original implementation was developed by authors
+Julien Herrmann and Guillaume Aupy and is orignally
+distributed under GNU GPL v.3 license terms.
+The original H-Revolve source code can be found in the
+following Gitlab repository:
 
+Original H-Revolve source-code:
+https://gitlab.inria.fr/adjoint-computation/H-Revolve/tree/master
+
+The H-Revolve library is described in detail in the
+paper "H-Revolve: A Framework for Adjoint Computation on
+Synchronous Hierarchical Platforms" by Herrmann and Pallez [1].
+
+Some minor modifications where made to adapt this libray for the
+checkpoint schedules API.
+
+Authors: Julien Herrmann, Guillaume Aupy
+
+Refs:
+[1] Herrmann, Pallez, "H-Revolve: A Framework for
+    Adjoint Computation on Synchronous Hierarchical
+    Platforms", ACM Transactions on Mathematical
+    Software  46(2), 2020.
+"""
 from .parameters import defaults
 from .basic_functions import (Operation as Op, Sequence, Function, my_buddy,
                               argmin)
 from functools import partial
 
 
-def get_hopt_table(lmax, cvect, wvect, rvect, ub, uf, **params):
-    """ Compute the HOpt table for architecture and l=0...lmax
-        This computation uses a dynamic program"""
+def get_hopt_table(lmax, cvect, wvect, rvect, ub=1, uf=1, **params):
+    """Compute the HOpt table for architecture and l=0...lmax.
+        This computation uses a dynamic program.
+
+    Parameters
+    ----------
+    lmax : int
+        Total checkpoint of a forward solver.
+    cvect : _type_
+        _description_
+    wvect : _type_
+        _description_
+    rvect : _type_
+        _description_
+    ub : _type_
+        Cost of the forward steps, by default 1.
+    uf : _type_
+        Cost of the backward steps, by default 1.
+
+    Returns
+    -------
+    tuple(list, list)
+        _description_
+        
+    """
     K = len(cvect)
     assert len(wvect) == len(rvect) == len(cvect)
     opt = [[[float("inf")] * (cvect[i] + 1) for _ in range(lmax + 1)] for i in range(K)]
