@@ -1,26 +1,15 @@
-from manage import Manage
-import sympy as sp
-
+from checkpoint_schedules import hrevolve_sequence
 class Forward():
     """Define the a forward solver.
 
     """
-    def __init__(self, steps, initial_condition):
+    def __init__(self, steps):
         self.exp = None
         self.chk_id = None
         self.steps = steps
-        self.ic = initial_condition
         self.chk = None
 
-    def DefEquation(self):
-        """Define the symbolic equation.
-
-        """
-        # Create a symbol x
-        x = sp.symbols("x")
-        self.exp = x
-
-    def Advance(self, n_0: int, n_1: int) -> None:
+    def advance(self, n_0: int, n_1: int) -> None:
         """Advance the foward equation.
 
         Parameters
@@ -36,28 +25,7 @@ class Forward():
         while i_n < n_1:
             i_np1 = i_n + 1
             i_n = i_np1
-            print(i_n)
-        
-        # if self.chk is None:
-        #     counter = self.ic
-        # else:
-        #     counter = self.chk
-        # self.ic = counter
-        # while counter <= n_1:
         self.chk = i_n
-            # counter += 1
-           
-    def GetSteps(self) -> int:
-        """Return the total time steps.
-
-        """
-        return self.steps
-   
-    def UpdateInitCondition(self, data) -> None:
-        """Clear the initial condition data.
-
-        """
-        self.chk = data
 
 
 class Backward():
@@ -68,16 +36,7 @@ class Backward():
         self.exp = None
         self.sol = None
 
-    def DefEquation(self):
-        """Define the symbolic equation.
-
-        """
-        # Create a symbol x
-        x = sp.symbols("x")
-        y = sp.symbols("y")
-        self.exp = (x - y)
-
-    def Advance(self, n_1: int, n_0: int, fwd_chk) -> None:
+    def advance(self, n_1: int, n_0: int) -> None:
         """Execute the backward equation.
 
         Parameters
@@ -88,20 +47,45 @@ class Backward():
             Final time step in reverse state.
 
         """
+        print("<".rjust(n_1))
         i_n = n_1
         while i_n > n_0:
             i_np1 = i_n - 1
-            print(i_n-fwd_chk)
             i_n = i_np1
             
 
-
-fwd_ic = 0
 steps = 10
 schk = 3
-fwd = Forward(steps, fwd_ic)
-fwd.DefEquation()
+cvect = (schk, 0)
+wvect = (0.0, 0.1)
+rvect = (0.0, 0.1)
+uf = 1.0
+ub = 2.0
+hrev_schedule = hrevolve_sequence.hrevolve(steps-1, cvect, wvect, rvect,
+                                           uf=uf, ub=ub
+                                           )
+schedule = list(hrev_schedule)
+
+fwd = Forward(steps)
 bwd = Backward()
-bwd.DefEquation()
-manage = Manage(fwd, bwd, schk, steps)
-manage.actions()
+
+while True:
+    schedule = iter(schedule)
+    action = next(schedule)
+    if action.type == "Forwards":
+        n_0, n_1 = action.index
+        fwd.advance(n_0, n_1)
+    elif action.type == "Write":
+        storage, n_0 = action.index
+    elif action.type == "Forward":
+        n_0 = action.index
+        n_1 = n_0 + 1
+    elif action.type == "Backward":
+        n_0 = action.index
+        n_1 = n_0 - 1
+        if action.index == 0:
+            break
+        bwd.advance(n_0, n_1)
+        
+   
+

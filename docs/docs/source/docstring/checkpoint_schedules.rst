@@ -1,6 +1,14 @@
 checkpoint\_schedules package
 =============================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   checkpoint_schedules.hrevolve_sequence
+
 Submodules
 ----------
 

@@ -55,7 +55,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
             Parameters
             ----------
             i : int
-                _description_
+                Action index.
 
             Returns
             -------

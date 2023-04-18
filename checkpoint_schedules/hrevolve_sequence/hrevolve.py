@@ -30,7 +30,7 @@ from .parameters import defaults
 from .basic_functions import (Operation as Op, Sequence, Function, my_buddy,
                               argmin)
 from functools import partial
-
+follow = 0
 
 def get_hopt_table(lmax, cvect, wvect, rvect, ub=1, uf=1, **params):
     """Compute the HOpt table for architecture and l=0...lmax.
@@ -57,6 +57,8 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub=1, uf=1, **params):
         _description_
 
     """
+    global follow 
+    follow = lmax
     K = len(cvect)
     assert len(wvect) == len(rvect) == len(cvect)
     opt = [[[float("inf")] * (cvect[i] + 1) for _ in range(lmax + 1)] for i in range(K)]
@@ -84,7 +86,7 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub=1, uf=1, **params):
     # Fill K > 0
     for k in range(1, K):
         mmax = cvect[k]
-        for l in range(2, lmax+1):
+        for l in range(2, lmax + 1):
             opt[k][l][0] = opt[k-1][l][cvect[k-1]]
         for m in range(1, mmax + 1):
             for l in range(1, lmax + 1):
@@ -93,32 +95,73 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub=1, uf=1, **params):
     return (optp, opt)
 
 
-def HRevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **params):
-    r""" l : number of forward step to execute in the AC graph
-            K: the level of memory
-            cmem: number of available slots in the K-th level of memory
-            Return the optimal sequence of makespan \overline{HOpt}(l, architecture)"""
+def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **params):
+    """_summary_
+
+    Parameters
+    ----------
+    l : int
+        Total number of the forward step.
+    K : 
+        The level of memory.
+    cmem : _type_
+        Number of available slots in the K-th level of memory.
+    cvect : _type_
+        _description_
+    wvect : _type_
+        _description_
+    rvect : _type_
+        _description_
+    hoptp : _type_, optional
+        _description_, by default None
+    hopt : _type_, optional
+        _description_, by default None
+    
+    Notes
+    -----
+    This function is a copy of the orginal hrevolve_aux
+    function that composes the python H-Revolve implementation
+    published by Herrmann and Pallez [1] in the following
+    Gitlab repository:
+
+    https://gitlab.inria.fr/adjoint-computation/H-Revolve/tree/master
+    
+    Returns
+    -------
+    tuple
+        Return the optimal sequence of makespan.
+
+    Raises
+    ------
+    KeyError
+        _description_
+    """
+    global follow 
+    follow = l
     uf = params["uf"]
     if (hoptp is None) or (hopt is None):
         (hoptp, hopt) = get_hopt_table(l, cvect, wvect, rvect, **params)
-    sequence = Sequence(Function("HRevolve_aux", l, [K, cmem]),
+    sequence = Sequence(Function("hrevolve_aux", l, [K, cmem]),
                         levels=len(cvect), concat=params["concat"])
     Operation = partial(Op, params=params)
     if cmem == 0:
-        raise KeyError("HRevolve_aux should not be call with cmem = 0. Contact developers.")
+        raise KeyError(
+            "hrevolve_aux should not be call with cmem = 0. \
+            Contact developers."
+            )
     if l == 0:
-        sequence.insert(Operation("Backward", my_buddy(-1)))
+        sequence.insert(Operation("Backward", 0))
         return sequence
     if l == 1:
         if wvect[0] + rvect[0] < rvect[K]:
             sequence.insert(Operation("Write", [0, 0]))
         sequence.insert(Operation("Forward", 0))
-        sequence.insert(Operation("Backward", my_buddy(0)))
+        sequence.insert(Operation("Backward", 1))
         if wvect[0] + rvect[0] < rvect[K]:
             sequence.insert(Operation("Read", [0, 0]))
         else:
             sequence.insert(Operation("Read", [K, 0]))
-        sequence.insert(Operation("Backward", my_buddy(-1)))
+        sequence.insert(Operation("Backward", 0))
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if K == 0 and cmem == 1:
@@ -126,33 +169,43 @@ def HRevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
             if index != l - 1:
                 sequence.insert(Operation("Read", [0, 0]))
             sequence.insert(Operation("Forwards", [0, index]))
-            sequence.insert(Operation("Backward", my_buddy(index)))
+            sequence.insert(Operation("Backward", index + 1))
         sequence.insert(Operation("Read", [0, 0]))
-        sequence.insert(Operation("Backward", my_buddy(-1)))
+        sequence.insert(Operation("Backward", 0))
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if K == 0:
-        list_mem = [j * uf + hopt[0][l - j][cmem - 1] + rvect[0] + hoptp[0][j - 1][cmem] for j in range(1, l)]
+        list_mem = [
+            j * uf
+            + hopt[0][l - j][cmem - 1]
+            + rvect[0] + hoptp[0][j - 1][cmem]
+            for j in range(1, l)
+            ]
         if min(list_mem) < hoptp[0][l][1]:
             jmin = argmin(list_mem)
-            sequence.insert(Operation("Forwards", [0, jmin - 1]))
+            sequence.insert(Operation("Forwards", [0, jmin-1]))
             sequence.insert_sequence(
                 hrevolve_recurse(l - jmin, 0, cmem - 1, cvect, wvect, rvect,
                                  hoptp=hoptp, hopt=hopt, **params).shift(jmin)
             )
             sequence.insert(Operation("Read", [0, 0]))
             sequence.insert_sequence(
-                HRevolve_aux(jmin - 1, 0, cmem, cvect, wvect, rvect,
+                hrevolve_aux(jmin - 1, 0, cmem, cvect, wvect, rvect,
                              hoptp=hoptp, hopt=hopt, **params)
             )
             return sequence
         else:
             sequence.insert_sequence(
-                HRevolve_aux(l, 0, 1, cvect, wvect, rvect, uf,
+                hrevolve_aux(l, 0, 1, cvect, wvect, rvect, uf,
                              hoptp=hoptp, hopt=hopt, **params)
             )
             return sequence
-    list_mem = [j * uf + hopt[K][l - j][cmem - 1] + rvect[K] + hoptp[K][j - 1][cmem] for j in range(1, l)]
+    list_mem = [
+        j * uf
+        + hopt[K][l - j][cmem - 1]
+        + rvect[K] + hoptp[K][j - 1][cmem]
+        for j in range(1, l)
+        ]
     if min(list_mem) < hopt[K-1][l][cvect[K-1]]:
         jmin = argmin(list_mem)
         sequence.insert(Operation("Forwards", [0, jmin - 1]))
@@ -162,7 +215,7 @@ def HRevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
         )
         sequence.insert(Operation("Read", [K, 0]))
         sequence.insert_sequence(
-            HRevolve_aux(jmin - 1, K, cmem, cvect, wvect, rvect,
+            hrevolve_aux(jmin - 1, K, cmem, cvect, wvect, rvect,
                          hoptp=hoptp, hopt=hopt, **params)
         )
         return sequence
@@ -175,11 +228,35 @@ def HRevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
 
 
 def hrevolve(l, cvect, wvect, rvect, **params):
-    """ l : number of forward step to execute in the AC graph
-        cvect: the number of slots in each level of memory
-        wvect: the cost of writing to each level of memory
-        rvect: the cost of reading from each level of memory
-        Return the optimal sequence of makespan HOpt(l, architecture)"""
+    """HRevolve scheduler.
+    
+    Parameters
+    ----------
+    l : int
+        Number of forward step.
+    cvect : _type_
+        The number of slots in each level of memory.
+    wvect : _type_
+        The cost of writing to each level of memory.
+    rvect : _type_
+        The cost of reading from each level of memory.
+
+    Notes
+    -----
+    This function is a copy of the orginal HRevolve
+    function that composes the python H-Revolve implementation
+    published by Herrmann and Pallez [1] in the following
+    Gitlab repository:
+
+    https://gitlab.inria.fr/adjoint-computation/H-Revolve/tree/master
+
+    Returns
+    -------
+    _type_
+        The optimal sequence of makespan HOpt(l, architecture).
+    """
+    global follow 
+    follow = l
     params["wd"] = wvect
     params["rd"] = rvect
     return hrevolve_recurse(l, len(cvect)-1, cvect[-1], cvect, wvect, rvect,
@@ -187,51 +264,76 @@ def hrevolve(l, cvect, wvect, rvect, **params):
 
 
 def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **params):
-    """ l : number of forward step to execute in the AC graph
-        K: the level of memory
-        cmem: number of available slots in the K-th level of memory
-        cvect: the number of slots in each level of memory
-        wvect: the cost of writing to each level of memory
-        rvect: the cost of reading from each level of memory
-        Return the optimal sequence of makespan HOpt(l, architecture)"""
-   
+    """
+
+    Parameters
+    ----------
+    l : int
+        Total number of forward step.
+    K : _type_
+        The level of memory.
+    cmem : _type_
+        Number of available slots in the K-th level of memory.
+    cvect : _type_
+        The number of slots in each level of memory.
+    wvect : _type_
+        The cost of writing to each level of memory.
+    rvect : _type_
+        The cost of reading from each level of memory.
+    hoptp : _type_, optional
+        _description_, by default None
+    hopt : _type_, optional
+        _description_, by default None
+
+    Returns
+    -------
+    _type_
+        _description_
+
+    Raises
+    ------
+    KeyError
+        _description_
+    """
+    global follow 
+    follow = l
     parameters = dict(defaults)
     parameters.update(params)
     if (hoptp is None) or (hopt is None):
         (hoptp, hopt) = get_hopt_table(l, cvect, wvect, rvect, **parameters)
-    sequence = Sequence(Function("HRevolve", l, [K, cmem]),
+    sequence = Sequence(Function("hrevolve", l, [K, cmem]),
                         levels=len(cvect), concat=parameters["concat"])
     Operation = partial(Op, params=parameters)
     if l == 0:
-        sequence.insert(Operation("Backward", my_buddy(-1)))
+        sequence.insert(Operation("Backward", 0))
         return sequence
     if K == 0 and cmem == 0:
         raise KeyError("It's impossible to execute an AC graph of size > 0 with no memory.")
     if l == 1:
         sequence.insert(Operation("Write", [0, 0]))
         sequence.insert(Operation("Forward", 0))
-        sequence.insert(Operation("Backward", my_buddy(0)))
+        sequence.insert(Operation("Backward", 1))
         sequence.insert(Operation("Read", [0, 0]))
-        sequence.insert(Operation("Backward", my_buddy(-1)))
+        sequence.insert(Operation("Backward", 0))
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if K == 0:
         sequence.insert(Operation("Write", [0, 0]))
         sequence.insert_sequence(
-            HRevolve_aux(l, 0, cmem, cvect, wvect, rvect,
+            hrevolve_aux(l, 0, cmem, cvect, wvect, rvect,
                          hoptp=hoptp, hopt=hopt, **parameters)
         )
         return sequence
     if wvect[K] + hoptp[K][l][cmem] < hopt[K-1][l][cvect[K-1]]:
         sequence.insert(Operation("Write", [K, 0]))
         sequence.insert_sequence(
-            HRevolve_aux(l, K, cmem, cvect, wvect, rvect,
+            hrevolve_aux(l, K, cmem, cvect, wvect, rvect,
                          hoptp=hoptp, hopt=hopt, **parameters)
         )
         return sequence
     else:
         sequence.insert_sequence(
-            hrevolve_recurse(l, K-1, cvect[K-1], cvect, wvect, rvect,
+            hrevolve_recurse(l, K - 1, cvect[K-1], cvect, wvect, rvect,
                              hoptp=hoptp, hopt=hopt, **parameters)
         )
         return sequence
