@@ -62,12 +62,6 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
             _type_
                 _description_
 
-            Raises
-            ------
-            RuntimeError
-                _description_
-            RuntimeError
-                _description_
             """
             assert i >= 0 and i < len(self._schedule)
             action = self._schedule[i]
@@ -121,10 +115,8 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                 yield Forward(n_0, n_1)
             elif cp_action == "Backward":
                 if n_0 != self._n:
-                    print("aqui0")
                     raise RuntimeError("Invalid checkpointing state")
                 if n_0 != self._max_n - self._r - 1:
-                    print(n_0, self._max_n, self._r + 1)
                     raise RuntimeError("Invalid checkpointing state")
                     
                 yield from write_deferred_cp()
