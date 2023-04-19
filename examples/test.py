@@ -1,4 +1,6 @@
 from checkpoint_schedules import hrevolve_sequence
+
+
 class Forward():
     """Define the a forward solver.
 
@@ -70,8 +72,8 @@ fwd = Forward(steps)
 bwd = Backward()
 
 while True:
-    sch_iter = iter(schedule)
-    action = next(sch_iter)
+    schedule = iter(schedule)
+    action = next(schedule)
     if action.type == "Forwards":
         n_0, n_1 = action.index
         fwd.advance(n_0, n_1)

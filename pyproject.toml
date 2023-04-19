@@ -18,12 +18,9 @@ readme = "README.md"
 keywords = ["checkpointing", "adjoint"]
 # license = {text = "BSD-3-Clause"}
 # classifiers = [
-#     "Framework :: Django",
 #     "Programming Language :: Python :: 3",
 # ]
 # dependencies = [
-#     # "requests",
-#     # 'importlib-metadata; python_version<"3.8"',
 # ]
 [project.urls]
 # homepage = "https://example.com"

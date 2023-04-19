@@ -57,7 +57,6 @@ class Manage():
 
         @action.register(Write)
         def action_write(cp_action):
-            data.add(self.forward.ic)
             snapshots[cp_action.storage][cp_action.n] = (set(ics), set(data))
 
         @action.register(Forward)
@@ -78,7 +77,7 @@ class Manage():
         @action.register(Reverse)
         def action_reverse(cp_action):
             nonlocal model_r
-            self.backward.advance(cp_action.n1, cp_action.n0, self.forward.chk)
+            self.backward.advance(cp_action.n1, cp_action.n0)
             model_r += cp_action.n1 - cp_action.n0
 
         @action.register(Read)
@@ -95,9 +94,6 @@ class Manage():
             if len(cp[1]) > 0:
                 data.clear()
                 data.update(cp[1])
-
-            fwd_chk = next(iter(cp[1]))
-            self.forward.UpdateInitCondition(fwd_chk)
             
             if cp_action.delete:
                 del snapshots[cp_action.storage][cp_action.n]
