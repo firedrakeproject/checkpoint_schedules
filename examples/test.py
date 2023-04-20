@@ -1,6 +1,6 @@
 from checkpoint_schedules import hrevolve_sequence
-
-
+import copy
+import time as tm
 class Forward():
     """Define the a forward solver.
 
@@ -55,9 +55,9 @@ class Backward():
             i_np1 = i_n - 1
             i_n = i_np1
             
-
-steps = 10
-schk = 3
+start = tm.time()
+steps = 100
+schk = 20
 cvect = (schk, 0)
 wvect = (0.0, 0.1)
 rvect = (0.0, 0.1)
@@ -67,27 +67,29 @@ hrev_schedule = hrevolve_sequence.hrevolve(steps, cvect, wvect, rvect,
                                            cfwd=cfwd, cbwd=cbwd
                                            )
 schedule = list(hrev_schedule)
+schedule0 = copy.copy(schedule)
 fwd = Forward(steps)
-# bwd = Backward()
+bwd = Backward()
 
-# while True:
-#     schedule = iter(schedule)
-#     action = next(schedule)
-#     if action.type == "Forwards":
-#         n_0, n_1 = action.index
-#         fwd.advance(n_0, n_1)
-#     elif action.type == "Write":
-#         storage, n_0 = action.index
-#     elif action.type == "Forward":
-#         n_0 = action.index[0]
-#         n_1 = action.index[1]
-#         fwd.advance(n_0, n_1)
-#     elif action.type == "Backward":
-#         n_0 = action.index
-#         n_1 = n_0 - 1
-#         if action.index == 0:
-#             break
-#         bwd.advance(n_0, n_1)
+while True:
+    schedule0 = iter(schedule0)
+    action = next(schedule0)
+    if action.type == "Forwards":
+        n_0, n_1 = action.index
+        fwd.advance(n_0, n_1)
+    elif action.type == "Write":
+        storage, n_0 = action.index
+    elif action.type == "Forward":
+        n_0 = action.index
+        n_1 = n_0 + 1
+        fwd.advance(n_0, n_1)
+    elif action.type == "Backward":
+        n_0 = action.index
+        n_1 = n_0 - 1
+        if action.index == 0:
+            break
+        bwd.advance(n_0, n_1)
 
-# print("end")
+end = tm.time()
+print(end-start)
 
