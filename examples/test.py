@@ -68,26 +68,26 @@ hrev_schedule = hrevolve_sequence.hrevolve(steps, cvect, wvect, rvect,
                                            )
 schedule = list(hrev_schedule)
 fwd = Forward(steps)
-bwd = Backward()
+# bwd = Backward()
 
-while True:
-    schedule = iter(schedule)
-    action = next(schedule)
-    if action.type == "Forwards":
-        n_0, n_1 = action.index
-        fwd.advance(n_0, n_1)
-    elif action.type == "Write":
-        storage, n_0 = action.index
-    elif action.type == "Forward":
-        n_0 = action.index[0]
-        n_1 = action.index[1]
-        fwd.advance(n_0, n_1)
-    elif action.type == "Backward":
-        n_0 = action.index
-        n_1 = n_0 - 1
-        if action.index == 0:
-            break
-        bwd.advance(n_0, n_1)
+# while True:
+#     schedule = iter(schedule)
+#     action = next(schedule)
+#     if action.type == "Forwards":
+#         n_0, n_1 = action.index
+#         fwd.advance(n_0, n_1)
+#     elif action.type == "Write":
+#         storage, n_0 = action.index
+#     elif action.type == "Forward":
+#         n_0 = action.index[0]
+#         n_1 = action.index[1]
+#         fwd.advance(n_0, n_1)
+#     elif action.type == "Backward":
+#         n_0 = action.index
+#         n_1 = n_0 - 1
+#         if action.index == 0:
+#             break
+#         bwd.advance(n_0, n_1)
 
-print("end")
+# print("end")
 
