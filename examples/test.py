@@ -1,11 +1,11 @@
-from manage import Manage
-import sympy as sp
+from checkpoint_schedules import hrevolve_sequence
+import copy
 
 class Forward():
     """Define the a forward solver.
 
     """
-    def __init__(self):
+    def __init__(self, steps):
         self.exp = None
         self.chk_id = None
         self.steps = steps
@@ -27,14 +27,8 @@ class Forward():
         while i_n < n_1:
             i_np1 = i_n + 1
             i_n = i_np1
-            # print(i_n)
-           
-    def getsteps(self) -> int:
-        """Return the total time steps.
+        self.chk = i_n
 
-        """
-        return self.steps
-   
 
 class Backward():
     """This object define the a forward solver.
@@ -55,18 +49,41 @@ class Backward():
             Final time step in reverse state.
 
         """
+        print("<".rjust(n_1))
         i_n = n_1
         while i_n > n_0:
             i_np1 = i_n - 1
             i_n = i_np1
-        print("<".rjust(n_1))
             
-
-
-steps = 2
-schk = 2
-fwd = Forward()
+steps = 10
+schk = 3
+cvect = (2, 1)
+wvect = (0.0, 0.1)
+rvect = (0.0, 0.1)
+cfwd = 1.0
+cbwd = 2.0
+hrev_schedule = hrevolve_sequence.hrevolve(steps, cvect, wvect, rvect,
+                                           cfwd=cfwd, cbwd=cbwd
+                                           )
+schedule = list(hrev_schedule)
+fwd = Forward(steps)
 bwd = Backward()
-manage = Manage(fwd, bwd, schk, steps)
-manage.actions()
+schedule0 = copy.copy(schedule)
+while True:
+    schedule0 = iter(schedule0)
+    action = next(schedule0)
+    if action.type == "Write":
+        storage, n_0 = action.index
+    elif action.type == "Forward":
+        n_0 = action.index[0]
+        n_1 = action.index[1]
+        fwd.advance(n_0, n_1)
+    elif action.type == "Backward":
+        n_0 = action.index
+        n_1 = n_0 - 1
+        if action.index == 0:
+            break
+        bwd.advance(n_0, n_1)
+
 print("end")
+

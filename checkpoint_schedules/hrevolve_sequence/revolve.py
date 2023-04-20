@@ -1,7 +1,6 @@
 #!/usr/bin/python
 from .parameters import defaults
-from .basic_functions import (Operation as Op, Sequence, Function, Table, beta,
-                              my_buddy, argmin)
+from .basic_functions import (Operation as Op, Sequence, Function, Table, beta, argmin)
 from functools import partial
 
 
