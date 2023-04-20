@@ -17,11 +17,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with tlm_adjoint.  If not, see <https://www.gnu.org/licenses/>.
-
-from hrevolve_checkpointing.checkpoint_schedules import \
-    Clear, Configure, Forward, Reverse, Read, Write, EndForward, EndReverse
-from hrevolve_checkpointing.checkpoint_schedules import \
-    (HRevolveCheckpointSchedule)
+from checkpoint_schedules import\
+    HRevolveCheckpointSchedule, Clear, Configure, Forward, Reverse, Read, Write, EndForward, EndReverse
 
 import functools
 import pytest
