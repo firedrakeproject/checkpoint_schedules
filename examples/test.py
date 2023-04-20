@@ -1,6 +1,6 @@
 from checkpoint_schedules import hrevolve_sequence
 import copy
-
+import time as tm
 class Forward():
     """Define the a forward solver.
 
@@ -54,7 +54,8 @@ class Backward():
         while i_n > n_0:
             i_np1 = i_n - 1
             i_n = i_np1
-            
+
+start = tm.time()         
 steps = 100
 cvect = (20, 0)
 wvect = (0.0, 0.1)
@@ -84,5 +85,5 @@ while True:
             break
         bwd.advance(n_0, n_1)
 
-print("Worked!")
-
+end = tm.time()
+print(end-start)
