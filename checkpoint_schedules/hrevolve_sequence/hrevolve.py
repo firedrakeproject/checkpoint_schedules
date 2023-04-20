@@ -33,18 +33,6 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub=2, uf=1, **params):
     ----------
     lmax : int
         Total checkpoint of a forward solver.
-<<<<<<< HEAD
-    cvect : _type_
-        _description_
-    wvect : _type_
-        _description_
-    rvect : _type_
-        _description_
-    ub : int
-        Cost of the backward steps.
-    uf : int
-        Cost of the forward steps.
-=======
     cvect : int
         The number of slots in each level of memory.
     wvect : tuple
@@ -66,7 +54,6 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub=2, uf=1, **params):
     Adjoint Computation on Synchronous Hierarchical
     Platforms", ACM Transactions on Mathematical
     Software  46(2), 2020.
->>>>>>> e68e082 (WIP)
 
     Returns
     -------
@@ -181,17 +168,19 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
         for index in range(l - 1, -1, -1):
             if index != l - 1:
                 sequence.insert(Operation("Read", [0, 0]))
-            sequence.insert(Operation("Forwards", [0, index]))
-            sequence.insert(Operation("Backward", my_buddy(index)))
+            sequence.insert(Operation("Forwards", [0, index+1]))
+            # sequence.insert(Operation("Backward", my_buddy(index)))
+            sequence.insert(Operation("Backward", index+1))
         sequence.insert(Operation("Read", [0, 0]))
-        sequence.insert(Operation("Backward", my_buddy(-1)))
+        sequence.insert(Operation("Backward", index))
+        # sequence.insert(Operation("Backward", my_buddy(-1)))
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if K == 0:
         list_mem = [j * uf + hopt[0][l - j][cmem - 1] + rvect[0] + hoptp[0][j - 1][cmem] for j in range(1, l)]
         if min(list_mem) < hoptp[0][l][1]:
             jmin = argmin(list_mem)
-            sequence.insert(Operation("Forwards", [0, jmin - 1]))
+            sequence.insert(Operation("Forwards", [0, jmin]))
             sequence.insert_sequence(
                 hrevolve_recurse(l - jmin, 0, cmem - 1, cvect, wvect, rvect,
                                  hoptp=hoptp, hopt=hopt, **params).shift(jmin)
@@ -208,7 +197,6 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
                              hoptp=hoptp, hopt=hopt, **params)
             )
             return sequence
-<<<<<<< HEAD
     list_mem = [
         j * uf
         + hopt[K][l - j][cmem - 1]
@@ -234,28 +222,6 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
     #                          hoptp=hoptp, hopt=hopt, **params)
     #     )
     #     return sequence
-=======
-    list_mem = [j * uf + hopt[K][l - j][cmem - 1] + rvect[K] + hoptp[K][j - 1][cmem] for j in range(1, l)]
-    if min(list_mem) < hopt[K-1][l][cvect[K-1]]:
-        jmin = argmin(list_mem)
-        sequence.insert(Operation("Forwards", [0, jmin - 1]))
-        sequence.insert_sequence(
-            hrevolve_recurse(l - jmin, K, cmem - 1, cvect, wvect, rvect,
-                             hoptp=hoptp, hopt=hopt, **params).shift(jmin)
-        )
-        sequence.insert(Operation("Read", [K, 0]))
-        sequence.insert_sequence(
-            hrevolve_aux(jmin - 1, K, cmem, cvect, wvect, rvect,
-                         hoptp=hoptp, hopt=hopt, **params)
-        )
-        return sequence
-    else:
-        sequence.insert_sequence(
-            hrevolve_recurse(l, K-1, cvect[K-1], cvect, wvect, rvect,
-                             hoptp=hoptp, hopt=hopt, **params)
-        )
-        return sequence
->>>>>>> e68e082 (WIP)
 
 
 def hrevolve(l, cvect, wvect, rvect, **params):

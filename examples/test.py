@@ -56,8 +56,8 @@ class Backward():
             i_n = i_np1
             
 
-steps = 2
-schk = 1
+steps = 10
+schk = 3
 cvect = (schk, 0)
 wvect = (0.0, 0.1)
 rvect = (0.0, 0.1)

@@ -284,14 +284,11 @@ class Sequence:
         del self.sequence[operation_index]
 
     def insert_sequence(self, sequence):
-        print(sequence)
         self.sequence.append(sequence)
-        print(sequence)
         self.makespan += sequence.makespan
         if self.function.name == "hrevolve" or self.function.name == "hrevolve_aux":
             for i in range(len(self.storage)):
                 self.storage[i] += sequence.storage[i]
-            print("aqui")
         else:
             self.memory += sequence.memory
             self.disk += sequence.disk
@@ -302,7 +299,6 @@ class Sequence:
         if self.function.name == "hrevolve" or self.function.name == "hrevolve_aux":
             for i in range(len(self.storage)):
                 self.storage[i] = [x + size for x in self.storage[i]]
-            print("aqui")
         else:
             self.memory = [x + size if type(x) is int else (x[0], x[1] + size) if x[0] == branch else (x[0], x[1]) for x in self.memory]
             self.disk = [x + size if type(x) is int else (x[0], x[1] + size) if x[0] == branch else (x[0], x[1]) for x in self.disk]
@@ -349,7 +345,7 @@ class Sequence:
             elif op.type == "Forward":
                 op.type = "Forward_branch"
                 op.index = [index, op.index]
-                print("aqui")
+
             elif op.type == "Forwards":
                 op.type = "Forwards_branch"
                 op.index = [index] + op.index
