@@ -61,13 +61,12 @@ schk = 1
 cvect = (schk, 0)
 wvect = (0.0, 0.1)
 rvect = (0.0, 0.1)
-uf = 1.0
-ub = 2.0
+cfwd = 1.0
+cbwd = 2.0
 hrev_schedule = hrevolve_sequence.hrevolve(steps, cvect, wvect, rvect,
-                                           uf=uf, ub=ub
+                                           cfwd=cfwd, cbwd=cbwd
                                            )
 schedule = list(hrev_schedule)
-
 fwd = Forward(steps)
 bwd = Backward()
 

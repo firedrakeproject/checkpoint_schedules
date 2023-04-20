@@ -177,22 +177,9 @@ class Function:
 
     def __repr__(self):
         if self.name == "hrevolve" or self.name == "hrevolve_aux":
-            return (
-                self.name
-                + "_"
-                + str(self.index[0])
-                + "(" + str(self.l)
-                + ", " 
-                + str(self.index[1])
-                + ")"
-                )
+            return self.name + "_" + str(self.index[0]) + "(" + str(self.l) + ", " + str(self.index[1]) + ")"
         else:
-            return (
-                self.name
-                + "(" + str(self.l)
-                + ", " + str(self.index)
-                + ")"
-                )
+            return self.name + "(" + str(self.l) + ", " + str(self.index) + ")"
 
 
 class Sequence:
@@ -221,14 +208,14 @@ class Sequence:
     def __iter__(self):
         return iter(self.concat_sequence(self.concat))
 
-    # def canonical(self):
-    #     if self.function.name == "Disk-Revolve":
-    #         concat = 2
-    #     if self.function.name == "1D-Revolve" or self.function.name == "Revolve":
-    #         concat = 1
-    #     l = [x.l + 1 for x in self.concat_sequence(concat=concat) if x.__class__.__name__ == "Function"]
-    #     l.reverse()
-    #     return l
+    def canonical(self):
+        if self.function.name == "Disk-Revolve":
+            concat = 2
+        if self.function.name == "1D-Revolve" or self.function.name == "Revolve":
+            concat = 1
+        l = [x.l + 1 for x in self.concat_sequence(concat=concat) if x.__class__.__name__ == "Function"]
+        l.reverse()
+        return l
 
     def concat_sequence(self, concat):
         l = []

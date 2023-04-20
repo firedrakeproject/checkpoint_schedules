@@ -35,8 +35,16 @@ class Manage():
         self.forward = forward
         self.backward = backward
         self.tot_steps = total_steps
+        self.action_list = []
 
     def actions(self):
+        """Actions.
+
+        Raises
+        ------
+        TypeError
+            _description_
+        """
         @functools.singledispatch
         def action(cp_action):
             raise TypeError("Unexpected action")
@@ -139,8 +147,9 @@ class Manage():
 
             while True:
                 cp_action = next(hrev_schedule)
+                self.action_list.append(cp_action)
                 action(cp_action)
-
+                
                 assert model_n is None or model_n == hrev_schedule.n()
                 assert model_r == hrev_schedule.r()
 
