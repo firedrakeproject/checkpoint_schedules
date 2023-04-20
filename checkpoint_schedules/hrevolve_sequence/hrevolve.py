@@ -20,8 +20,7 @@ Refs:
     Software  46(2), 2020.
 """
 from .parameters import defaults
-from .basic_functions import (Operation as Op, Sequence, Function, my_buddy,
-                              argmin)
+from .basic_functions import (Operation as Op, Sequence, Function, argmin)
 from functools import partial
 
 
@@ -168,7 +167,7 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
         for index in range(l - 1, -1, -1):
             if index != l - 1:
                 sequence.insert(Operation("Read", [0, 0]))
-            sequence.insert(Operation("Forwards", [0, index+1]))
+            sequence.insert(Operation("Forward", [0, index+1]))
             # sequence.insert(Operation("Backward", my_buddy(index)))
             sequence.insert(Operation("Backward", index+1))
         sequence.insert(Operation("Read", [0, 0]))
@@ -180,7 +179,7 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
         list_mem = [j * uf + hopt[0][l - j][cmem - 1] + rvect[0] + hoptp[0][j - 1][cmem] for j in range(1, l)]
         if min(list_mem) < hoptp[0][l][1]:
             jmin = argmin(list_mem)
-            sequence.insert(Operation("Forwards", [0, jmin]))
+            sequence.insert(Operation("Forward", [0, jmin]))
             sequence.insert_sequence(
                 hrevolve_recurse(l - jmin, 0, cmem - 1, cvect, wvect, rvect,
                                  hoptp=hoptp, hopt=hopt, **params).shift(jmin)
@@ -205,7 +204,7 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
         ]
     # if min(list_mem) < hopt[K-1][l][cvect[K-1]]:
     #     jmin = argmin(list_mem)
-    #     sequence.insert(Operation("Forwards", [0, jmin - 1]))
+    #     sequence.insert(Operation("Forward", [0, jmin - 1]))
     #     sequence.insert_sequence(
     #         hrevolve_recurse(l - jmin, K, cmem - 1, cvect, wvect, rvect,
     #                          hoptp=hoptp, hopt=hopt, **params).shift(jmin)
@@ -314,7 +313,7 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
                         levels=len(cvect), concat=parameters["concat"])
     Operation = partial(Op, params=parameters)
     if l == 0:
-        sequence.insert(Operation("Backward", my_buddy(-1)))
+        sequence.insert(Operation("Backward", 0))
         return sequence
     if K == 0 and cmem == 0:
         raise KeyError("It's impossible to execute an AC graph of size > 0 with no memory.")

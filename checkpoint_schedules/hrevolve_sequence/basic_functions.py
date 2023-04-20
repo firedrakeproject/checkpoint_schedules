@@ -4,7 +4,6 @@ import math
 
 official_names = {
     "Forward": "F",
-    "Forwards": "F",
     "Backward": "B",
     "Checkpoint": "C",
     "Read_disk": "RD",
@@ -18,17 +17,12 @@ official_names = {
     "Discard": "D",
     # "ForwardMode": "FM",
     "Forward_branch": "F",
-    "Forwards_branch": "F",
+    # "Forward_branch": "F",
     "Backward_branch": "B",
     "Turn": "T",
     "Discard_branch": "DB",
     "Checkpoint_branch": "C"
 }
-
-
-def my_buddy(index):
-    return index + 1
-
 
 def beta(x, y):
     if y < 0:
@@ -84,11 +78,9 @@ class Operation:
             raise ValueError("Unreconized operation name: " + operation_type)
         self.type = operation_type
         self.index = operation_index
-        if self.type == "Forwards" and self.index[0] == self.index[1]:
-            self.type = "Forward"
+        if self.type == "Forward" and self.index[0] == self.index[1]:
             self.index = self.index[0]
-        if self.type == "Forwards_branch" and self.index[1] == self.index[2]:
-            self.type = "Forward_branch"
+        if self.type == "Forward_branch" and self.index[1] == self.index[2]:
             self.index = [self.index[0], self.index[1]]
         self.params = params
 
@@ -98,11 +90,9 @@ class Operation:
         if type(self.index) is int:
             return official_names[self.type] + "_" + str(self.index)
         elif type(self.index) is list:
-            if self.type == "Forwards":
+            if self.type == "Forward":
                 return official_names[self.type] + "_" + str(self.index[0]) + "->" + str(self.index[1])
-            # if self.type == "ForwardMode":
-            #     return official_names[self.type] + "_" + str(self.index[0]) + "->" + str(self.index[1])
-            elif self.type == "Forwards_branch":
+            elif self.type == "Forward_branch":
                 return official_names[self.type] + "^" + str(self.index[0]) + "_" + str(self.index[1]) + "->" + str(self.index[2])
             else:
                 return official_names[self.type] + "^" + str(self.index[0]) + "_" + str(self.index[1])
@@ -110,7 +100,7 @@ class Operation:
     def cost(self):
         if self.type == "Forward":
             return self.params["uf"]
-        if self.type == "Forwards":
+        if self.type == "Forward":
             a = (self.index[1] - self.index[0] + 1) * self.params["uf"]
             return (self.index[1] - self.index[0] + 1) * self.params["uf"]
         # if self.type == "ForwardMode":
@@ -138,8 +128,6 @@ class Operation:
         if self.type == "Discard":
             return 0
         if self.type == "Forward_branch":
-            return self.params["uf"]
-        if self.type == "Forwards_branch":
             return (self.index[2] - self.index[1] + 1) * self.params["uf"]
         if self.type == "Backward_branch":
             return self.params["ub"]
@@ -155,16 +143,17 @@ class Operation:
         if type(self.index) is int:
             self.index += size
         elif type(self.index) is list:
-            if self.type == "Forwards":
+            if self.type == "Forward":
                 self.index[0] += size
                 self.index[1] += size
             elif self.type == "Forwards_multi":
                 self.index[1] += size
                 self.index[2] += size
-            elif self.type in ["Forward_branch", "Forwards_branch", "Discard_branch", "Checkpoint_branch", "Backward_branch"]:
+            elif self.type in ["Forward_branch", "Discard_branch", "Checkpoint_branch", "Backward_branch"]:
                 if self.index[0] == branch:
                     for i in range(1, len(self.index)):
                         self.index[i] += size
+                        print(self.index[i])
             else:
                 self.index[1] += size
 
@@ -345,10 +334,6 @@ class Sequence:
             elif op.type == "Forward":
                 op.type = "Forward_branch"
                 op.index = [index, op.index]
-
-            elif op.type == "Forwards":
-                op.type = "Forwards_branch"
-                op.index = [index] + op.index
             elif op.type == "Backward":
                 op.type = "Backward_branch"
                 op.index = [index, op.index]
@@ -393,16 +378,13 @@ class Sequence:
             elif op.type == "Forward":
                 op.type = "Forward_branch"
                 op.index = [index, op.index]
-            elif op.type == "Forwards":
-                op.type = "Forwards_branch"
-                op.index = [index] + op.index
             elif op.type == "Backward":
                 op.type = "Backward_branch"
                 op.index = [index, op.index]
             elif op.type == "Checkpoint":
                 op.type = "Checkpoint_branch"
                 op.index = [index, op.index]
-            elif op.type in ["Forward_branch", "Forwards_branch", "Turn", "Discard_branch", "Checkpoint", "Backward_branch"]:
+            elif op.type in ["Forward_branch", "Turn", "Discard_branch", "Checkpoint", "Backward_branch"]:
                 continue
             elif op.type in ["Read_disk", "Write_disk", "Discard_disk"]:
                 ValueError("Cannot use convert_new_to_branch on sequences from two-memory architecture")

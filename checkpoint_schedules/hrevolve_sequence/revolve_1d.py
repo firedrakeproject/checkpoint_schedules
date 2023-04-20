@@ -1,8 +1,7 @@
 #!/usr/bin/python
 
 from .parameters import defaults
-from .basic_functions import (Operation as Op, Sequence, Function, Table,
-                              my_buddy, argmin)
+from .basic_functions import (Operation as Op, Sequence, Function, Table, argmin)
 from .revolve import revolve, get_opt_0_table
 from functools import partial
 
