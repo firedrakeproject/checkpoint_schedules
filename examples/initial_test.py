@@ -63,8 +63,8 @@ class Backward():
             
 
 
-steps = 10
-schk = 3
+steps = 1
+schk = 1
 fwd = Forward()
 bwd = Backward()
 manage = Manage(fwd, bwd, schk, steps)

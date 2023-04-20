@@ -32,7 +32,7 @@ from .basic_functions import (Operation as Op, Sequence, Function, my_buddy,
 from functools import partial
 follow = 0
 
-def get_hopt_table(lmax, cvect, wvect, rvect, ub=1, uf=1, **params):
+def get_hopt_table(lmax, cvect, wvect, rvect, ub=2, uf=1, **params):
     """Compute the HOpt table for architecture and l=0...lmax.
         This computation uses a dynamic program.
 
@@ -46,10 +46,10 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub=1, uf=1, **params):
         _description_
     rvect : _type_
         _description_
-    ub : _type_
-        Cost of the forward steps, by default 1.
-    uf : _type_
-        Cost of the backward steps, by default 1.
+    ub : int
+        Cost of the backward steps.
+    uf : int
+        Cost of the forward steps.
 
     Returns
     -------
@@ -155,7 +155,7 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
     if l == 1:
         if wvect[0] + rvect[0] < rvect[K]:
             sequence.insert(Operation("Write", [0, 0]))
-        sequence.insert(Operation("Forward", 0))
+        sequence.insert(Operation("Forward", [0, 1]))
         sequence.insert(Operation("Backward", 1))
         if wvect[0] + rvect[0] < rvect[K]:
             sequence.insert(Operation("Read", [0, 0]))
@@ -206,25 +206,25 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
         + rvect[K] + hoptp[K][j - 1][cmem]
         for j in range(1, l)
         ]
-    if min(list_mem) < hopt[K-1][l][cvect[K-1]]:
-        jmin = argmin(list_mem)
-        sequence.insert(Operation("Forwards", [0, jmin - 1]))
-        sequence.insert_sequence(
-            hrevolve_recurse(l - jmin, K, cmem - 1, cvect, wvect, rvect,
-                             hoptp=hoptp, hopt=hopt, **params).shift(jmin)
-        )
-        sequence.insert(Operation("Read", [K, 0]))
-        sequence.insert_sequence(
-            hrevolve_aux(jmin - 1, K, cmem, cvect, wvect, rvect,
-                         hoptp=hoptp, hopt=hopt, **params)
-        )
-        return sequence
-    else:
-        sequence.insert_sequence(
-            hrevolve_recurse(l, K-1, cvect[K-1], cvect, wvect, rvect,
-                             hoptp=hoptp, hopt=hopt, **params)
-        )
-        return sequence
+    # if min(list_mem) < hopt[K-1][l][cvect[K-1]]:
+    #     jmin = argmin(list_mem)
+    #     sequence.insert(Operation("Forwards", [0, jmin - 1]))
+    #     sequence.insert_sequence(
+    #         hrevolve_recurse(l - jmin, K, cmem - 1, cvect, wvect, rvect,
+    #                          hoptp=hoptp, hopt=hopt, **params).shift(jmin)
+    #     )
+    #     sequence.insert(Operation("Read", [K, 0]))
+    #     sequence.insert_sequence(
+    #         hrevolve_aux(jmin - 1, K, cmem, cvect, wvect, rvect,
+    #                      hoptp=hoptp, hopt=hopt, **params)
+    #     )
+    #     return sequence
+    # else:
+    #     sequence.insert_sequence(
+    #         hrevolve_recurse(l, K-1, cvect[K-1], cvect, wvect, rvect,
+    #                          hoptp=hoptp, hopt=hopt, **params)
+    #     )
+    #     return sequence
 
 
 def hrevolve(l, cvect, wvect, rvect, **params):
@@ -311,13 +311,14 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
         raise KeyError("It's impossible to execute an AC graph of size > 0 with no memory.")
     if l == 1:
         sequence.insert(Operation("Write", [0, 0]))
-        sequence.insert(Operation("Forward", 0))
+        sequence.insert(Operation("Forward", [0, 1]))
         sequence.insert(Operation("Backward", 1))
         sequence.insert(Operation("Read", [0, 0]))
         sequence.insert(Operation("Backward", 0))
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if K == 0:
+        # first store
         sequence.insert(Operation("Write", [0, 0]))
         sequence.insert_sequence(
             hrevolve_aux(l, 0, cmem, cvect, wvect, rvect,
@@ -332,6 +333,7 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
         )
         return sequence
     else:
+        # ask firtly here and back to this function for K=0
         sequence.insert_sequence(
             hrevolve_recurse(l, K - 1, cvect[K-1], cvect, wvect, rvect,
                              hoptp=hoptp, hopt=hopt, **parameters)

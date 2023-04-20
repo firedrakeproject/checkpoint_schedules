@@ -41,7 +41,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
         self._exhausted = False
 
         cvect = (snapshots_in_ram, snapshots_on_disk)
-        schedule = hrevolve(max_n-1, cvect, wvect, rvect,
+        schedule = hrevolve(max_n, cvect, wvect, rvect,
                             uf=uf, ub=ub, **kwargs)
         
         self._schedule = list(schedule)
@@ -52,14 +52,13 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
         def action(i):
             """Provide the actions.
 
-            Parameters
+            Parameterss
             ----------
             i : int
                 Action index.
 
             Returns
             -------
-            _type_
                 _description_
 
             """

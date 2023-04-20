@@ -56,8 +56,8 @@ class Backward():
             i_n = i_np1
             
 
-steps = 10
-schk = 3
+steps = 2
+schk = 1
 cvect = (schk, 0)
 wvect = (0.0, 0.1)
 rvect = (0.0, 0.1)
@@ -80,8 +80,8 @@ while True:
     elif action.type == "Write":
         storage, n_0 = action.index
     elif action.type == "Forward":
-        n_0 = action.index
-        n_1 = n_0 + 1
+        n_0 = action.index[0]
+        n_1 = action.index[1]
         fwd.advance(n_0, n_1)
     elif action.type == "Backward":
         n_0 = action.index
@@ -89,6 +89,6 @@ while True:
         if action.index == 0:
             break
         bwd.advance(n_0, n_1)
-        
+
 print("end")
 
