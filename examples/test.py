@@ -55,9 +55,8 @@ class Backward():
             i_np1 = i_n - 1
             i_n = i_np1
             
-steps = 10
-schk = 3
-cvect = (2, 1)
+steps = 100
+cvect = (20, 0)
 wvect = (0.0, 0.1)
 rvect = (0.0, 0.1)
 cfwd = 1.0
@@ -85,5 +84,5 @@ while True:
             break
         bwd.advance(n_0, n_1)
 
-print("end")
+print("Worked!")
 
