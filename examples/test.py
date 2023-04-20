@@ -56,8 +56,8 @@ class Backward():
             i_n = i_np1
 
 start = tm.time()         
-steps = 100
-cvect = (20, 0)
+steps = 10
+cvect = (3, 0)
 wvect = (0.0, 0.1)
 rvect = (0.0, 0.1)
 cfwd = 1.0
@@ -69,6 +69,7 @@ schedule = list(hrev_schedule)
 fwd = Forward(steps)
 bwd = Backward()
 schedule0 = copy.copy(schedule)
+count = 0
 while True:
     schedule0 = iter(schedule0)
     action = next(schedule0)
@@ -84,6 +85,7 @@ while True:
         if action.index == 0:
             break
         bwd.advance(n_0, n_1)
-
+    count += 1
+    print(count)
 end = tm.time()
 print(end-start)
