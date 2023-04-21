@@ -1,17 +1,16 @@
 [build-system]
-requires = ["setuptools"]
+requires = [
+    "setuptools",
+]
 build-backend = "setuptools.build_meta"
-
-[tool.setuptools]
-packages = ["checkpoint_schedules"]
 
 [project]
 name = "checkpoint_schedules"
 version = "0.0.1"
-authors = [
-  {email = "....."},
-  {name = "....."}
-]
+# authors = [
+#   {email = "....."},
+#   {name = "....."}
+# ]
 description = "Schedules for incremental checkpointing of adjoint simulations."
 readme = "README.md"
 # requires-python = ">=3.7"
@@ -20,9 +19,9 @@ readme = "README.md"
 # classifiers = [
 #     "Programming Language :: Python :: 3",
 # ]
-# dependencies = [ numpy ]
+dependencies = ["numpy"]
 #[project.urls]
 # homepage = "https://example.com"
 # documentation = "https://readthedocs.org"
-repository = "https://github.com/firedrakeproject/checkpoint_schedules"
+# repository = "https://github.com/firedrakeproject/checkpoint_schedules"
 # changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
