@@ -222,7 +222,6 @@ def test_validity(schedule, schedule_kwargs,
 
     for s in S:
         # print(f"{n=:d} {s=:d}")
-       
         model_n = 0
         model_r = 0
 
