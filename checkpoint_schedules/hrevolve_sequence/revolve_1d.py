@@ -48,21 +48,21 @@ def revolve_1d(l, cm, opt_0=None, opt_1d=None, **params):
     sequence = Sequence(Function("1D-Revolve", l, cm), concat=parameters["concat"])
     Operation = partial(Op, params=parameters)
     if l == 0:
-        sequence.insert(Operation("Backward", my_buddy(-1, l-1)))
+        sequence.insert(Operation("Backward", 0))
         return sequence
     if l == 1:
         if cm == 0:
             sequence.insert(Operation("Forward", 0))
-            sequence.insert(Operation("Backward", my_buddy(0, l - 1)))
+            sequence.insert(Operation("Backward", 1))
             sequence.insert(Operation("Read_disk", 0))
-            sequence.insert(Operation("Backward", my_buddy(-1, l - 1)))
+            sequence.insert(Operation("Backward", 0))
             return sequence
         else:
             sequence.insert(Operation("Write_memory", 0))
             sequence.insert(Operation("Forward", 0))
-            sequence.insert(Operation("Backward", my_buddy(0, l - 1)))
+            sequence.insert(Operation("Backward", 1))
             sequence.insert(Operation("Read_memory", 0))
-            sequence.insert(Operation("Backward", my_buddy(-1, l - 1)))
+            sequence.insert(Operation("Backward", 0))
             sequence.insert(Operation("Discard_memory", 0))
             return sequence
     if one_read_disk:
