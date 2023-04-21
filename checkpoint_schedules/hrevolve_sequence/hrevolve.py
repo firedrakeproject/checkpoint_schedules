@@ -168,11 +168,9 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
             if index != l - 1:
                 sequence.insert(Operation("Read", [0, 0]))
             sequence.insert(Operation("Forward", [0, index+1]))
-            # sequence.insert(Operation("Backward", my_buddy(index)))
             sequence.insert(Operation("Backward", index+1))
         sequence.insert(Operation("Read", [0, 0]))
         sequence.insert(Operation("Backward", index))
-        # sequence.insert(Operation("Backward", my_buddy(-1)))
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if K == 0:
