@@ -1,5 +1,2 @@
-bluepy
-flake8 
-pytest 
-numpy
+bluepy 
 
