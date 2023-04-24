@@ -3,7 +3,7 @@
 
 # Add corect license text
 
-from .schedule import CheckpointSchedule, Clear, Configure, Forward, Reverse, \
+from .schedule import CheckpointSchedule, Forward, Reverse, \
     Read, Write, EndForward, EndReverse
 
 import enum

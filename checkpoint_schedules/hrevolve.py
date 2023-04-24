@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Add corect license text
-from .schedule import CheckpointSchedule, Clear, Configure, Forward, Reverse, \
+from .schedule import CheckpointSchedule, Forward, Reverse, \
     Read, Write, EndForward, EndReverse
 from .hrevolve_sequence import hrevolve
 import logging
@@ -13,27 +13,27 @@ __all__ = \
 
 
 class HRevolveCheckpointSchedule(CheckpointSchedule):
-    """H-Revolve Checnkpointing Schedule.
+    """H-Revolve checkpointing schedule.
 
     Attributes
     ----------
     max_n : int
         Total checkpoint of a foward solver.
     snapshots_in_ram : int
-        Number of checkpoints save in RAM.
+        Number of checkpoints saves in RAM.
     snapshots_on_disk : int
-        Number of checkpoints save in disk.
+        Number of checkpoints saves in disk.
     wvect : tuple, optional
-        _description_, by default (0.0, 0.1)
+        Cost of writing to each level of memory.
     rvect : tuple, optional
-        _description_, by default (0.0, 0.1)
-    uf : float, optional
-        _description_, by default 1.0
-    ub : float, optional
-        _description_, by default 2.0
+        Cost of reading from each level of memory.
+    cfwd : float, optional
+        Cost of the forward steps.
+    cfwd : float, optional
+        Cost of the backward steps.
     """
     def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk, *,
-                 wvect=(0.0, 0.1), rvect=(0.0, 0.1), uf=1.0, ub=2.0, **kwargs):
+                 wvect=(0.0, 0.1), rvect=(0.0, 0.1), cfwd=1.0, cbwd=2.0, **kwargs):
         
         super().__init__(max_n)
         self._snapshots_in_ram = snapshots_in_ram
@@ -42,33 +42,37 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
 
         cvect = (snapshots_in_ram, snapshots_on_disk)
         schedule = hrevolve(max_n, cvect, wvect, rvect,
-                            uf=uf, ub=ub, **kwargs)
+                            cfwd=cfwd, cbwd=cbwd, **kwargs)
         
         self._schedule = list(schedule)
 
+    # def forward_mode(self):
+    #     """Return the hevolve schedule of the forward mode.
+    #     """
+    #     fwd_action = []
+    #     n = 0
+    #         fwd_action.append(action)
+
+    # def reverse_mode (self):
+
     def iter(self):
-        """_summary_
+        """Checkpoint iterator.
         """
         def action(i):
-            """Provide the actions.
+            """Return a hrevove action.
 
-            Parameterss
+            Parameters
             ----------
             i : int
-                _description_
+                Index of the hrevolve sequence.
 
             Returns
             -------
-                _description_
-
-            Raises
-            ------
-            RuntimeError
-                _description_
-            RuntimeError
-                _description_
+            object
+                Action.
             """
             assert i >= 0 and i < len(self._schedule)
+
             action = self._schedule[i]
             cp_action = action.type
             if cp_action == "Forward":
@@ -113,9 +117,6 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
             if cp_action == "Forward":
                 if n_0 != self._n:
                     raise RuntimeError("Invalid checkpointing state")
-
-                yield Clear(True, True)
-                yield Configure(n_0 not in snapshots, False)
                 self._n = n_1
                 yield Forward(n_0, n_1)
             elif cp_action == "Backward":
@@ -126,8 +127,6 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
 
                 yield from write_deferred_cp()
 
-                yield Clear(True, True)
-                yield Configure(False, True)
                 self._n = n_0 + 1
                 yield Forward(n_0, n_0 + 1)
                 if self._n == self._max_n:
@@ -151,7 +150,6 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                     else:
                         cp_delete = False
 
-                yield Clear(True, True)
                 if cp_delete:
                     snapshots.remove(n_0)
                 self._n = n_0
@@ -183,8 +181,6 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
 
         if len(snapshots) != 0:
             raise RuntimeError("Invalid checkpointing state")
-
-        yield Clear(True, True)
 
         self._exhausted = True
         yield EndReverse(True)

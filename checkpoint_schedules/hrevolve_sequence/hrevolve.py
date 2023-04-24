@@ -24,7 +24,7 @@ from .basic_functions import (Operation as Op, Sequence, Function, argmin)
 from functools import partial
 
 
-def get_hopt_table(lmax, cvect, wvect, rvect, cbwd=2, cfwd=1, **params):
+def get_hopt_table(lmax, cvect, wvect, rvect, cbwd=2.0, cfwd=1.0, **params):
     """Compute the HOpt table for architecture and l=0...lmax.
     This computation uses a dynamic program.
 
@@ -35,12 +35,12 @@ def get_hopt_table(lmax, cvect, wvect, rvect, cbwd=2, cfwd=1, **params):
     cvect : int
         The number of slots in each level of memory.
     wvect : tuple
-        The cost of writing to each level of memory.
-    rvect : tupe
-        The cost of reading from each level of memory.
-    cbwd : int
+        Cost of writing to each level of memory.
+    rvect : tuple
+        Cost of reading from each level of memory.
+    cbwd : float
         Cost of the backward steps.
-    cfwd : int
+    cfwd : float
         Cost of the forward steps.
 
     Notes
