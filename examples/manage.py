@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from checkpoint_schedules import \
-    (HRevolveCheckpointSchedule, Write,
+    (HRevolveCheckpointSchedule, Write, Clear, Configure,
      Forward, EndForward, Reverse, Read, EndReverse)
 import functools
 
@@ -38,7 +38,7 @@ class Manage():
         self.action_list = []
 
     def actions(self):
-        """Actions of checkpoint scheduled managing.
+        """Actions.
 
         Raises
         ------
@@ -48,6 +48,20 @@ class Manage():
         @functools.singledispatch
         def action(cp_action):
             raise TypeError("Unexpected action")
+
+        @action.register(Clear)
+        def action_clear(cp_action):
+            if cp_action.clear_ics:
+                ics.clear()
+            if cp_action.clear_data:
+                data.clear()
+
+        @action.register(Configure)
+        def action_configure(cp_action):
+            nonlocal store_ics, store_data
+
+            store_ics = cp_action.store_ics
+            store_data = cp_action.store_data
 
         @action.register(Write)
         def action_write(cp_action):
@@ -107,37 +121,38 @@ class Manage():
             if not cp_action.exhausted:
                 model_r = 0
 
-        model_n = 0
-        model_r = 0
+        S = (self.save_chk,)
+        for s in S:
+            model_n = 0
+            model_r = 0
 
-        store_ics = False
-        ics = set()
-        store_data = False
-        data = set()
+            store_ics = False
+            ics = set()
+            store_data = False
+            data = set()
 
-        snapshots = {"RAM": {}, "disk": {}}
+            snapshots = {"RAM": {}, "disk": {}}
 
-        hrev_schedule = HRevolveCheckpointSchedule(self.tot_steps, self.save_chk, 0)
-        fwd_schedule = hrev_schedule.forwardmode()
-        bwd_schedule = 
-        if hrev_schedule is None:
-            print("Incompatible with schedule type")
+            hrev_schedule = HRevolveCheckpointSchedule(self.tot_steps, self.save_chk, 0)
 
-        assert hrev_schedule.n() == 0
-        assert hrev_schedule.r() == 0
-        assert (
-                hrev_schedule.max_n() is None
-                or hrev_schedule.max_n() == self.tot_steps
-                )
-        count = 0
-        while True:
-            cp_action = next(hrev_schedule)
-            self.action_list.append(cp_action)
-            action(cp_action)
-            count += 1
-            print(count)
-            assert model_n is None or model_n == hrev_schedule.n()
-            assert model_r == hrev_schedule.r()
+            if hrev_schedule is None:
+                print("Incompatible with schedule type")
 
-            if isinstance(cp_action, EndReverse):
-                break
+            assert hrev_schedule.n() == 0
+            assert hrev_schedule.r() == 0
+            assert (
+                    hrev_schedule.max_n() is None
+                    or hrev_schedule.max_n() == self.tot_steps
+                   )
+            count = 0
+            while True:
+                cp_action = next(hrev_schedule)
+                self.action_list.append(cp_action)
+                action(cp_action)
+                count += 1
+                print(count)
+                assert model_n is None or model_n == hrev_schedule.n()
+                assert model_r == hrev_schedule.r()
+
+                if isinstance(cp_action, EndReverse):
+                    break
