@@ -47,7 +47,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
         self._schedule = list(schedule)
 
     def iter(self):
-        """_summary_
+        """Iterator.
         """
         def action(i):
             """Provide the actions.
