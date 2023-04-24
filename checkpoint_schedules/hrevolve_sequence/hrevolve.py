@@ -57,7 +57,7 @@ def get_hopt_table(lmax, cvect, wvect, rvect, cbwd=2, cfwd=1, **params):
     Returns
     -------
     tuple(list, list)
-        _description_
+        Return optp (?) and opt (?).
     """
     K = len(cvect)
     assert len(wvect) == len(rvect) == len(cvect)
@@ -249,7 +249,7 @@ def hrevolve(l, cvect, wvect, rvect, **params):
 
     Returns
     -------
-    _type_
+    object
         The optimal sequence of makespan HOpt(l, architecture).
     """
     params["wd"] = wvect
@@ -259,7 +259,7 @@ def hrevolve(l, cvect, wvect, rvect, **params):
 
 
 def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **params):
-    """
+    """Hrevolve recurse.
 
     Parameters
     ----------
@@ -269,7 +269,7 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
         The level of memory.
     cmem : int
         Number of available slots in the K-th level of memory.
-        E.g., in two level of memory (RAM and Disk), cmem collects 
+        In two level of memory (RAM and Disk), `cmem` collects 
         the number of checkpoints saved in Disk.
     cvect : tuple
         The number of slots in each level of memory.
@@ -277,10 +277,10 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
         The cost of writing to each level of memory.
     rvect : tuple
         The cost of reading from each level of memory.
-    hoptp : _type_, optional
-        _description_, by default None
-    hopt : _type_, optional
-        _description_, by default None
+    hoptp : list, optional
+        ??, by default None
+    hopt : list, optional
+        ??, by default None
 
     Notes
     -----
@@ -295,13 +295,13 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
 
     Returns
     -------
-    _type_
-        _description_
+    object
+        Hrevolve sequence.
 
     Raises
     ------
     KeyError
-        _description_
+        If `K = 0` and `cmem = 0`.
     """
    
     parameters = dict(defaults)
