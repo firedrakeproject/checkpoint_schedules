@@ -24,9 +24,9 @@ from .basic_functions import (Operation as Op, Sequence, Function, argmin)
 from functools import partial
 
 
-def get_hopt_table(lmax, cvect, wvect, rvect, ub=2, uf=1, **params):
+def get_hopt_table(lmax, cvect, wvect, rvect, cbwd=2, cfwd=1, **params):
     """Compute the HOpt table for architecture and l=0...lmax.
-        This computation uses a dynamic program.
+    This computation uses a dynamic program.
 
     Parameters
     ----------
@@ -67,21 +67,21 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub=2, uf=1, **params):
     for k in range(K):
         mmax = cvect[k]
         for m in range(mmax + 1):
-            opt[k][0][m] = ub
-            optp[k][0][m] = ub
+            opt[k][0][m] = cbwd
+            optp[k][0][m] = cbwd
         for m in range(mmax + 1):
             if (m == 0) and (k == 0):
                 continue
-            optp[k][1][m] = uf + 2 * ub + rvect[0]
+            optp[k][1][m] = cfwd + 2 * cbwd + rvect[0]
             opt[k][1][m] = wvect[0] + optp[k][1][m]
     # Fill K = 0
     mmax = cvect[0]
     for l in range(2, lmax):
-        optp[0][l][1] = (l + 1) * ub + l * (l + 1) / 2 * uf + l * rvect[0]
+        optp[0][l][1] = (l + 1) * cbwd + l * (l + 1) / 2 * cfwd + l * rvect[0]
         opt[0][l][1] = wvect[0] + optp[0][l][1]
     for m in range(2, mmax + 1):
         for l in range(2, lmax):
-            optp[0][l][m] = min([j * uf + opt[0][l - j][m - 1] + rvect[0] + optp[0][j - 1][m] for j in range(1, l)] + [optp[0][l][1]])
+            optp[0][l][m] = min([j * cfwd + opt[0][l - j][m - 1] + rvect[0] + optp[0][j - 1][m] for j in range(1, l)] + [optp[0][l][1]])
             opt[0][l][m] = wvect[0] + optp[0][l][m]
     # Fill K > 0
     for k in range(1, K):
@@ -90,13 +90,13 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub=2, uf=1, **params):
             opt[k][l][0] = opt[k-1][l][cvect[k-1]]
         for m in range(1, mmax + 1):
             for l in range(1, lmax):
-                optp[k][l][m] = min([opt[k-1][l][cvect[k-1]]] + [j * uf + opt[k][l - j][m - 1] + rvect[k] + optp[k][j - 1][m] for j in range(1, l)])
+                optp[k][l][m] = min([opt[k-1][l][cvect[k-1]]] + [j * cfwd + opt[k][l - j][m - 1] + rvect[k] + optp[k][j - 1][m] for j in range(1, l)])
                 opt[k][l][m] = min(opt[k-1][l][cvect[k-1]], wvect[k] + optp[k][l][m])
     return (optp, opt)
 
 
 def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **params):
-    """_summary_
+    """Auxiliary function of the hrevolve schedule.
 
     Parameters
     ----------
@@ -138,9 +138,10 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
     Raises
     ------
     KeyError
-        _description_
+        If `cmem = 0`, `hrevolve_aux` should not be call.
+
     """
-    uf = params["uf"]
+    cfwd = params["cfwd"]
     if (hoptp is None) or (hopt is None):
         (hoptp, hopt) = get_hopt_table(l, cvect, wvect, rvect, **params)
     sequence = Sequence(Function("hrevolve_aux", l, [K, cmem]),
@@ -174,7 +175,7 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if K == 0:
-        list_mem = [j * uf + hopt[0][l - j][cmem - 1] + rvect[0] + hoptp[0][j - 1][cmem] for j in range(1, l)]
+        list_mem = [j * cfwd + hopt[0][l - j][cmem - 1] + rvect[0] + hoptp[0][j - 1][cmem] for j in range(1, l)]
         if min(list_mem) < hoptp[0][l][1]:
             jmin = argmin(list_mem)
             sequence.insert(Operation("Forward", [0, jmin]))
@@ -190,35 +191,35 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
             return sequence
         else:
             sequence.insert_sequence(
-                hrevolve_aux(l, 0, 1, cvect, wvect, rvect, uf,
+                hrevolve_aux(l, 0, 1, cvect, wvect, rvect, cfwd,
                              hoptp=hoptp, hopt=hopt, **params)
             )
             return sequence
     list_mem = [
-        j * uf
+        j * cfwd
         + hopt[K][l - j][cmem - 1]
         + rvect[K] + hoptp[K][j - 1][cmem]
         for j in range(1, l)
         ]
-    # if min(list_mem) < hopt[K-1][l][cvect[K-1]]:
-    #     jmin = argmin(list_mem)
-    #     sequence.insert(Operation("Forward", [0, jmin - 1]))
-    #     sequence.insert_sequence(
-    #         hrevolve_recurse(l - jmin, K, cmem - 1, cvect, wvect, rvect,
-    #                          hoptp=hoptp, hopt=hopt, **params).shift(jmin)
-    #     )
-    #     sequence.insert(Operation("Read", [K, 0]))
-    #     sequence.insert_sequence(
-    #         hrevolve_aux(jmin - 1, K, cmem, cvect, wvect, rvect,
-    #                      hoptp=hoptp, hopt=hopt, **params)
-    #     )
-    #     return sequence
-    # else:
-    #     sequence.insert_sequence(
-    #         hrevolve_recurse(l, K-1, cvect[K-1], cvect, wvect, rvect,
-    #                          hoptp=hoptp, hopt=hopt, **params)
-    #     )
-    #     return sequence
+    if min(list_mem) < hopt[K-1][l][cvect[K-1]]:
+        jmin = argmin(list_mem)
+        sequence.insert(Operation("Forward", [0, jmin - 1]))
+        sequence.insert_sequence(
+            hrevolve_recurse(l - jmin, K, cmem - 1, cvect, wvect, rvect,
+                             hoptp=hoptp, hopt=hopt, **params).shift(jmin)
+        )
+        sequence.insert(Operation("Read", [K, 0]))
+        sequence.insert_sequence(
+            hrevolve_aux(jmin - 1, K, cmem, cvect, wvect, rvect,
+                         hoptp=hoptp, hopt=hopt, **params)
+        )
+        return sequence
+    else:
+        sequence.insert_sequence(
+            hrevolve_recurse(l, K-1, cvect[K-1], cvect, wvect, rvect,
+                             hoptp=hoptp, hopt=hopt, **params)
+        )
+        return sequence
 
 
 def hrevolve(l, cvect, wvect, rvect, **params):
