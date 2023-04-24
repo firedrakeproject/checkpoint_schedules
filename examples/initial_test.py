@@ -1,5 +1,4 @@
-from manage import Manage
-import sympy as sp
+from checkpoint_schedules import HRevolveCheckpointSchedule
 import time as tm
 class Forward():
     """Define the a forward solver.
@@ -64,9 +63,20 @@ class Backward():
 start = tm.time()
 steps = 10
 schk = 3
-fwd = Forward()
-bwd = Backward()
-manage = Manage(fwd, bwd, schk, steps)
-manage.actions()
-end = tm.time()
-print(end-start)
+hrev_schedule = HRevolveCheckpointSchedule(steps, schk, 0)
+fwd_schedule = hrev_schedule.get_forward_schedule()
+bwd_schedule = hrev_schedule.get_reverse_schedule()
+
+print("end")
+# bwd_schedule = 
+# cp_action = next(hrev_schedule)
+# self.action_list.append(cp_action)
+# action(cp_action)
+# fwd = Forward()
+# bwd = Backward()
+
+
+# manage = Manage(fwd, bwd, schk, steps)
+# manage.actions()
+# end = tm.time()
+# print(end-start)

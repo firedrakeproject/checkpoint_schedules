@@ -118,7 +118,8 @@ class Manage():
         snapshots = {"RAM": {}, "disk": {}}
 
         hrev_schedule = HRevolveCheckpointSchedule(self.tot_steps, self.save_chk, 0)
-
+        fwd_schedule = hrev_schedule.forwardmode()
+        bwd_schedule = 
         if hrev_schedule is None:
             print("Incompatible with schedule type")
 
