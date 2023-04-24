@@ -22,10 +22,10 @@ class Manage():
     hrevolve_chedules : object
         Hrevolve schdules of the reverse mode.
     """
-    def __init__(self, forward, backward, hrevolve_chedules):
+    def __init__(self, forward, backward, hrevolve_schedules):
         self.forward = forward
         self.backward = backward
-        self.hrev_schedule = hrevolve_chedules
+        self.hrev_schedule = hrevolve_schedules
         self.action_list = []
 
     def actions(self):
@@ -77,13 +77,13 @@ class Manage():
             if not cp_action.exhausted:
                 model_r = 0
 
-        model_n = 0
+        model_n = hrev_schedule._max_n
         model_r = 0
 
         if hrev_schedule is None:
             print("Incompatible with schedule type")
 
-        assert hrev_schedule.n() == 0
+        assert hrev_schedule.n() == hrev_schedule._max_n
         assert hrev_schedule.r() == 0
         while True:
             cp_action = next(hrev_schedule)

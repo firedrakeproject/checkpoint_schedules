@@ -63,8 +63,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                 fwd_end_step = self._schedule[i].index[1]
             i+=1
         self.end_forward = (True, index_1)
-        
-        self.finalize(fwd_end_step)
+        self._n = fwd_end_step
         return self._schedule[index_0:index_1]
         
 
@@ -77,6 +76,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
             Reverse schedule list.
         """
         index_0 = self.end_forward[1]
+        
         return self._schedule[index_0: len(self._schedule)]
 
     def iter(self):
@@ -142,7 +142,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
             if cp_action == "Backward":
                 if n_0 != self._n:
                     raise RuntimeError("Invalid checkpointing state")
-                if n_0 != self._max_n - self._r - 1:
+                if n_0 != self._max_n - self._r:
                     raise RuntimeError("Invalid checkpointing state")
 
                 yield from write_deferred_cp()
