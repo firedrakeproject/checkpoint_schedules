@@ -87,7 +87,7 @@ class Manage():
         assert hrev_schedule.r() == 0
         while True:
             cp_action = next(hrev_schedule)
-            self.action_list.append(cp_action)
+            action(cp_action)
             assert model_n is None or model_n == hrev_schedule.n()
             assert model_r == hrev_schedule.r()
 

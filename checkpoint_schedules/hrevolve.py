@@ -100,16 +100,10 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
             action = reverse_schedule[i]
             cp_action = action.type
             if cp_action == "Forward":
-                n_0 = action.index
-                n_1 = n_0 + 1
+                [n_0, n_1] = action.index
                 storage = None
-            elif cp_action == "Forwards":
-                cp_action = "Forward"
-                n_0, n_1 = action.index
                 if n_1 <= n_0:
                     raise RuntimeError("Invalid schedule")
-                n_1 += 1
-                storage = None
             elif cp_action == "Backward":
                 n_0 = action.index
                 n_1 = None
@@ -148,18 +142,19 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                 yield from write_deferred_cp()
 
                 self._n = n_0
-                yield Forward(n_0, n_0 + 1)
-                if self._n == self._max_n:
-                    if self._r != 0:
-                        raise RuntimeError("Invalid checkpointing state")
-                    yield EndForward()
+                if self._n < self._max_n:
+                    yield Forward(n_0, n_1)
+                # 
+                #     if self._r != 0:
+                #         raise RuntimeError("Invalid checkpointing state")
+                #     yield EndForward()
                 self._r += 1
-                yield Reverse(n_0 + 1, n_0)
+                yield Reverse(n_0, n_0-1)
             elif cp_action == "Read":
                 if deferred_cp is not None:
                     raise RuntimeError("Invalid checkpointing state")
 
-                if n_0 == self._max_n - self._r - 1:
+                if n_0 == self._max_n - self._r:
                     cp_delete = True
                 elif i < len(self._schedule) - 2:
                     d_cp_action, (d_n_0, _, d_storage) = action(i + 2)
