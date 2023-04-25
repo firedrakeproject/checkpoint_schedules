@@ -11,6 +11,8 @@ __all__ = \
         "Reverse",
         "Read",
         "Write",
+        "Clear",
+        "Configure",
         "EndForward",
         "EndReverse",
         "CheckpointSchedule"
@@ -29,6 +31,37 @@ class CheckpointAction:
     def __eq__(self, other):
         return type(self) == type(other) and self.args == other.args
 
+class Clear(CheckpointAction):
+    """_summary_
+
+    Parameters
+    ----------
+    CheckpointAction : _type_
+        _description_
+    """
+    def __init__(self, clear_ics, clear_data):
+        super().__init__(clear_ics, clear_data)
+
+    @property
+    def clear_ics(self):
+        return self.args[0]
+
+    @property
+    def clear_data(self):
+        return self.args[1]
+
+
+class Configure(CheckpointAction):
+    def __init__(self, store_ics, store_data):
+        super().__init__(store_ics, store_data)
+
+    @property
+    def store_ics(self):
+        return self.args[0]
+
+    @property
+    def store_data(self):
+        return self.args[1]
 class Forward(CheckpointAction):
     """Forward action.
 

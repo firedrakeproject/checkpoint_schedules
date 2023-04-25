@@ -27,13 +27,13 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
         _description_, by default (0.0, 0.1)
     rvect : tuple, optional
         _description_, by default (0.0, 0.1)
-    uf : float, optional
+    cfwd : float, optional
         _description_, by default 1.0
-    ub : float, optional
+    cbwd : float, optional
         _description_, by default 2.0
     """
     def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk, *,
-                 wvect=(0.0, 0.1), rvect=(0.0, 0.1), uf=1.0, ub=2.0, **kwargs):
+                 wvect=(0.0, 0.1), rvect=(0.0, 0.1), cfwd=1.0, cbwd=2.0, **kwargs):
         
         super().__init__(max_n)
         self._snapshots_in_ram = snapshots_in_ram
@@ -42,7 +42,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
 
         cvect = (snapshots_in_ram, snapshots_on_disk)
         schedule = hrevolve(max_n, cvect, wvect, rvect,
-                            uf=uf, ub=ub, **kwargs)
+                            cfwd=cfwd, cbwd=cbwd, **kwargs)
         
         self._schedule = list(schedule)
 
@@ -72,16 +72,10 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
             action = self._schedule[i]
             cp_action = action.type
             if cp_action == "Forward":
-                n_0 = action.index
-                n_1 = n_0 + 1
-                storage = None
-            elif cp_action == "Forwards":
-                cp_action = "Forward"
                 n_0, n_1 = action.index
+                storage = None
                 if n_1 <= n_0:
                     raise RuntimeError("Invalid schedule")
-                n_1 += 1
-                storage = None
             elif cp_action == "Backward":
                 n_0 = action.index
                 n_1 = None
@@ -121,21 +115,21 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
             elif cp_action == "Backward":
                 if n_0 != self._n:
                     raise RuntimeError("Invalid checkpointing state")
-                if n_0 != self._max_n - self._r - 1:
+                if n_0 != self._max_n - self._r:
                     raise RuntimeError("Invalid checkpointing state")
 
                 yield from write_deferred_cp()
 
-                yield Clear(True, True)
-                yield Configure(False, True)
-                self._n = n_0 + 1
-                yield Forward(n_0, n_0 + 1)
+                # yield Clear(True, True)
+                # yield Configure(False, True)
+                # self._n = n_0 + 1
+                # yield Forward(n_0, n_0 + 1)
                 if self._n == self._max_n:
                     if self._r != 0:
                         raise RuntimeError("Invalid checkpointing state")
                     yield EndForward()
                 self._r += 1
-                yield Reverse(n_0 + 1, n_0)
+                yield Reverse(n_0, n_0-1)
             elif cp_action == "Read":
                 if deferred_cp is not None:
                     raise RuntimeError("Invalid checkpointing state")
