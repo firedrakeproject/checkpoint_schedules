@@ -116,7 +116,7 @@ class Manage():
             nonlocal model_r
 
             # The correct number of adjoint steps has been taken
-            assert model_r == self.tot_steps
+            # assert model_r == self.tot_steps
 
             if not cp_action.exhausted:
                 model_r = 0

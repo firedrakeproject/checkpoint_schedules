@@ -112,6 +112,10 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                 yield Configure(n_0 not in snapshots, False)
                 self._n = n_1
                 yield Forward(n_0, n_1)
+                if self._n == self._max_n:
+                    if self._r != 0:
+                        raise RuntimeError("Invalid checkpointing state")
+                    yield EndForward()
             elif cp_action == "Backward":
                 if n_0 != self._n:
                     raise RuntimeError("Invalid checkpointing state")
@@ -122,19 +126,15 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
 
                 # yield Clear(True, True)
                 # yield Configure(False, True)
-                # self._n = n_0 + 1
-                # yield Forward(n_0, n_0 + 1)
-                if self._n == self._max_n:
-                    if self._r != 0:
-                        raise RuntimeError("Invalid checkpointing state")
-                    yield EndForward()
+                # self._n = n_1
+                # yield Forward(n_0, n_1)
+   
                 self._r += 1
                 yield Reverse(n_0, n_0-1)
             elif cp_action == "Read":
                 if deferred_cp is not None:
                     raise RuntimeError("Invalid checkpointing state")
-
-                if n_0 == self._max_n - self._r - 1:
+                if n_0 == self._max_n - self._r:
                     cp_delete = True
                 elif i < len(self._schedule) - 2:
                     d_cp_action, (d_n_0, _, d_storage) = action(i + 2)
