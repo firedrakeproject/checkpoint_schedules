@@ -39,7 +39,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
         self._snapshots_in_ram = snapshots_in_ram
         self._snapshots_on_disk = snapshots_on_disk
         self._exhausted = False
-
+        self.end_forward = (False, None)
         cvect = (snapshots_in_ram, snapshots_on_disk)
         schedule = hrevolve(max_n, cvect, wvect, rvect,
                             cfwd=cfwd, cbwd=cbwd, **kwargs)
