@@ -101,7 +101,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                 yield Write(*deferred_cp)
                 deferred_cp = None
 
-        for i in range(len(self._schedule)):
+        for i in range(len(self._schedule)-1):
             cp_action, (n_0, n_1, storage) = action(i)
 
             if cp_action == "Forward":
@@ -126,9 +126,9 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
 
                 # yield Clear(True, True)
                 # yield Configure(False, True)
-                # self._n = n_1
-                # yield Forward(n_0, n_1)
-   
+                # self._n = n_0
+                # if n_0 < self._max_n:
+                #     yield Forward(n_0-1, n_0)
                 self._r += 1
                 yield Reverse(n_0, n_0-1)
             elif cp_action == "Read":
@@ -153,10 +153,10 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
             elif cp_action == "Write":
                 if n_0 != self._n:
                     raise RuntimeError("Invalid checkpointing state")
-
+                deferred_cp = (n_0, storage)
                 yield from write_deferred_cp()
 
-                deferred_cp = (n_0, storage)
+                
 
                 if i > 0:
                     r_cp_action, (r_n_0, _, _) = action(i - 1)

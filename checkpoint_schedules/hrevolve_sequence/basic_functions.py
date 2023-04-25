@@ -15,9 +15,7 @@ official_names = {
     "Read": "R",
     "Write": "W",
     "Discard": "D",
-    # "ForwardMode": "FM",
     "Forward_branch": "F",
-    # "Forward_branch": "F",
     "Backward_branch": "B",
     "Turn": "T",
     "Discard_branch": "DB",
@@ -101,7 +99,6 @@ class Operation:
         if self.type == "Forward":
             return self.params["uf"]
         if self.type == "Forward":
-            a = (self.index[1] - self.index[0] + 1) * self.params["uf"]
             return (self.index[1] - self.index[0] + 1) * self.params["uf"]
         # if self.type == "ForwardMode":
         #     return (self.index[1] - self.index[0] + 1) * self.params["uf"]

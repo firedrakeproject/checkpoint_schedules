@@ -144,13 +144,10 @@ class Manage():
                     hrev_schedule.max_n() is None
                     or hrev_schedule.max_n() == self.tot_steps
                    )
-            count = 0
             while True:
                 cp_action = next(hrev_schedule)
                 self.action_list.append(cp_action)
                 action(cp_action)
-                count += 1
-                print(count)
                 assert model_n is None or model_n == hrev_schedule.n()
                 assert model_r == hrev_schedule.r()
 

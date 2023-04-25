@@ -56,8 +56,8 @@ class Backward():
             i_n = i_np1
 
 start = tm.time()         
-steps = 100
-cvect = (30, 0)
+steps = 20
+cvect = (7, 0)
 wvect = (0.0, 0.1)
 rvect = (0.0, 0.1)
 cfwd = 1.0
@@ -84,7 +84,6 @@ while True:
         n_0 = action.index
         n_1 = n_0 - 1
         bwd.advance(n_0, n_1)
-    elif action.type == "Discard":
         if action.index == 0:
             break
         
