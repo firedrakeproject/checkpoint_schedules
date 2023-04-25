@@ -1,7 +1,10 @@
-from manage import Manage
-import sympy as sp
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+import functools
 import time as tm
-class Forward():
+from checkpoint_schedules import HRevolveCheckpointSchedule
+
+class FowardSolver():
     """Define the a forward solver.
 
     """
@@ -11,7 +14,7 @@ class Forward():
         self.steps = steps
         self.chk = None
 
-    def advance(self, n_0: int, n_1: int) -> None:
+    def advance(self, schedules):
         """Advance the foward equation.
 
         Parameters
@@ -22,21 +25,27 @@ class Forward():
             Final time step.
 
         """
-        print((">"*(n_1-n_0)).rjust(n_1))
-        i_n = n_0
-        while i_n < n_1:
+        print("Start forward.")
+        i_n = 0
+        i_w = 0
+        index_w = []
+        for sch in schedules:
+            if sch.type == "Write":
+                index_w.append(sch.index[1])
+        while i_n < self.steps:
+            if len(index_w) != 0 and i_n == index_w[0]:
+                if index_w[0] != 0:
+                    print((">"*(i_n-i_w)).rjust(i_n))
+                print("Writing checkpoint at step: ", i_n)
+                i_w = index_w[0]
+                index_w.pop(0)
             i_np1 = i_n + 1
+            
             i_n = i_np1
-        self.chk = i_n
-           
-    def getsteps(self) -> int:
-        """Return the total time steps.
+        print((">"*(i_n-i_w)).rjust(i_n))
+        print("End forward.")
 
-        """
-        return self.steps
-   
-
-class Backward():
+class BackwardSolver():
     """This object define the a forward solver.
 
     """
@@ -62,11 +71,11 @@ class Backward():
             i_n = i_np1
 
 start = tm.time()
-steps = 10
-schk = 3
-fwd = Forward()
-bwd = Backward()
-manage = Manage(fwd, bwd, schk, steps)
-manage.actions()
-end = tm.time()
-print(end-start)
+steps = 20
+schk = 7
+hrev_schedule = HRevolveCheckpointSchedule(steps, schk, 0)
+fwd_schedule = hrev_schedule.get_forward_schedule()
+bwd_schedule = hrev_schedule.get_reverse_schedule()
+
+fwd = FowardSolver()
+fwd.advance(fwd_schedule)
