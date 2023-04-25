@@ -123,12 +123,6 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                     raise RuntimeError("Invalid checkpointing state")
 
                 yield from write_deferred_cp()
-
-                # yield Clear(True, True)
-                # yield Configure(False, True)
-                # self._n = n_0
-                # if n_0 < self._max_n:
-                #     yield Forward(n_0-1, n_0)
                 self._r += 1
                 yield Reverse(n_0, n_0-1)
             elif cp_action == "Read":
@@ -155,9 +149,6 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                     raise RuntimeError("Invalid checkpointing state")
                 deferred_cp = (n_0, storage)
                 yield from write_deferred_cp()
-
-                
-
                 if i > 0:
                     r_cp_action, (r_n_0, _, _) = action(i - 1)
                     if r_cp_action == "Read":

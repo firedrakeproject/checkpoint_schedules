@@ -56,8 +56,8 @@ class Backward():
             i_n = i_np1
 
 start = tm.time()         
-steps = 20
-cvect = (7, 0)
+steps = 10
+cvect = (3, 0)
 wvect = (0.0, 0.1)
 rvect = (0.0, 0.1)
 cfwd = 1.0
@@ -73,7 +73,6 @@ schedule0 = copy.copy(schedule)
 while True:
     schedule0 = iter(schedule0)
     action = next(schedule0)
-    print(action)
     if action.type == "Write":
         storage, n_0 = action.index
     elif action.type == "Forward":
