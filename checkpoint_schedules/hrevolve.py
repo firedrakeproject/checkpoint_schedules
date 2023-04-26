@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Add corect license text
+
+# Add correct license text
+
 from .schedule import CheckpointSchedule, Clear, Configure, Forward, Reverse, \
     Read, Write, EndForward, EndReverse
 from .hrevolve_sequence import hrevolve
@@ -13,61 +15,23 @@ __all__ = \
 
 
 class HRevolveCheckpointSchedule(CheckpointSchedule):
-    """H-Revolve Checnkpointing Schedule.
-
-    Attributes
-    ----------
-    max_n : int
-        Total checkpoint of a foward solver.
-    snapshots_in_ram : int
-        Number of checkpoints save in RAM.
-    snapshots_on_disk : int
-        Number of checkpoints save in disk.
-    wvect : tuple, optional
-        _description_, by default (0.0, 0.1)
-    rvect : tuple, optional
-        _description_, by default (0.0, 0.1)
-    uf : float, optional
-        _description_, by default 1.0
-    ub : float, optional
-        _description_, by default 2.0
-    """
     def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk, *,
                  wvect=(0.0, 0.1), rvect=(0.0, 0.1), uf=1.0, ub=2.0, **kwargs):
-        
         super().__init__(max_n)
         self._snapshots_in_ram = snapshots_in_ram
         self._snapshots_on_disk = snapshots_on_disk
         self._exhausted = False
 
         cvect = (snapshots_in_ram, snapshots_on_disk)
-        schedule = hrevolve(max_n-1, cvect, wvect, rvect,
-                            uf=uf, ub=ub, **kwargs)
-        
+        schedule = hrevolve(max_n - 1, cvect, wvect, rvect,
+                                     uf=uf, ub=ub, **kwargs)
         self._schedule = list(schedule)
 
+        logger = logging.getLogger("tlm_adjoint.checkpointing")
+        logger.debug(f"H-Revolve schedule: {str(self._schedule):s}")
+
     def iter(self):
-        """_summary_
-        """
         def action(i):
-            """Provide the actions.
-
-            Parameterss
-            ----------
-            i : int
-                _description_
-
-            Returns
-            -------
-                _description_
-
-            Raises
-            ------
-            RuntimeError
-                _description_
-            RuntimeError
-                _description_
-            """
             assert i >= 0 and i < len(self._schedule)
             action = self._schedule[i]
             cp_action = action.type
@@ -96,12 +60,13 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
 
         if self._max_n is None:
             raise RuntimeError("Invalid checkpointing state")
-    
+
         snapshots = set()
         deferred_cp = None
 
         def write_deferred_cp():
             nonlocal deferred_cp
+
             if deferred_cp is not None:
                 snapshots.add(deferred_cp[0])
                 yield Write(*deferred_cp)

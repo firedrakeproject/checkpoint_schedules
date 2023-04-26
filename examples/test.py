@@ -56,8 +56,8 @@ class Backward():
             i_n = i_np1
             
 start = tm.time()
-steps = 100
-schk = 20
+steps = 11
+schk = 3
 cvect = (schk, 0)
 wvect = (0.0, 0.1)
 rvect = (0.0, 0.1)
