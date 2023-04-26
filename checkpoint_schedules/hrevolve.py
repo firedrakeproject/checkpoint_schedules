@@ -46,38 +46,38 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
         
         self._schedule = list(schedule)
 
-    def get_forward_schedule(self):
-        """Return the hevolve schedule of the forward mode.
+    # def get_forward_schedule(self):
+    #     """Return the hevolve schedule of the forward mode.
 
-        Returns
-        -------
-        list
-            Forward schedule list.
-        """
-        index_0 = 0
-        index_1 = None
-        i = 0
-        while index_1 is None:
-            if self._schedule[i].index[1] == self._max_n:
-                index_1 = i+1
-                fwd_end_step = self._schedule[i].index[1]
-            i+=1
-        self.end_forward = (True, index_1)
-        self._n = fwd_end_step
-        return self._schedule[index_0:index_1]
+    #     Returns
+    #     -------
+    #     list
+    #         Forward schedule list.
+    #     """
+    #     index_0 = 0
+    #     index_1 = None
+    #     i = 0
+    #     while index_1 is None:
+    #         if self._schedule[i].index[1] == self._max_n:
+    #             index_1 = i+1
+    #             fwd_end_step = self._schedule[i].index[1]
+    #         i+=1
+    #     self.end_forward = (True, index_1)
+    #     self._n = fwd_end_step
+    #     return self._schedule[index_0:index_1]
         
 
-    def get_reverse_schedule(self):
-        """Return the hevolve schedule of the backward mode.
+    # def get_reverse_schedule(self):
+    #     """Return the hevolve schedule of the backward mode.
 
-        Returns
-        -------
-        list
-            Reverse schedule list.
-        """
-        index_0 = self.end_forward[1]
+    #     Returns
+    #     -------
+    #     list
+    #         Reverse schedule list.
+    #     """
+    #     index_0 = self.end_forward[1]
         
-        return self._schedule[index_0: len(self._schedule)]
+    #     return self._schedule[index_0: len(self._schedule)]
 
     def iter(self):
         """Iterator.
