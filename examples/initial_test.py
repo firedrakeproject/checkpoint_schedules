@@ -71,11 +71,15 @@ class BackwardSolver():
             i_n = i_np1
 
 start = tm.time()
-steps = 20
-schk = 7
+steps = 10
+schk = 3
 hrev_schedule = HRevolveCheckpointSchedule(steps, schk, 0)
+
+print("hrevolve schedule: ", hrev_schedule._schedule)
 fwd_schedule = hrev_schedule.get_forward_schedule()
 bwd_schedule = hrev_schedule.get_reverse_schedule()
-
-fwd = FowardSolver()
-fwd.advance(fwd_schedule)
+print("Forward hrevolve schedule: ", fwd_schedule)
+print("Forward hrevolve schedule: ", bwd_schedule)
+# quit()
+# fwd = FowardSolver()
+# fwd.advance(fwd_schedule)
