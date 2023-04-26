@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 # Add correct license text
-
 from .schedule import CheckpointSchedule, Clear, Configure, Forward, Reverse, \
     Read, Write, EndForward, EndReverse
 from .hrevolve_sequence import hrevolve
