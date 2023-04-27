@@ -164,7 +164,7 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
         else:
             sequence.insert(Operation("Read", [K, 0]))
         sequence.insert(Operation("Backward", 0))
-        sequence.insert(Operation("Discard", [0, 0]))
+        # sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if K == 0 and cmem == 1:
         for index in range(l - 1, -1, -1):
@@ -176,7 +176,7 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
             sequence.insert(Operation("Discard_Forward", [0, index+1]))
         sequence.insert(Operation("Read", [0, 0]))
         sequence.insert(Operation("Backward", index))
-        sequence.insert(Operation("Discard", [0, 0]))
+        # sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if K == 0:
         list_mem = [j * cfwd + hopt[0][l - j][cmem - 1] + rvect[0] + hoptp[0][j - 1][cmem] for j in range(1, l)]
@@ -192,7 +192,6 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
                 hrevolve_aux(jmin - 1, 0, cmem, cvect, wvect, rvect,
                              hoptp=hoptp, hopt=hopt, **params)
             )
-            sequence.insert(Operation("Discard", [0, 0]))
             return sequence
         else:
             sequence.insert_sequence(
@@ -338,6 +337,7 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
             hrevolve_aux(l, 0, cmem, cvect, wvect, rvect,
                          hoptp=hoptp, hopt=hopt, **parameters)
         )
+        sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if wvect[K] + hoptp[K][l][cmem] < hopt[K-1][l][cvect[K-1]]:
         sequence.insert(Operation("Write", [K, 0]))
