@@ -56,8 +56,8 @@ class Backward():
             i_n = i_np1
 
 start = tm.time()         
-steps = 100
-cvect = (20, 0)
+steps = 11
+cvect = (3, 0)
 wvect = (0.0, 0.1)
 rvect = (0.0, 0.1)
 cfwd = 1.0
@@ -67,6 +67,8 @@ hrev_schedule = hrevolve_sequence.hrevolve(steps, cvect, wvect, rvect,
                                            )
 
 schedule = list(hrev_schedule)
+print(schedule)
+quit()
 fwd = Forward(steps)
 bwd = Backward()
 schedule0 = copy.copy(schedule)

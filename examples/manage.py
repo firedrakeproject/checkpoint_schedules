@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 from checkpoint_schedules import \
     (HRevolveCheckpointSchedule, Write, Clear, Configure,
      Forward, EndForward, Reverse, Read, EndReverse)
@@ -14,7 +11,6 @@ __all__ = \
 
 class Manage():
     """Manage the forward and backward solvers.
-
     This object manage the solvers with the employment of the
     hrevolve checkpointing.
 
@@ -28,7 +24,6 @@ class Manage():
         Number of checkpoint that will be stored.
     total_steps : int
         Total steps used to execute the solvers.
-
     """
     def __init__(self, forward, backward, save_chk, total_steps):
         self.save_chk = save_chk
@@ -39,7 +34,7 @@ class Manage():
 
     def actions(self):
         """Actions.
-
+        
         Raises
         ------
         TypeError
@@ -116,7 +111,7 @@ class Manage():
             nonlocal model_r
 
             # The correct number of adjoint steps has been taken
-            # assert model_r == self.tot_steps
+            assert model_r == self.tot_steps
 
             if not cp_action.exhausted:
                 model_r = 0
@@ -143,7 +138,7 @@ class Manage():
             assert (
                     hrev_schedule.max_n() is None
                     or hrev_schedule.max_n() == self.tot_steps
-                   )
+                )
             while True:
                 cp_action = next(hrev_schedule)
                 self.action_list.append(cp_action)

@@ -24,13 +24,13 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
     snapshots_on_disk : int
         Number of checkpoints save in disk.
     wvect : tuple, optional
-        _description_, by default (0.0, 0.1)
+        _description_
     rvect : tuple, optional
-        _description_, by default (0.0, 0.1)
+        _description_
     cfwd : float, optional
-        _description_, by default 1.0
+        _description_
     cbwd : float, optional
-        _description_, by default 2.0
+        _description_
     """
     def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk, *,
                  wvect=(0.0, 0.1), rvect=(0.0, 0.1), cfwd=1.0, cbwd=2.0, **kwargs):
@@ -46,7 +46,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
         
         self._schedule = list(schedule)
 
-    # def get_forward_schedule(self):
+    # def forward_schedule(self):
     #     """Return the hevolve schedule of the forward mode.
 
     #     Returns
@@ -67,7 +67,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
     #     return self._schedule[index_0:index_1]
         
 
-    # def get_reverse_schedule(self):
+    # def reverse_schedule(self):
     #     """Return the hevolve schedule of the backward mode.
 
     #     Returns
@@ -80,35 +80,16 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
     #     return self._schedule[index_0: len(self._schedule)]
 
     def iter(self):
-        """Iterator.
-        """
         def action(i):
-            """Provide the actions.
-
-            Parameterss
-            ----------
-            i : int
-                _description_
-
-            Returns
-            -------
-                _description_
-
-            Raises
-            ------
-            RuntimeError
-                _description_
-            RuntimeError
-                _description_
-            """
             assert i >= 0 and i < len(self._schedule)
             action = self._schedule[i]
             cp_action = action.type
             if cp_action == "Forward":
                 n_0, n_1 = action.index
-                storage = None
+                # n_1 = n_0 + 1
                 if n_1 <= n_0:
                     raise RuntimeError("Invalid schedule")
+                storage = None
             elif cp_action == "Backward":
                 n_0 = action.index
                 n_1 = None
@@ -123,18 +104,19 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
 
         if self._max_n is None:
             raise RuntimeError("Invalid checkpointing state")
-    
+
         snapshots = set()
         deferred_cp = None
 
         def write_deferred_cp():
             nonlocal deferred_cp
+
             if deferred_cp is not None:
                 snapshots.add(deferred_cp[0])
                 yield Write(*deferred_cp)
                 deferred_cp = None
 
-        for i in range(len(self._schedule)-1):
+        for i in range(len(self._schedule)-2):
             cp_action, (n_0, n_1, storage) = action(i)
 
             if cp_action == "Forward":
@@ -156,11 +138,17 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                     raise RuntimeError("Invalid checkpointing state")
 
                 yield from write_deferred_cp()
+
+                # yield Clear(True, True)
+                # yield Configure(False, True)
+                # self._n = n_0 + 1
+                # yield Forward(n_0, n_0 + 1)
                 self._r += 1
                 yield Reverse(n_0, n_0-1)
             elif cp_action == "Read":
                 if deferred_cp is not None:
                     raise RuntimeError("Invalid checkpointing state")
+
                 if n_0 == self._max_n - self._r:
                     cp_delete = True
                 elif i < len(self._schedule) - 2:
@@ -180,8 +168,10 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
             elif cp_action == "Write":
                 if n_0 != self._n:
                     raise RuntimeError("Invalid checkpointing state")
+                
                 deferred_cp = (n_0, storage)
                 yield from write_deferred_cp()
+
                 if i > 0:
                     r_cp_action, (r_n_0, _, _) = action(i - 1)
                     if r_cp_action == "Read":

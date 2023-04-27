@@ -15,17 +15,17 @@ official_names = {
     "Read": "R",
     "Write": "W",
     "Discard": "D",
-    "Discard_Forward": "DF",
+    # "Discard_Forward": "DF",
     "Forward_branch": "F",
     "Backward_branch": "B",
     "Turn": "T",
-    "Write_Forward": "WF",
-    "Write_Forward_memory": "DFM",
+    # "Write_Forward": "WF",
+    # "Write_Forward_memory": "DFM",
     "Discard_branch": "DB",
-    "Discard_Forward_branch": "DFB",
+    # "Discard_Forward_branch": "DFB",
     "Checkpoint_branch": "C",
-    "Discard_Forward_disk": "DFD",
-    "Discard_Forward_memory": "DFM",
+    # "Discard_Forward_disk": "DFD",
+    # "Discard_Forward_memory": "DFM",
 }
 
 def beta(x, y):
@@ -118,26 +118,26 @@ class Operation:
             return 0
         if self.type == "Write_memory":
             return 0
-        if self.type == "Write_Forward_memory":
-            return 0
+        # if self.type == "Write_Forward_memory":
+        #     return 0
         if self.type == "Discard_disk":
             return 0
         if self.type == "Discard_memory":
             return 0
-        if self.type == "Discard_Forward_disk":
-            return 0
-        if self.type == "Discard_Forward_memory":
-            return 0
+        # if self.type == "Discard_Forward_disk":
+        #     return 0
+        # if self.type == "Discard_Forward_memory":
+        #     return 0
         if self.type == "Read":
             return self.params["rd"][self.index[0]]
         if self.type == "Write":
             return self.params["wd"][self.index[0]]
-        if self.type == "Write_Forward":
-            return self.params["wd"][self.index[0]]
+        # if self.type == "Write_Forward":
+        #     return self.params["wd"][self.index[0]]
         if self.type == "Discard":
             return 0
-        if self.type == "Discard_Forward":
-            return 0
+        # if self.type == "Discard_Forward":
+        #     return 0
         if self.type == "Forward_branch":
             return (self.index[2] - self.index[1] + 1) * self.params["cfwd"]
         if self.type == "Backward_branch":
@@ -146,8 +146,8 @@ class Operation:
             return self.params["up"]
         if self.type == "Discard_branch":
             return 0
-        if self.type == "Discard_Forward_branch":
-            return 0
+        # if self.type == "Discard_Forward_branch":
+        #     return 0
         if self.type == "Checkpoint_branch":
             return 0
         raise ValueError("Unknown cost for operation type " + self.type)
@@ -164,7 +164,8 @@ class Operation:
                 self.index[2] += size
             elif self.type in [
                 "Forward_branch", "Discard_branch", 
-                "Discard_Forward_branch", "Checkpoint_branch", 
+                # "Discard_Forward_branch", 
+                "Checkpoint_branch", 
                 "Backward_branch"
                 ]:
                 if self.index[0] == branch:
@@ -267,8 +268,8 @@ class Sequence:
         self.makespan += operation.cost()
         if operation.type == "Write_memory":
             self.memory.append(operation.index)
-        if operation.type == "Write_Forward_memory":
-            self.memory.append(operation.index)
+        # if operation.type == "Write_Forward_memory":
+        #     self.memory.append(operation.index)
         if operation.type == "Write_disk":
             self.disk.append(operation.index)
         if operation.type == "Checkpoint":
@@ -282,8 +283,8 @@ class Sequence:
         self.makespan -= self.sequence[operation_index].cost()
         if self.sequence[operation_index].type == "Write_memory":
             self.memory.remove(self.sequence[operation_index].index)
-        if self.sequence[operation_index].type == "Write_Forward_memory":
-            self.memory.remove(self.sequence[operation_index].index)
+        # if self.sequence[operation_index].type == "Write_Forward_memory":
+        #     self.memory.remove(self.sequence[operation_index].index)
         if self.sequence[operation_index].type == "Write_disk":
             self.disk.remove(self.sequence[operation_index].index)
         if self.sequence[operation_index].type == "Write":
