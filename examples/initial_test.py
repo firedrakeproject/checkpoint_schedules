@@ -62,8 +62,8 @@ class Backward():
             i_n = i_np1
 
 start = tm.time()
-steps = 10
-schk = 3
+steps = 5
+schk = 2
 fwd = Forward()
 bwd = Backward()
 manage = Manage(fwd, bwd, schk, steps)
