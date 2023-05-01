@@ -171,9 +171,9 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
             if index != l - 1:
                 sequence.insert(Operation("Read", [0, 0]))
             sequence.insert(Operation("Forward", [0, index+1]))
-            # sequence.insert(Operation("Write_Forward", [0, index+1]))
+            sequence.insert(Operation("Write_Forward", [0, index+1]))
             sequence.insert(Operation("Backward", index+1))
-            # sequence.insert(Operation("Discard_Forward", [0, index+1]))
+            sequence.insert(Operation("Discard_Forward", [0, index+1]))
         sequence.insert(Operation("Read", [0, 0]))
         sequence.insert(Operation("Backward", index))
         # sequence.insert(Operation("Discard", [0, 0]))
@@ -323,9 +323,9 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
     if l == 1:
         sequence.insert(Operation("Write", [0, 0]))
         sequence.insert(Operation("Forward", [0, 1]))
-        # sequence.insert(Operation("Write_Forward", [0, 1]))
+        sequence.insert(Operation("Write_Forward", [0, 1]))
         sequence.insert(Operation("Backward", 1))
-        # sequence.insert(Operation("Discard_Forward", [0, 1]))
+        sequence.insert(Operation("Discard_Forward", [0, 1]))
         sequence.insert(Operation("Read", [0, 0]))
         sequence.insert(Operation("Backward", 0))
         sequence.insert(Operation("Discard", [0, 0]))

@@ -11,6 +11,7 @@ __all__ = \
         "Reverse",
         "Read",
         "Write",
+        # "WriteForwardData",
         "Clear",
         "Configure",
         "EndForward",
@@ -20,7 +21,8 @@ __all__ = \
 
 
 class CheckpointAction:
-    """_summary_
+    """Checkpoint action object.
+    
     """
     def __init__(self, *args):
         self.args = args
@@ -32,12 +34,14 @@ class CheckpointAction:
         return type(self) == type(other) and self.args == other.args
 
 class Clear(CheckpointAction):
-    """_summary_
+    """Clear checkpoint data.
 
-    Parameters
-    ----------
-    CheckpointAction : _type_
-        _description_
+    Args
+    ----
+    clear_ics : bool
+        If "True", the checkpoint data used to reatart the forward solver is cleared.
+    clear_data : bool
+        If "True", the latest forward checkpoint data is cleared.
     """
     def __init__(self, clear_ics, clear_data):
         super().__init__(clear_ics, clear_data)
@@ -52,6 +56,15 @@ class Clear(CheckpointAction):
 
 
 class Configure(CheckpointAction):
+    """Configure the type of checkpoint that is being saved.
+
+    Args
+    ----
+    store_ics : bool
+        If "True", ...
+    store_data : bool
+
+    """
     def __init__(self, store_ics, store_data):
         super().__init__(store_ics, store_data)
 
@@ -62,11 +75,12 @@ class Configure(CheckpointAction):
     @property
     def store_data(self):
         return self.args[1]
-class Forward(CheckpointAction):
-    """Forward action.
 
-    Attributes
-    ----------
+class Forward(CheckpointAction):
+    """Abstract forward action.
+
+    Args
+    ----
     n0 : int
         initial step.
     n1 : int
@@ -218,6 +232,41 @@ class Write(CheckpointAction):
             If "True", the checkpoint data at a step `n` is saved.
         """
         return self.args[1]
+
+
+# class WriteForwardData(CheckpointAction):
+#     """_summary_
+
+#     Parameters
+#     ----------
+#     CheckpointAction : _type_
+#         _description_
+#     """
+    
+#     def __init__(self, n, storage):
+#         super().__init__(n, storage)
+
+#     @property
+#     def n(self):
+#         """Step.
+
+#         Returns
+#         -------
+#         int
+#             Current step.
+#         """
+#         return self.args[0]
+
+#     @property
+#     def storage(self):
+#         """Checkpoint write.
+
+#         Returns
+#         -------
+#         bool
+#             If "True", the checkpoint data at a step `n` is saved.
+#         """
+#         return self.args[1]
 
 
 class EndForward(CheckpointAction):

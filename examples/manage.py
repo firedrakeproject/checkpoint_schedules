@@ -62,6 +62,10 @@ class Manage():
         def action_write(cp_action):
             snapshots[cp_action.storage][cp_action.n] = (set(ics), set(data))
 
+        # @action.register(WriteForwardData)
+        # def action_write_data():
+            
+
         @action.register(Forward)
         def action_forward(cp_action):
             nonlocal model_n

@@ -46,39 +46,6 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
         
         self._schedule = list(schedule)
 
-    # def forward_schedule(self):
-    #     """Return the hevolve schedule of the forward mode.
-
-    #     Returns
-    #     -------
-    #     list
-    #         Forward schedule list.
-    #     """
-    #     index_0 = 0
-    #     index_1 = None
-    #     i = 0
-    #     while index_1 is None:
-    #         if self._schedule[i].index[1] == self._max_n:
-    #             index_1 = i+1
-    #             fwd_end_step = self._schedule[i].index[1]
-    #         i+=1
-    #     self.end_forward = (True, index_1)
-    #     self._n = fwd_end_step
-    #     return self._schedule[index_0:index_1]
-        
-
-    # def reverse_schedule(self):
-    #     """Return the hevolve schedule of the backward mode.
-
-    #     Returns
-    #     -------
-    #     list
-    #         Reverse schedule list.
-    #     """
-    #     index_0 = self.end_forward[1]
-        
-    #     return self._schedule[index_0: len(self._schedule)]
-
     def iter(self):
         def action(i):
             assert i >= 0 and i < len(self._schedule)
@@ -86,7 +53,6 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
             cp_action = action.type
             if cp_action == "Forward":
                 n_0, n_1 = action.index
-                # n_1 = n_0 + 1
                 if n_1 <= n_0:
                     raise RuntimeError("Invalid schedule")
                 storage = None
@@ -94,7 +60,9 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                 n_0 = action.index
                 n_1 = None
                 storage = None
-            elif cp_action in ["Read", "Write", "Discard"]:
+            elif cp_action in ["Read", "Write",
+                               "Write_Forward", "Discard",
+                               "Discard_Forward"]:
                 storage, n_0 = action.index
                 n_1 = None
                 storage = {0: "RAM", 1: "disk"}[storage]
@@ -106,6 +74,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
             raise RuntimeError("Invalid checkpointing state")
 
         snapshots = set()
+        forward_data = set()
         deferred_cp = None
 
         def write_deferred_cp():
@@ -118,19 +87,25 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
 
         for i in range(len(self._schedule)-2):
             cp_action, (n_0, n_1, storage) = action(i)
-
+           
             if cp_action == "Forward":
                 if n_0 != self._n:
                     raise RuntimeError("Invalid checkpointing state")
-
-                yield Clear(True, True)
-                yield Configure(n_0 not in snapshots, False)
                 self._n = n_1
+                yield Clear(True, True)
+                d_cp_action, (d_n_0, _, d_storage) = action(i + 1)
+                if d_cp_action == "Write_Forward":
+                    forward_data.add(n_1)
+                    yield Configure(n_0 not in snapshots, True)
+                else:
+                    yield Configure(n_0 not in snapshots, False)
                 yield Forward(n_0, n_1)
+
                 if self._n == self._max_n:
                     if self._r != 0:
                         raise RuntimeError("Invalid checkpointing state")
                     yield EndForward()
+                    
             elif cp_action == "Backward":
                 if n_0 != self._n:
                     raise RuntimeError("Invalid checkpointing state")
@@ -139,26 +114,26 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
 
                 yield from write_deferred_cp()
 
-                # yield Clear(True, True)
-                # yield Configure(False, True)
-                # self._n = n_0 + 1
-                # yield Forward(n_0, n_0 + 1)
+                self._n = n_0
                 self._r += 1
                 yield Reverse(n_0, n_0-1)
+                d_cp_action, (d_n_0, _, d_storage) = action(i + 1)
+                if d_cp_action == "Discard_Forward":
+                    forward_data.remove(n_0)
             elif cp_action == "Read":
                 if deferred_cp is not None:
                     raise RuntimeError("Invalid checkpointing state")
 
                 if n_0 == self._max_n - self._r:
                     cp_delete = True
-                elif i < len(self._schedule) - 2:
-                    d_cp_action, (d_n_0, _, d_storage) = action(i + 2)
-                    if d_cp_action == "Discard":
-                        if d_n_0 != n_0 or d_storage != storage:
-                            raise RuntimeError("Invalid schedule")
-                        cp_delete = True
-                    else:
-                        cp_delete = False
+            
+                d_cp_action, (d_n_0, _, d_storage) = action(i + 2)
+                if d_cp_action == "Discard":
+                    if d_n_0 != n_0 or d_storage != storage:
+                        raise RuntimeError("Invalid schedule")
+                    cp_delete = True
+                else:
+                    cp_delete = False
 
                 yield Clear(True, True)
                 if cp_delete:
@@ -178,12 +153,24 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                         if r_n_0 != n_0:
                             raise RuntimeError("Invalid schedule")
                         yield from write_deferred_cp()
+            elif cp_action == "Write_Forward":
+                d_cp_action, (d_n_0, _, d_storage) = action(i + 2)
+                if d_cp_action != "Discard_Forward":
+                    raise RuntimeError("Invalid checkpointing state")
             elif cp_action == "Discard":
                 if i < 2:
                     raise RuntimeError("Invalid schedule")
                 r_cp_action, (r_n_0, _, r_storage) = action(i - 2)
                 if r_cp_action != "Read" \
                         or r_n_0 != n_0 \
+                        or r_storage != storage:
+                    raise RuntimeError("Invalid schedule")
+            elif cp_action == "Discard_Forward":
+                if i < 2:
+                    raise RuntimeError("Invalid schedule")
+                r_cp_action, (df_n_0, _, df_storage) = action(i - 2)
+                if r_cp_action != "Write_Forward" \
+                        or df_n_0 != n_0 \
                         or r_storage != storage:
                     raise RuntimeError("Invalid schedule")
             else:
