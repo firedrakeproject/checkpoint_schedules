@@ -44,6 +44,7 @@ class Clear(CheckpointAction):
         If "True", the latest forward checkpoint data is cleared.
     """
     def __init__(self, clear_ics, clear_data):
+        self.type = "Clear"
         super().__init__(clear_ics, clear_data)
 
     @property
@@ -66,6 +67,7 @@ class Configure(CheckpointAction):
 
     """
     def __init__(self, store_ics, store_data):
+        self.type = "Configure"
         super().__init__(store_ics, store_data)
 
     @property
@@ -87,6 +89,7 @@ class Forward(CheckpointAction):
         Final step.
     """
     def __init__(self, n0, n1):
+        self.type = "Forward"
         super().__init__(n0, n1)
 
     def __iter__(self):
@@ -132,6 +135,7 @@ class Reverse(CheckpointAction):
         Final step of reverse solver.  
     """
     def __init__(self, n1, n0):
+        self.type = "Reverse"
         super().__init__(n1, n0)
 
     def __iter__(self):
@@ -170,6 +174,7 @@ class Read(CheckpointAction):
     """Action read a checkpoint.
     """
     def __init__(self, n, storage, delete):
+        self.type = "Read"
         super().__init__(n, storage, delete)
 
     @property
@@ -209,6 +214,7 @@ class Read(CheckpointAction):
 class Write(CheckpointAction):
     
     def __init__(self, n, storage):
+        self.type = "Write"
         super().__init__(n, storage)
 
     @property
@@ -234,51 +240,18 @@ class Write(CheckpointAction):
         return self.args[1]
 
 
-# class WriteForwardData(CheckpointAction):
-#     """_summary_
-
-#     Parameters
-#     ----------
-#     CheckpointAction : _type_
-#         _description_
-#     """
-    
-#     def __init__(self, n, storage):
-#         super().__init__(n, storage)
-
-#     @property
-#     def n(self):
-#         """Step.
-
-#         Returns
-#         -------
-#         int
-#             Current step.
-#         """
-#         return self.args[0]
-
-#     @property
-#     def storage(self):
-#         """Checkpoint write.
-
-#         Returns
-#         -------
-#         bool
-#             If "True", the checkpoint data at a step `n` is saved.
-#         """
-#         return self.args[1]
-
-
 class EndForward(CheckpointAction):
     """End forward action.
     """
-    pass
+    def __init__(self):
+        self.type = "EndForward"
 
 
 class EndReverse(CheckpointAction):
     """End reverse action.
     """
     def __init__(self, exhausted):
+        self.type = "EndReverse"
         super().__init__(exhausted)
 
     @property
