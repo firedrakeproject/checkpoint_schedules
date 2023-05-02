@@ -11,7 +11,7 @@ paper "H-Revolve: A Framework for Adjoint Computation on
 Synchronous Hierarchical Platforms" by Herrmann and Pallez [1].
 
 Some minor modifications where made to adapt this libray for the
-checkpoint schedules API.
+checkpoint_schedules API.
 
 Refs:
 [1] Herrmann, Pallez, "H-Revolve: A Framework for
@@ -156,9 +156,9 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
         if wvect[0] + rvect[0] < rvect[K]:
             sequence.insert(Operation("Write", [0, 0]))
         sequence.insert(Operation("Forward", [0, 1]))
-        # sequence.insert(Operation("Write_Forward", [0, 1]))
+        sequence.insert(Operation("Write_Forward", [0, 1]))
         sequence.insert(Operation("Backward", 1))
-        # sequence.insert(Operation("Discard_Forward", [0, 1]))
+        sequence.insert(Operation("Discard_Forward", [0, 1]))
         if wvect[0] + rvect[0] < rvect[K]:
             sequence.insert(Operation("Read", [0, 0]))
         else:
@@ -227,7 +227,7 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
 
 
 def hrevolve(l, cvect, wvect, rvect, **params):
-    """hrevolve scheduler.
+    """H-Revolve scheduler.
     
     Parameters
     ----------
@@ -245,6 +245,7 @@ def hrevolve(l, cvect, wvect, rvect, **params):
     This function is a copy of the orginal hrevolve_aux
     function that composes the python H-Revolve implementation
     published by Herrmann and Pallez [1].
+
     Refs:
     [1] Herrmann, Pallez, "H-Revolve: A Framework for
     Adjoint Computation on Synchronous Hierarchical
@@ -263,7 +264,7 @@ def hrevolve(l, cvect, wvect, rvect, **params):
 
 
 def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **params):
-    """Hrevolve recurse.
+    """Hrevolve recurse schedule.
 
     Parameters
     ----------
@@ -274,7 +275,7 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
     cmem : int
         Number of available slots in the K-th level of memory.
         In two level of memory (RAM and Disk), `cmem` collects 
-        the number of checkpoints saved in Disk.
+        the number of checkpoints save in Disk.
     cvect : tuple
         The number of slots in each level of memory.
     wvect : tuple

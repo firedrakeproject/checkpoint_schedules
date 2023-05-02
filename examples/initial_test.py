@@ -5,9 +5,7 @@ from checkpoint_schedules import HRevolveCheckpointSchedule
 
 
 def solvers_with_hrevolve(fwd, bwd, chk_in_ram, chk_in_disk, steps):
-    """Manage the forward and backward solvers.
-    This object manage the solvers with the employment of the
-    hrevolve checkpointing.
+    """Forwad and Backward solvers with the employment of H-Revolve method.
 
     Parameters
     ----------
@@ -33,16 +31,18 @@ def solvers_with_hrevolve(fwd, bwd, chk_in_ram, chk_in_disk, steps):
         ics = set()
         data = set()
         snapshots = {"RAM": {}, "disk": {}}
-
+        fwd_data = {"RAM": {}, "disk": {}}
         if hrev_schedule is None:
             print("Incompatible with schedule type")
-
+        
         assert hrev_schedule.n() == 0
         assert hrev_schedule.r() == 0
         assert (
                 hrev_schedule.max_n() is None
                 or hrev_schedule.max_n() == steps
             )
+        # set the initial condition
+        ic = fwd.ic
         while True:
             cp_action = next(hrev_schedule)
             if cp_action.type == "Clear":
@@ -54,44 +54,50 @@ def solvers_with_hrevolve(fwd, bwd, chk_in_ram, chk_in_disk, steps):
                 store_ics = cp_action.store_ics
                 store_data = cp_action.store_data
             elif cp_action.type == "Write":
+                if store_ics:
+                    ics.add(ic)
+                    ic = None
                 assert ics is not None
-                snapshots[cp_action.storage][cp_action.n] = (set(ics), set(data))
+                snapshots[cp_action.storage][cp_action.n] = (set(ics))
+            elif cp_action.type == "WriteForward":
+                assert ic==cp_action.n
+                data.add(ic)
+                ic = None
             elif cp_action.type == "Forward":
+                assert len(ics) == 1
                 fwd.advance(cp_action.n0, cp_action.n1)
                 n1 = min(cp_action.n1, steps)
                 model_n = n1
-                if store_ics:
-                    ics.add(n1)
-                if store_data:
-                    data.add(n1)
                 if n1 == steps:
                     hrev_schedule.finalize(n1)
+                ic = n1
             elif cp_action.type == "Read":
                 cp = snapshots[cp_action.storage][cp_action.n]
                 model_n = None
-
-                if len(cp[0]) > 0:
+                if len(cp) > 0:
                     ics.clear()
-                    ics.update(cp[0])
-                    model_n = cp_action.n
-
-                if len(cp[1]) > 0:
+                    ics.update(cp)
+                if len(data) > 0:
                     data.clear()
-                    data.update(cp[1])
+                    data.update(cp)
                 
+                model_n = cp_action.n
                 if cp_action.delete:
                     del snapshots[cp_action.storage][cp_action.n]
             elif cp_action.type == "Reverse":
+                assert len(data) == 1 or len(ics) == 1
+                if len(data)==1 and len(ics)==1:
+                    raise RuntimeError("Invalid number of checkpoint saves.")
+                
                 bwd.advance(cp_action.n1, cp_action.n0)
                 model_r += cp_action.n1 - cp_action.n0
+
             elif cp_action.type == "EndForward":
                 assert model_n is not None and model_n == steps
             elif cp_action.type == "EndReverse":
                 assert model_r == steps
                 if not cp_action.exhausted:
-                    model_r = 0
-
-            # action_list.append(cp_action)           
+                    model_r = 0         
             assert model_n is None or model_n == hrev_schedule.n()
             assert model_r == hrev_schedule.r()
             if cp_action.type == "EndReverse":
@@ -99,17 +105,27 @@ def solvers_with_hrevolve(fwd, bwd, chk_in_ram, chk_in_disk, steps):
 
 
 class Forward():
-    """Define the a forward solver.
+    """Forward solver.
 
     """
-    def __init__(self):
-        self.exp = None
+    def __init__(self, ic):
         self.chk_id = None
         self.steps = steps
         self.chk = None
+        self.ic = ic
+
+    def initial_condition(self):
+        """Initial condition.
+
+        Returns
+        -------
+        float
+            _description_
+        """
+        return self.ic
 
     def advance(self, n_0: int, n_1: int) -> None:
-        """Advance the foward equation.
+        """A simple example to illustrate the forwad advance.
 
         Parameters
         ----------
@@ -141,7 +157,7 @@ class Backward():
         self.sol = None
 
     def advance(self, n_1: int, n_0: int) -> None:
-        """Execute the backward equation.
+        """A simple example to illustrate the forwad advance.
 
         Parameters
         ----------
@@ -158,10 +174,12 @@ class Backward():
 
 
 start = tm.time()
-steps = 5
-schk = 2
-fwd = Forward()
+init_condition = 0
+steps = 100
+sm_chk = 2
+sd_chk = 0
+fwd = Forward(init_condition)
 bwd = Backward()
-solvers_with_hrevolve(fwd, bwd, schk, 0, steps)
+solvers_with_hrevolve(fwd, bwd, sm_chk, sd_chk, steps)
 end = tm.time()
 print(end-start)

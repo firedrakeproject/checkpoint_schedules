@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Add corect license text
 from .schedule import CheckpointSchedule, Clear, Configure, Forward, Reverse, \
-    Read, Write, EndForward, EndReverse
+    Read, Write, EndForward, EndReverse, WriteForward
 from .hrevolve_sequence import hrevolve
 import logging
 
@@ -46,6 +46,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
         
         self._schedule = list(schedule)
         self.snapshots = set()
+        self.forward_data = set()
 
     def iter(self):
         """Iterator.
@@ -76,12 +77,13 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
         if self._max_n is None:
             raise RuntimeError("Invalid checkpointing state")
         
-        forward_data = set()
         deferred_cp = None
 
         def write_deferred_cp():
             nonlocal deferred_cp
             if deferred_cp is not None:
+                yield Clear(True, True)
+                yield Configure(True, False)
                 self.snapshots.add(deferred_cp[0])
                 yield Write(*deferred_cp)
                 deferred_cp = None
@@ -91,22 +93,13 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
 
             if cp_action == "Forward":
                 if n_0 != self._n:
-                    raise RuntimeError("Invalid checkpointing state")
-                wf_cp_action, _ = action(i + 1)
-                if wf_cp_action == "Write_Forward":
-                    forward_data.add(n_1)
-                    yield Clear(True, True)
-                    yield Configure(False, True)
-                elif (wf_cp_action == "Write"):
-                    yield Clear(True, True)
-                    yield Configure(True, False)
+                    raise RuntimeError("Invalid checkpointing state")            
                 self._n = n_1
                 yield Forward(n_0, n_1)
                 if self._n == self._max_n:
                     if self._r != 0:
                         raise RuntimeError("Invalid checkpointing state")
                     yield EndForward()
-                    
             elif cp_action == "Backward":
                 if n_0 != self._n:
                     raise RuntimeError("Invalid checkpointing state")
@@ -121,8 +114,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                     Reverse(n_0, n_0)
                 d_cp_action, (d_n_0, _, d_storage) = action(i + 1)
                 if d_cp_action == "Discard_Forward":
-                    forward_data.remove(n_0)
-                    yield Clear(False, True)      
+                    self.forward_data.remove(n_0)     
             elif cp_action == "Read":
                 if deferred_cp is not None:
                     raise RuntimeError("Invalid checkpointing state")
@@ -137,8 +129,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                     cp_delete = True
                 else:
                     cp_delete = False
-
-                yield Clear(True, True)
+                yield Clear(True, True) 
                 if cp_delete:
                     self.snapshots.remove(n_0)
                 self._n = n_0
@@ -146,8 +137,9 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
             elif cp_action == "Write":
                 if n_0 != self._n:
                     raise RuntimeError("Invalid checkpointing state")
-                yield from write_deferred_cp()
                 deferred_cp = (n_0, storage)
+                yield from write_deferred_cp()
+                
                 if i > 0:
                     r_cp_action, (r_n_0, _, _) = action(i - 1)
                     if r_cp_action == "Read":
@@ -158,6 +150,12 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                 d_cp_action, (d_n_0, _, d_storage) = action(i + 2)
                 if d_cp_action != "Discard_Forward":
                     raise RuntimeError("Invalid checkpointing state")
+
+                self.forward_data.add(n_0)
+                yield Clear(True, True)
+                yield Configure(False, True)
+                yield WriteForward(n_0, storage)
+
             elif cp_action == "Discard":
                 if i < 2:
                     raise RuntimeError("Invalid schedule")
