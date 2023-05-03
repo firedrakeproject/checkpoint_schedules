@@ -1,6 +1,7 @@
 #!/usr/bin/python
 from .parameters import defaults
-from .basic_functions import (Operation as Op, Sequence, Function, Table, beta, argmin)
+from .basic_functions import (Operation as Op, Sequence, Function, Table, beta,
+                              my_buddy, argmin)
 from functools import partial
 
 
@@ -53,7 +54,7 @@ def revolve(l, cm, opt_0=None, **params):
     sequence = Sequence(Function("Revolve", l, cm), concat=parameters["concat"])
     Operation = partial(Op, params=parameters)
     if l == 0:
-        sequence.insert(Operation("Backward", 0))
+        sequence.insert(Operation("Backward", my_buddy(-1, l-1)))
         sequence.insert(Operation("Discard_memory", 0))
         return sequence
     elif cm == 0:
@@ -61,9 +62,9 @@ def revolve(l, cm, opt_0=None, **params):
     elif l == 1:
         sequence.insert(Operation("Write_memory", 0))
         sequence.insert(Operation("Forward", 0))
-        sequence.insert(Operation("Backward", 1))
+        sequence.insert(Operation("Backward", my_buddy(0, l-1)))
         sequence.insert(Operation("Read_memory", 0))
-        sequence.insert(Operation("Backward", 0))
+        sequence.insert(Operation("Backward", my_buddy(-1, l-1)))
         sequence.insert(Operation("Discard_memory", 0))
         return sequence
     elif cm == 1:
@@ -72,9 +73,9 @@ def revolve(l, cm, opt_0=None, **params):
             if index != l - 1:
                 sequence.insert(Operation("Read_memory", 0))
             sequence.insert(Operation("Forwards", [0, index]))
-            sequence.insert(Operation("Backward", index+1))
+            sequence.insert(Operation("Backward", my_buddy(index, l-1)))
         sequence.insert(Operation("Read_memory", 0))
-        sequence.insert(Operation("Backward", 0))
+        sequence.insert(Operation("Backward", my_buddy(-1, l-1)))
         sequence.insert(Operation("Discard_memory", 0))
         return sequence
     list_mem = [j*parameters["uf"] + opt_0[cm-1][l-j] + opt_0[cm][j-1] for j in range(1, l)]

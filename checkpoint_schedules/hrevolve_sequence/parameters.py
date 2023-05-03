@@ -4,8 +4,8 @@ import argparse
 
 # Default parameter values. Not all parameters are used by all algorithms.
 defaults = {
-    "cfwd": 1,  # Cost of a forward step.
-    "cbwd": 1,  # Cost of a backward step.
+    "uf": 1,  # Cost of a forward step.
+    "ub": 1,  # Cost of a backward step.
     "up": 1,  # Cost of the loss function.
     "wd": 5,  # Cost of writing to disk.
     "rd": 5,  # Cost of reading from disk.
@@ -88,8 +88,8 @@ def parse_arguments_Revolve():
     parser = argparse.ArgumentParser(description='Compute Revolve with l and cm')
     parser.add_argument("l", help="Size of the Adjoint Computation problem (number of foward steps)", type=int)
     parser.add_argument("cm", help="Memory Size", type=int)
-    parser.add_argument("--cfwd", help="Cost of the forward steps (default: 1)", default=defaults["cfwd"], type=float, metavar="float", dest="cfwd")
-    parser.add_argument("--cbwd", help="Cost of the backward steps (default: 1)", default=defaults["cbwd"], type=float, metavar="float", dest="cbwd")
+    parser.add_argument("--uf", help="Cost of the forward steps (default: 1)", default=defaults["uf"], type=float, metavar="float", dest="uf")
+    parser.add_argument("--ub", help="Cost of the backward steps (default: 1)", default=defaults["ub"], type=float, metavar="float", dest="ub")
     parser.add_argument("--concat", help="Level of concatenation between 0 and 2? (default: 0)", default=defaults["concat"], type=int, metavar="int", dest="concat")
     parser.add_argument("--print_table", help="Name of the file to print the table of results", default=defaults["print_table"], type=str, metavar="str", dest="print_table")
     return vars(parser.parse_args())
@@ -99,8 +99,8 @@ def parse_arguments_1D_Revolve():
     parser = argparse.ArgumentParser(description='Compute 1D-Revolve with l and cm')
     parser.add_argument("l", help="Size of the Adjoint Computation problem (number of foward steps)", type=int)
     parser.add_argument("cm", help="Memory Size", type=int)
-    parser.add_argument("--cfwd", help="Cost of the forward steps (default: 1)", default=defaults["cfwd"], type=float, metavar="float", dest="cfwd")
-    parser.add_argument("--cbwd", help="Cost of the backward steps (default: 1)", default=defaults["cbwd"], type=float, metavar="float", dest="cbwd")
+    parser.add_argument("--uf", help="Cost of the forward steps (default: 1)", default=defaults["uf"], type=float, metavar="float", dest="uf")
+    parser.add_argument("--ub", help="Cost of the backward steps (default: 1)", default=defaults["ub"], type=float, metavar="float", dest="ub")
     parser.add_argument("--wd", help="Cost of writting in the disk (default: 5)", default=defaults["wd"], type=float, metavar="float", dest="wd")
     parser.add_argument("--rd", help="Cost of reading in the disk (default: 5)", default=defaults["rd"], type=float, metavar="float", dest="rd")
     parser.add_argument("--one_read_disk", help="Option to force one read maximum for disk checkpoints", action='store_true')
@@ -113,8 +113,8 @@ def parse_arguments_Disk_Revolve():
     parser = argparse.ArgumentParser(description='Compute Disk-Revolve with l and cm')
     parser.add_argument("l", help="Size of the Adjoint Computation problem (number of foward steps)", type=int)
     parser.add_argument("cm", help="Memory Size", type=int)
-    parser.add_argument("--cfwd", help="Cost of the forward steps (default: 1)", default=defaults["cfwd"], type=float, metavar="float", dest="cfwd")
-    parser.add_argument("--cbwd", help="Cost of the backward steps (default: 1)", default=defaults["cbwd"], type=float, metavar="float", dest="cbwd")
+    parser.add_argument("--uf", help="Cost of the forward steps (default: 1)", default=defaults["uf"], type=float, metavar="float", dest="uf")
+    parser.add_argument("--ub", help="Cost of the backward steps (default: 1)", default=defaults["ub"], type=float, metavar="float", dest="ub")
     parser.add_argument("--wd", help="Cost of writting in the disk (default: 5)", default=defaults["wd"], type=float, metavar="float", dest="wd")
     parser.add_argument("--rd", help="Cost of reading in the disk (default: 5)", default=defaults["rd"], type=float, metavar="float", dest="rd")
     parser.add_argument("--one_read_disk", help="Option to force one read maximum for disk checkpoints", action='store_true')
@@ -127,8 +127,8 @@ def parse_arguments_Periodic_Disk_Revolve():
     parser = argparse.ArgumentParser(description='Compute Disk-Revolve with l and cm')
     parser.add_argument("l", help="Size of the Adjoint Computation problem (number of foward steps)", type=int)
     parser.add_argument("cm", help="Memory Size", type=int)
-    parser.add_argument("--cfwd", help="Cost of the forward steps (default: 1)", default=defaults["cfwd"], type=float, metavar="float", dest="cfwd")
-    parser.add_argument("--cbwd", help="Cost of the backward steps (default: 1)", default=defaults["cbwd"], type=float, metavar="float", dest="cbwd")
+    parser.add_argument("--uf", help="Cost of the forward steps (default: 1)", default=defaults["uf"], type=float, metavar="float", dest="uf")
+    parser.add_argument("--ub", help="Cost of the backward steps (default: 1)", default=defaults["ub"], type=float, metavar="float", dest="ub")
     parser.add_argument("--wd", help="Cost of writting in the disk (default: 5)", default=defaults["wd"], type=float, metavar="float", dest="wd")
     parser.add_argument("--rd", help="Cost of reading in the disk (default: 5)", default=defaults["rd"], type=float, metavar="float", dest="rd")
     parser.add_argument("--mx", help="Size of the period (default: the optimal one)", default=defaults["mx"], type=int, metavar="int", dest="mx")
@@ -143,7 +143,7 @@ def parse_arguments_HRevolve():
     parser = argparse.ArgumentParser(description='Compute HRevolve with l and the architecture described in file_name')
     parser.add_argument("l", help="Size of the Adjoint Computation problem (number of foward steps)", type=int)
     parser.add_argument("file_name", help="File describing the architecture", type=str)
-    parser.add_argument("--cfwd", help="Cost of the forward steps (default: 1)", default=defaults["cfwd"], type=float, metavar="float", dest="cfwd")
-    parser.add_argument("--cbwd", help="Cost of the backward steps (default: 1)", default=defaults["cbwd"], type=float, metavar="float", dest="cbwd")
+    parser.add_argument("--uf", help="Cost of the forward steps (default: 1)", default=defaults["uf"], type=float, metavar="float", dest="uf")
+    parser.add_argument("--ub", help="Cost of the backward steps (default: 1)", default=defaults["ub"], type=float, metavar="float", dest="ub")
     parser.add_argument("--concat", help="Level of concatenation between 0 and K? (default: 0)", default=defaults["concat"], type=int, metavar="int", dest="concat")
     return vars(parser.parse_args())
