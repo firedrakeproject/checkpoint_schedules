@@ -175,7 +175,7 @@ class Backward():
 
 start = tm.time()
 init_condition = 0
-steps = 100
+steps = 10
 sm_chk = 2
 sd_chk = 0
 fwd = Forward(init_condition)
