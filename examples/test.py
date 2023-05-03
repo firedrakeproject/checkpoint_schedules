@@ -102,4 +102,4 @@ def test_periodic_disk_revolve_l7():
     assert sequence.makespan == 25
 
 
-test_hrevolve_l2()
+test_hrevolve_l2
