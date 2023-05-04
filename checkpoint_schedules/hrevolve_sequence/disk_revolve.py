@@ -7,7 +7,7 @@ from .revolve_1d import revolve_1d, get_opt_1d_table
 from functools import partial
 
 
-def get_opt_inf_table(lmax, cm, uf, ub, rd, wd, one_read_disk, print_table,
+def get_opt_inf_table(lmax, cm, cfwd, cbwd, rd, wd, one_read_disk, print_table,
                       opt_0=None, opt_1d=None, **params):
     """ Compute the opt_inf table for cm and l=0...lmax
         This computation uses a dynamic program"""
@@ -18,18 +18,18 @@ def get_opt_inf_table(lmax, cm, uf, ub, rd, wd, one_read_disk, print_table,
     opt_inf = Table()
     if __name__ == '__main__' and print_table:
         opt_inf.set_to_print(print_table)
-    opt_inf.append(ub)
+    opt_inf.append(cbwd)
     # Opt_inf[1] for cm
     if cm == 0:
-        opt_inf.append(wd + uf + 2 * ub + rd)
+        opt_inf.append(wd + cfwd + 2 * cbwd + rd)
     else:
-        opt_inf.append(uf + 2 * ub)
+        opt_inf.append(cfwd + 2 * cbwd)
     # Opt_inf[2...lmax] for cm
     for l in range(2, lmax + 1):
         if one_read_disk:
-            opt_inf.append(min(opt_0[cm][l], min([wd + j * uf + opt_inf[l - j] + rd + opt_0[cm][j-1] for j in range(1, l)])))
+            opt_inf.append(min(opt_0[cm][l], min([wd + j * cfwd + opt_inf[l - j] + rd + opt_0[cm][j-1] for j in range(1, l)])))
         else:
-            opt_inf.append(min(opt_0[cm][l], min([wd + j * uf + opt_inf[l - j] + rd + opt_1d[j-1] for j in range(1, l)])))
+            opt_inf.append(min(opt_0[cm][l], min([wd + j * cfwd + opt_inf[l - j] + rd + opt_1d[j-1] for j in range(1, l)])))
     return opt_inf
 
 
@@ -41,7 +41,7 @@ def disk_revolve(l, cm, opt_0=None, opt_1d=None,
     
     parameters = dict(defaults)
     parameters.update(params)
-    uf = parameters["uf"]
+    cfwd = parameters["cfwd"]
     rd = parameters["rd"]
     wd = parameters["wd"]
     one_read_disk = parameters["one_read_disk"]
@@ -60,28 +60,32 @@ def disk_revolve(l, cm, opt_0=None, opt_1d=None,
     if l == 1:
         if cm == 0:
             sequence.insert(Operation("Write_disk", 0))
-            sequence.insert(Operation("Forward", 0))
+            sequence.insert(Operation("Forward", [0, 1]))
+            sequence.insert(Operation("Write_Forward", 1))
             sequence.insert(Operation("Backward", 1))
+            sequence.insert(Operation("Discard_Forward", 1))
             sequence.insert(Operation("Read_disk", 0))
             sequence.insert(Operation("Backward", 0))
             sequence.insert(Operation("Discard_disk", 0))
             return sequence
         else:
             sequence.insert(Operation("Write_memory", 0))
-            sequence.insert(Operation("Forward", 0))
+            sequence.insert(Operation("Forward", [0, 1]))
+            sequence.insert(Operation("Write_Forward", 1))
             sequence.insert(Operation("Backward", 1))
+            sequence.insert(Operation("Discard_Forward", 1))
             sequence.insert(Operation("Read_memory", 0))
             sequence.insert(Operation("Backward", 0))
             sequence.insert(Operation("Discard_memory", 0))
             return sequence
     if one_read_disk:
-        list_mem = [wd + j * uf + opt_inf[l - j] + rd + opt_0[cm][j-1] for j in range(1, l)]
+        list_mem = [wd + j * cfwd + opt_inf[l - j] + rd + opt_0[cm][j-1] for j in range(1, l)]
     else:
-        list_mem = [wd + j * uf + opt_inf[l - j] + rd + opt_1d[j-1] for j in range(1, l)]
+        list_mem = [wd + j * cfwd + opt_inf[l - j] + rd + opt_1d[j-1] for j in range(1, l)]
     if min(list_mem) < opt_0[cm][l]:
         jmin = argmin(list_mem)
         sequence.insert(Operation("Write_disk", 0))
-        sequence.insert(Operation("Forwards", [0, jmin - 1]))
+        sequence.insert(Operation("Forward", [0, jmin]))
         sequence.insert_sequence(
             disk_revolve(l - jmin, cm, opt_0=opt_0, opt_1d=opt_1d, opt_inf=opt_inf, **parameters).shift(jmin)
         )
