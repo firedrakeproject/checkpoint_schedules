@@ -99,10 +99,8 @@ class Operation:
                 return official_names[self.type] + "^" + str(self.index[0]) + "_" + str(self.index[1])
 
     def cost(self):
-        # if self.type == "Forward":
-        #     return self.params["uf"]
         if self.type == "Forward":
-            return (self.index[1] - self.index[0] + 1) * self.params["uf"]
+            return (self.index[1] - self.index[0]) * self.params["uf"]
         if self.type == "Backward":
             return self.params["ub"]
         if self.type == "Checkpoint":
@@ -133,12 +131,10 @@ class Operation:
             return self.params["wd"][self.index[0]]
         if self.type == "Discard":
             return 0
-        # if self.type == "Forward_branch":
-        #     return self.params["uf"]
         if self.type == "Discard_Forward":
             return 0
         if self.type == "Forward_branch":
-            return (self.index[2] - self.index[1] + 1) * self.params["cfwd"]
+            return (self.index[2] - self.index[1]) * self.params["cfwd"]
         if self.type == "Backward_branch":
             return self.params["cbwd"]
         if self.type == "Turn":
