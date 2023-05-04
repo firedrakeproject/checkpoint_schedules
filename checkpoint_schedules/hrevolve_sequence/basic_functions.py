@@ -20,7 +20,7 @@ official_names = {
     "Backward_branch": "B",
     "Turn": "T",
     "Write_Forward": "WF",
-    "Write_Forward_memory": "DFM",
+    "Write_Forward_memory": "WFM",
     "Discard_branch": "DB",
     "Discard_Forward_branch": "DFB",
     "Checkpoint_branch": "C",

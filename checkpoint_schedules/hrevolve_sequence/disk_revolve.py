@@ -60,16 +60,20 @@ def disk_revolve(l, cm, opt_0=None, opt_1d=None,
     if l == 1:
         if cm == 0:
             sequence.insert(Operation("Write_disk", 0))
-            sequence.insert(Operation("Forward", 0))
+            sequence.insert(Operation("Forward", [0, 1]))
+            sequence.insert(Operation("Write_Forward", 1))
             sequence.insert(Operation("Backward", 1))
+            sequence.insert(Operation("Discard_Forward", 1))
             sequence.insert(Operation("Read_disk", 0))
             sequence.insert(Operation("Backward", 0))
             sequence.insert(Operation("Discard_disk", 0))
             return sequence
         else:
             sequence.insert(Operation("Write_memory", 0))
-            sequence.insert(Operation("Forward", 0))
+            sequence.insert(Operation("Forward", [0, 1]))
+            sequence.insert(Operation("Write_Forward", 1))
             sequence.insert(Operation("Backward", 1))
+            sequence.insert(Operation("Discard_Forward", 1))
             sequence.insert(Operation("Read_memory", 0))
             sequence.insert(Operation("Backward", 0))
             sequence.insert(Operation("Discard_memory", 0))
@@ -81,7 +85,7 @@ def disk_revolve(l, cm, opt_0=None, opt_1d=None,
     if min(list_mem) < opt_0[cm][l]:
         jmin = argmin(list_mem)
         sequence.insert(Operation("Write_disk", 0))
-        sequence.insert(Operation("Forwards", [0, jmin - 1]))
+        sequence.insert(Operation("Forward", [0, jmin]))
         sequence.insert_sequence(
             disk_revolve(l - jmin, cm, opt_0=opt_0, opt_1d=opt_1d, opt_inf=opt_inf, **parameters).shift(jmin)
         )

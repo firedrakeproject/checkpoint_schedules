@@ -5,6 +5,20 @@ from functools import partial
 
 
 def get_t(l, cm):
+    """_summary_
+
+    Parameters
+    ----------
+    l : int
+        Steps number.
+    cm : int
+        Number of available memory slots.
+
+    Returns
+    -------
+    int
+        _description_
+    """
     t = 0
     while (beta(cm, t) <= l):
         t += 1
@@ -12,7 +26,24 @@ def get_t(l, cm):
 
 
 def opt_0_closed_formula(l, cm, uf, ub, **params):
-    """ Fast computation of Opt_0 based on the closed formula """
+    """Fast computation of "Opt_0" based on the closed formula.
+
+    Parameters
+    ----------
+    l : int
+        Steps number.
+    cm : int
+        Number of available memory slots.
+    uf : float
+        Cost of the forward steps.
+    ub : float
+        Cost of the backward steps.
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     if l == 0:
         return ub
     t = get_t(l, cm)
@@ -20,9 +51,30 @@ def opt_0_closed_formula(l, cm, uf, ub, **params):
 
 
 def get_opt_0_table(lmax, mmax, uf, ub, print_table, **params):
-    """ Return the Opt_0 tables
-        for every Opt_0[m][l] with l = 0...lmax and m = 0...mmax
-        The computation uses a dynamic program"""
+    """Return the Opt_0 tables.
+
+    Parameters
+    ----------
+    lmax : int
+        Steps number.
+    mmax : _type_
+        _description_
+    uf : float
+        Cost of the forward steps.
+    ub : float
+        Cost of the backward steps.
+    print_table : _type_
+        _description_
+
+    Notes
+    -----
+    The computation uses a dynamic program.
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     # Build table
     opt = [Table() for _ in range(mmax + 1)]
     if __name__ == '__main__' and print_table:
@@ -43,9 +95,27 @@ def get_opt_0_table(lmax, mmax, uf, ub, print_table, **params):
 
 
 def revolve(l, cm, opt_0=None, **params):
-    """ l : number of forward step to execute in the AC graph
-        cm : number of available memory slots
-        Return the optimal sequence of makespan Opt_0(l, cm)"""
+    """Return a revolve sequence.
+
+    Parameters
+    ----------
+    l : int
+        Number of forward step to execute in the AC graph.
+    cm : int
+        number of available memory slots
+    opt_0 : _type_, optional
+        Return the optimal sequence of makespan.
+
+    Returns
+    -------
+    _type_
+        _description_
+
+    Raises
+    ------
+    ValueError
+        _description_
+    """
     parameters = dict(defaults)
     parameters.update(params)
     if opt_0 is None:
@@ -60,8 +130,10 @@ def revolve(l, cm, opt_0=None, **params):
         raise ValueError("It's impossible to execute an AC graph without memory")
     elif l == 1:
         sequence.insert(Operation("Write_memory", 0))
-        sequence.insert(Operation("Forward", 0))
+        sequence.insert(Operation("Forward", [0, 1]))
+        sequence.insert(Operation("Write_Forward_memory", 1))
         sequence.insert(Operation("Backward", 1))
+        sequence.insert(Operation("Discard_Forward_memory", 1))
         sequence.insert(Operation("Read_memory", 0))
         sequence.insert(Operation("Backward", 0))
         sequence.insert(Operation("Discard_memory", 0))
@@ -71,8 +143,10 @@ def revolve(l, cm, opt_0=None, **params):
         for index in range(l - 1, -1, -1):
             if index != l - 1:
                 sequence.insert(Operation("Read_memory", 0))
-            sequence.insert(Operation("Forwards", [0, index]))
+            sequence.insert(Operation("Forward", [0, index+1]))
+            sequence.insert(Operation("Write_Forward_memory", index+1))
             sequence.insert(Operation("Backward", index+1))
+            sequence.insert(Operation("Discard_Forward_memory", index+1))
         sequence.insert(Operation("Read_memory", 0))
         sequence.insert(Operation("Backward", 0))
         sequence.insert(Operation("Discard_memory", 0))
@@ -80,7 +154,7 @@ def revolve(l, cm, opt_0=None, **params):
     list_mem = [j*parameters["uf"] + opt_0[cm-1][l-j] + opt_0[cm][j-1] for j in range(1, l)]
     jmin = argmin(list_mem)
     sequence.insert(Operation("Write_memory", 0))
-    sequence.insert(Operation("Forwards", [0, jmin-1]))
+    sequence.insert(Operation("Forward", [0, jmin]))
     sequence.insert_sequence(
         revolve(l - jmin, cm - 1, opt_0=opt_0, **parameters).shift(jmin)
     )

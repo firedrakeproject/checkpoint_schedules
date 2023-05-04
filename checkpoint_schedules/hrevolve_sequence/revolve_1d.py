@@ -32,10 +32,28 @@ def get_opt_1d_table(lmax, cm, print_table, ub, uf, rd, one_read_disk,
 
 
 def revolve_1d(l, cm, opt_0=None, opt_1d=None, **params):
-    """ l : number of forward step to execute in the AC graph
-        cm : number of available memory slots
-        Return the optimal sequence of makespan Opt_1d(l, cm)
-        We consider that x_0 is already stored on the disk"""
+    """Return the 1D revolve sequence.
+
+    Parameters
+    ----------
+    l : int
+        Total number of the forward step.
+    cm : int
+        Number of available memory slots.
+    opt_0 : _type_, optional
+        _description_
+    opt_1d : _type_, optional
+        _description_
+
+    Notes
+    -----
+    Consider that "x_0" is already stored on the disk.
+
+    Returns
+    -------
+    object
+        1D revolve sequence.
+    """
     parameters = dict(defaults)
     parameters.update(params)
     rd = parameters["rd"]
@@ -52,15 +70,19 @@ def revolve_1d(l, cm, opt_0=None, opt_1d=None, **params):
         return sequence
     if l == 1:
         if cm == 0:
-            sequence.insert(Operation("Forward", 0))
+            sequence.insert(Operation("Forward", [0, 1]))
+            sequence.insert(Operation("Write_Forward_memory", 1))
             sequence.insert(Operation("Backward", 1))
+            sequence.insert(Operation("Discard_Forward_memory", 1))
             sequence.insert(Operation("Read_disk", 0))
             sequence.insert(Operation("Backward", 0))
             return sequence
         else:
             sequence.insert(Operation("Write_memory", 0))
-            sequence.insert(Operation("Forward", 0))
+            sequence.insert(Operation("Forward", [0, 1]))
+            sequence.insert(Operation("Write_Forward_memory", 1))
             sequence.insert(Operation("Backward", 1))
+            sequence.insert(Operation("Discard_Forward_memory", 1))
             sequence.insert(Operation("Read_memory", 0))
             sequence.insert(Operation("Backward", 0))
             sequence.insert(Operation("Discard_memory", 0))
@@ -71,7 +93,7 @@ def revolve_1d(l, cm, opt_0=None, opt_1d=None, **params):
         list_mem = [j * uf + opt_0[cm][l - j] + rd + opt_1d[j-1] for j in range(1, l)]
     if min(list_mem) < opt_0[cm][l]:
         jmin = argmin(list_mem)
-        sequence.insert(Operation("Forwards", [0, jmin - 1]))
+        sequence.insert(Operation("Forward", [0, jmin]))
         sequence.insert_sequence(
             revolve(l - jmin, cm, opt_0=opt_0, **parameters).shift(jmin)
         )
