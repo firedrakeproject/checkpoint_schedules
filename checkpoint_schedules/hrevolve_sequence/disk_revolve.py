@@ -1,5 +1,14 @@
 #!/usr/bin/python
+"""This function is a copy of the original disk_revolve
+module that composes the python H-Revolve implementation
+published by Herrmann and Pallez [1].
 
+Refs:
+[1] Herrmann, Pallez, "H-Revolve: A Framework for
+Adjoint Computation on Synchronous Hierarchical
+Platforms", ACM Transactions on Mathematical
+Software  46(2), 2020.
+"""
 from .parameters import defaults
 from .basic_functions import (Operation as Op, Table, Sequence, Function, argmin)
 from .revolve import get_opt_0_table, revolve
@@ -9,8 +18,39 @@ from functools import partial
 
 def get_opt_inf_table(lmax, cm, uf, ub, rd, wd, one_read_disk, print_table,
                       opt_0=None, opt_1d=None, **params):
-    """ Compute the opt_inf table for cm and l=0...lmax
-        This computation uses a dynamic program"""
+    """Compute the opt_inf table for architecture and l=0...lmax.
+
+    Parameters
+    ----------
+    lmax : int
+        Maximal step.
+    cm : int
+        The number of checkpoint stored in memory.
+    ub : float
+        Cost of the backward steps.
+    uf : float
+        Cost of the forward steps.
+    rd : _type_
+        _description_
+    wd : _type_
+        _description_
+    one_read_disk : _type_
+        _description_
+    print_table : _type_
+        _description_
+    opt_0 : _type_, optional
+        _description_, by default None
+    opt_1 : _type_, optional
+        _description_, by default None
+
+    Notes
+    -----
+    This computation uses a dynamic program.
+
+    Returns
+    -------
+    
+    """
     if opt_0 is None:
         opt_0 = get_opt_0_table(lmax, cm, **params)
     if opt_1d is None and not one_read_disk:
@@ -32,13 +72,29 @@ def get_opt_inf_table(lmax, cm, uf, ub, rd, wd, one_read_disk, print_table,
             opt_inf.append(min(opt_0[cm][l], min([wd + j * uf + opt_inf[l - j] + rd + opt_1d[j-1] for j in range(1, l)])))
     return opt_inf
 
-
+    
 def disk_revolve(l, cm, opt_0=None, opt_1d=None,
                  opt_inf=None, **params):
-    """ l : number of forward step to execute in the AC graph
-        cm : number of available memory slots
-        Return the optimal sequence of makespan Opt_inf(l, cm)"""
-    
+    """Return a disk revolve sequence.
+
+    Parameters
+    ----------
+    l : int
+        Number of forward step to execute in the AC graph.
+    cm : int
+        Number of available memory slots.
+    opt_0 : _type_, optional
+        _description_, by default None
+    opt_1d : _type_, optional
+        _description_, by default None
+    opt_inf : _type_, optional
+        _description_, by default None
+
+    Returns
+    -------
+
+        Return the optimal sequence of makespan Opt_inf(l, cm).
+    """
     parameters = dict(defaults)
     parameters.update(params)
     uf = parameters["uf"]

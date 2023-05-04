@@ -8,8 +8,7 @@ from .revolve_1d import get_opt_1d_table, revolve_1d
 
 
 def compute_mmax(cm, wd, rd, uf, **params):
-    """Compute m_max, the bound on the optimal
-        period mX, as defined in the paper
+    """Compute m_max.
 
     Parameters
     ----------
@@ -19,8 +18,12 @@ def compute_mmax(cm, wd, rd, uf, **params):
         _description_
     rd : _type_
         _description_
-    uf : _type_
-        _description_
+    uf : int
+        Cost of the forward steps.
+
+    Notes
+    -----
+    The bound on the optimal period mX, as defined in the paper.
 
     Returns
     -------
@@ -37,12 +40,12 @@ def compute_mmax(cm, wd, rd, uf, **params):
 
 
 def RelCostX(m, opt_1d_m_moins_1, wd, rd, **params):
-    """ The RelCost_X function, as defined in the paper """
+    """ The RelCost_X function, as defined in the paper. """
     return 1.0*(wd + rd + opt_1d_m_moins_1) / m
 
 
 def compute_mx(cm, opt_0=None, opt_1d=None, mmax=None, **params):
-    """ Compute the optimal period mX, as defined in the paper """
+    """Compute the optimal period mX, as defined in the paper. """
     if mmax is None:
         mmax = compute_mmax(cm, **params)
     if opt_0 is None or len(opt_0) < mmax:

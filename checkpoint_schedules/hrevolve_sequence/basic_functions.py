@@ -134,7 +134,7 @@ class Operation:
         if self.type == "Discard_Forward":
             return 0
         if self.type == "Forward_branch":
-            return (self.index[2] - self.index[1]) * self.params["cfwd"]
+            return (self.index[2] - self.index[1]) * self.params["uf"]
         if self.type == "Backward_branch":
             return self.params["cbwd"]
         if self.type == "Turn":
@@ -148,6 +148,15 @@ class Operation:
         raise ValueError("Unknown cost for operation type " + self.type)
 
     def shift(self, size, branch=-1):
+        """_summary_
+
+        Parameters
+        ----------
+        size : _type_
+            _description_
+        branch : int, optional
+            _description_, by default -1
+        """
         if type(self.index) is int:
             self.index += size
         elif type(self.index) is list:
@@ -168,6 +177,8 @@ class Operation:
 
 
 class Function:
+    """_summary_
+    """
     def __init__(self, name, l, index):
         self.name = name
         self.l = l

@@ -60,9 +60,9 @@ def get_opt_0_table(lmax, mmax, uf, ub, print_table, **params):
     mmax : _type_
         _description_
     uf : float
-        Cost of the forward steps.
+        Cost associated to the forward step.
     ub : float
-        Cost of the backward steps.
+        Cost associated to the backward step.
     print_table : _type_
         _description_
 

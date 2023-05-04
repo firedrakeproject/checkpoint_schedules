@@ -1,3 +1,14 @@
+"""This function is a copy of the original hrevolve
+module that composes the python H-Revolve implementation
+published by Herrmann and Pallez [1].
+
+Refs:
+[1] Herrmann, Pallez, "H-Revolve: A Framework for
+Adjoint Computation on Synchronous Hierarchical
+Platforms", ACM Transactions on Mathematical
+Software  46(2), 2020.
+"""
+
 from .parameters import defaults
 from .basic_functions import (Operation as Op, Sequence, Function, argmin)
 from functools import partial
@@ -5,12 +16,11 @@ from functools import partial
 
 def get_hopt_table(lmax, cvect, wvect, rvect, ub, uf, **params):
     """Compute the HOpt table for architecture and l=0...lmax.
-    This computation uses a dynamic program.
 
     Parameters
     ----------
     lmax : int
-        Total checkpoint of a forward solver.
+        Maximal step.
     cvect : int
         The number of slots in each level of memory.
     wvect : tuple
@@ -24,14 +34,7 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub, uf, **params):
 
     Notes
     -----
-    This function is a copy of the orginal hrevolve_aux
-    function that composes the python H-Revolve implementation
-    published by Herrmann and Pallez [1].
-    Refs:
-    [1] Herrmann, Pallez, "H-Revolve: A Framework for
-    Adjoint Computation on Synchronous Hierarchical
-    Platforms", ACM Transactions on Mathematical
-    Software  46(2), 2020.
+    This computation uses a dynamic program.
 
     Returns
     -------
@@ -97,18 +100,6 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
         _description_, by default None
     hopt : _type_, optional
         _description_, by default None
-    
-    Notes
-    -----
-    This function is a copy of the orginal hrevolve_aux
-    function that composes the python H-Revolve implementation
-    published by Herrmann and Pallez [1].
-
-    Refs:
-    [1] Herrmann, Pallez, "H-Revolve: A Framework for
-    Adjoint Computation on Synchronous Hierarchical
-    Platforms", ACM Transactions on Mathematical
-    Software  46(2), 2020.
     
     Returns
     -------
@@ -214,18 +205,6 @@ def hrevolve(l, cvect, wvect, rvect, **params):
     rvect : tuple
         The cost of reading from each level of memory.
 
-    Notes
-    -----
-    This function is a copy of the orginal hrevolve_aux
-    function that composes the python H-Revolve implementation
-    published by Herrmann and Pallez [1].
-
-    Refs:
-    [1] Herrmann, Pallez, "H-Revolve: A Framework for
-    Adjoint Computation on Synchronous Hierarchical
-    Platforms", ACM Transactions on Mathematical
-    Software  46(2), 2020.
-
     Returns
     -------
     object
@@ -261,17 +240,7 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
     hopt : list, optional
         ??, by default None
 
-    Notes
-    -----
-    This function is a copy of the orginal hrevolve_aux
-    function that composes the python H-Revolve implementation
-    published by Herrmann and Pallez [1].
-    Refs:
-    [1] Herrmann, Pallez, "H-Revolve: A Framework for
-    Adjoint Computation on Synchronous Hierarchical
-    Platforms", ACM Transactions on Mathematical
-    Software  46(2), 2020.
-
+   
     Returns
     -------
     object
