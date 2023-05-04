@@ -15,14 +15,19 @@ official_names = {
     "Read": "R",
     "Write": "W",
     "Discard": "D",
-    # "ForwardMode": "FM",
+    "Discard_Forward": "DF",
     "Forward_branch": "F",
-    # "Forward_branch": "F",
     "Backward_branch": "B",
     "Turn": "T",
+    "Write_Forward": "WF",
+    "Write_Forward_memory": "DFM",
     "Discard_branch": "DB",
-    "Checkpoint_branch": "C"
+    "Discard_Forward_branch": "DFB",
+    "Checkpoint_branch": "C",
+    "Discard_Forward_disk": "DFD",
+    "Discard_Forward_memory": "DFM",
 }
+
 
 def beta(x, y):
     if y < 0:
@@ -78,10 +83,6 @@ class Operation:
             raise ValueError("Unreconized operation name: " + operation_type)
         self.type = operation_type
         self.index = operation_index
-        if self.type == "Forward" and self.index[0] == self.index[1]:
-            self.index = self.index[0]
-        if self.type == "Forward_branch" and self.index[1] == self.index[2]:
-            self.index = [self.index[0], self.index[1]]
         self.params = params
 
     def __repr__(self):
@@ -98,13 +99,10 @@ class Operation:
                 return official_names[self.type] + "^" + str(self.index[0]) + "_" + str(self.index[1])
 
     def cost(self):
+        # if self.type == "Forward":
+        #     return self.params["uf"]
         if self.type == "Forward":
-            return self.params["uf"]
-        if self.type == "Forward":
-            a = (self.index[1] - self.index[0] + 1) * self.params["uf"]
             return (self.index[1] - self.index[0] + 1) * self.params["uf"]
-        # if self.type == "ForwardMode":
-        #     return (self.index[1] - self.index[0] + 1) * self.params["uf"]
         if self.type == "Backward":
             return self.params["ub"]
         if self.type == "Checkpoint":
@@ -117,23 +115,37 @@ class Operation:
             return 0
         if self.type == "Write_memory":
             return 0
+        if self.type == "Write_Forward_memory":
+            return 0
         if self.type == "Discard_disk":
             return 0
         if self.type == "Discard_memory":
+            return 0
+        if self.type == "Discard_Forward_disk":
+            return 0
+        if self.type == "Discard_Forward_memory":
             return 0
         if self.type == "Read":
             return self.params["rd"][self.index[0]]
         if self.type == "Write":
             return self.params["wd"][self.index[0]]
+        if self.type == "Write_Forward":
+            return self.params["wd"][self.index[0]]
         if self.type == "Discard":
             return 0
+        # if self.type == "Forward_branch":
+        #     return self.params["uf"]
+        if self.type == "Discard_Forward":
+            return 0
         if self.type == "Forward_branch":
-            return (self.index[2] - self.index[1] + 1) * self.params["uf"]
+            return (self.index[2] - self.index[1] + 1) * self.params["cfwd"]
         if self.type == "Backward_branch":
-            return self.params["ub"]
+            return self.params["cbwd"]
         if self.type == "Turn":
             return self.params["up"]
         if self.type == "Discard_branch":
+            return 0
+        if self.type == "Discard_Forward_branch":
             return 0
         if self.type == "Checkpoint_branch":
             return 0
@@ -149,11 +161,12 @@ class Operation:
             elif self.type == "Forwards_multi":
                 self.index[1] += size
                 self.index[2] += size
-            elif self.type in ["Forward_branch", "Discard_branch", "Checkpoint_branch", "Backward_branch"]:
+            elif self.type in ["Forward_branch", "Discard_branch",
+                               "Discard_Forward_branch", 
+                                "Checkpoint_branch", "Backward_branch"]:
                 if self.index[0] == branch:
                     for i in range(1, len(self.index)):
                         self.index[i] += size
-                        print(self.index[i])
             else:
                 self.index[1] += size
 
@@ -165,7 +178,7 @@ class Function:
         self.index = index
 
     def __repr__(self):
-        if self.name == "hrevolve" or self.name == "hrevolve_aux":
+        if self.name == "HRevolve" or self.name == "hrevolve_aux":
             return self.name + "_" + str(self.index[0]) + "(" + str(self.l) + ", " + str(self.index[1]) + ")"
         else:
             return self.name + "(" + str(self.l) + ", " + str(self.index) + ")"
@@ -178,7 +191,7 @@ class Sequence:
         self.levels = levels
         self.concat = concat
         self.makespan = 0  # Makespan to be updated
-        if self.function.name == "hrevolve" or self.function.name == "hrevolve_aux":
+        if self.function.name == "HRevolve" or self.function.name == "hrevolve_aux":
             self.storage = [[] for _ in range(self.levels)]  # List of list of checkpoints in hierarchical storage
         else:
             self.memory = []  # List of memory checkpoints
@@ -186,7 +199,7 @@ class Sequence:
         self.type = "Function"
 
     def __repr__(self):
-        if self.function.name == "hrevolve" or self.function.name == "hrevolve_aux":
+        if self.function.name == "HRevolve" or self.function.name == "hrevolve_aux":
             return self.concat_sequence_hierarchic(self.concat).__repr__()
         else:
             if self.concat == 3:
@@ -238,7 +251,7 @@ class Sequence:
             elif x.__class__.__name__ == "Sequence":
                 if concat == 0:
                     l += x.concat_sequence_hierarchic(concat=concat)
-                elif x.function.name == "hrevolve" and x.function.index[0] <= concat-1:
+                elif x.function.name == "HRevolve" and x.function.index[0] <= concat-1:
                     l.append(x.function)
                 else:
                     l += x.concat_sequence_hierarchic(concat=concat)
@@ -250,6 +263,8 @@ class Sequence:
         self.sequence.append(operation)
         self.makespan += operation.cost()
         if operation.type == "Write_memory":
+            self.memory.append(operation.index)
+        if operation.type == "Write_Forward_memory":
             self.memory.append(operation.index)
         if operation.type == "Write_disk":
             self.disk.append(operation.index)
@@ -264,6 +279,8 @@ class Sequence:
         self.makespan -= self.sequence[operation_index].cost()
         if self.sequence[operation_index].type == "Write_memory":
             self.memory.remove(self.sequence[operation_index].index)
+        if self.sequence[operation_index].type == "Write_Forward_memory":
+            self.memory.remove(self.sequence[operation_index].index)
         if self.sequence[operation_index].type == "Write_disk":
             self.disk.remove(self.sequence[operation_index].index)
         if self.sequence[operation_index].type == "Write":
@@ -275,7 +292,7 @@ class Sequence:
     def insert_sequence(self, sequence):
         self.sequence.append(sequence)
         self.makespan += sequence.makespan
-        if self.function.name == "hrevolve" or self.function.name == "hrevolve_aux":
+        if self.function.name == "HRevolve" or self.function.name == "hrevolve_aux":
             for i in range(len(self.storage)):
                 self.storage[i] += sequence.storage[i]
         else:
@@ -285,7 +302,7 @@ class Sequence:
     def shift(self, size, branch=-1):
         for x in self.sequence:
             x.shift(size, branch=branch)
-        if self.function.name == "hrevolve" or self.function.name == "hrevolve_aux":
+        if self.function.name == "HRevolve" or self.function.name == "hrevolve_aux":
             for i in range(len(self.storage)):
                 self.storage[i] = [x + size for x in self.storage[i]]
         else:
@@ -333,7 +350,7 @@ class Sequence:
                 self.sequence[i] = self.sequence[i].convert_old_to_branch(index)
             elif op.type == "Forward":
                 op.type = "Forward_branch"
-                op.index = [index, op.index]
+                op.index = [index] + op.index
             elif op.type == "Backward":
                 op.type = "Backward_branch"
                 op.index = [index, op.index]
@@ -377,7 +394,7 @@ class Sequence:
                 self.sequence[i] = self.sequence[i].convert_new_to_branch(index)
             elif op.type == "Forward":
                 op.type = "Forward_branch"
-                op.index = [index, op.index]
+                op.index = [index] + op.index
             elif op.type == "Backward":
                 op.type = "Backward_branch"
                 op.index = [index, op.index]

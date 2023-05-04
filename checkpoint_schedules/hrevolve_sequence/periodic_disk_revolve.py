@@ -120,7 +120,7 @@ def periodic_disk_revolve(l, cm, opt_0=None, opt_1d=None, mmax=None, **params):
     current_task = 0
     while l - current_task > mx:
         sequence.insert(Operation("Write_disk", current_task))
-        sequence.insert(Operation("Forwards", [current_task, current_task + mx - 1]))
+        sequence.insert(Operation("Forward", [current_task, current_task + mx - 1]))
         current_task += mx
     if one_read_disk or opt_1d[l - current_task] == opt_0[cm][l - current_task]:
         sequence.insert_sequence(

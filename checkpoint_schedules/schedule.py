@@ -7,12 +7,13 @@ import functools
 __all__ = \
     [
         "CheckpointAction",
-        "Clear",
-        "Configure",
         "Forward",
         "Reverse",
         "Read",
         "Write",
+        "WriteForward",
+        "Clear",
+        "Configure",
         "EndForward",
         "EndReverse",
         "CheckpointSchedule"
@@ -20,7 +21,8 @@ __all__ = \
 
 
 class CheckpointAction:
-    """_summary_
+    """Checkpoint action object.
+    
     """
     def __init__(self, *args):
         self.args = args
@@ -31,16 +33,18 @@ class CheckpointAction:
     def __eq__(self, other):
         return type(self) == type(other) and self.args == other.args
 
-
 class Clear(CheckpointAction):
-    """_summary_
+    """Clear checkpoint data.
 
-    Parameters
-    ----------
-    CheckpointAction : _type_
-        _description_
+    Args
+    ----
+    clear_ics : bool
+        If "True", the checkpoint used to restart the forward solver is comming clear.
+    clear_data : bool
+        If True, the latest forward checkpoint data is coming clear.
     """
     def __init__(self, clear_ics, clear_data):
+        self.type = "Clear"
         super().__init__(clear_ics, clear_data)
 
     @property
@@ -53,20 +57,47 @@ class Clear(CheckpointAction):
 
 
 class Configure(CheckpointAction):
+    """Configure the type of checkpoint that is being saved.
+
+    Args
+    ----
+    store_ics : bool
+        If "True", the checkpoint data is coming save at the step give by 'Write' action.
+    store_data : bool
+        If "True", the latest checkpoint data is coming save.
+
+    """
     def __init__(self, store_ics, store_data):
+        self.type = "Configure"
         super().__init__(store_ics, store_data)
 
     @property
     def store_ics(self):
+        """
+
+        Returns
+        -------
+        _type_
+            _description_
+        """
         return self.args[0]
 
     @property
     def store_data(self):
         return self.args[1]
 
-
 class Forward(CheckpointAction):
+    """Abstract forward action.
+
+    Args
+    ----
+    n0 : int
+        initial step.
+    n1 : int
+        Final step.
+    """
     def __init__(self, n0, n1):
+        self.type = "Forward"
         super().__init__(n0, n1)
 
     def __iter__(self):
@@ -80,15 +111,39 @@ class Forward(CheckpointAction):
 
     @property
     def n0(self):
+        """Initial step of the forward mode.
+
+        Returns
+        -------
+        float
+            Initial step.
+        """
         return self.args[0]
 
     @property
     def n1(self):
+        """Final step of the forward mode.
+
+        Returns
+        -------
+        float
+            Final step.
+        """
         return self.args[1]
 
 
 class Reverse(CheckpointAction):
+    """Reverse action.
+
+    Attributes
+    ----------
+    n1 : int
+        Initial step of reverse solver.
+    n0 : int
+        Final step of reverse solver.  
+    """
     def __init__(self, n1, n0):
+        self.type = "Reverse"
         super().__init__(n1, n0)
 
     def __iter__(self):
@@ -102,53 +157,147 @@ class Reverse(CheckpointAction):
 
     @property
     def n0(self):
+        """Final step of the reverse mode.
+
+        Returns
+        -------
+        float
+            Final step.
+        """
         return self.args[1]
 
     @property
     def n1(self):
+        """Initial step of the reverse mode.
+
+        Returns
+        -------
+        float
+            Initial step.
+        """
         return self.args[0]
 
 
 class Read(CheckpointAction):
+    """Action read a checkpoint.
+    """
     def __init__(self, n, storage, delete):
+        self.type = "Read"
         super().__init__(n, storage, delete)
 
     @property
     def n(self):
+        """Step.
+
+        Returns
+        -------
+        int
+            Current step.
+        """
         return self.args[0]
 
     @property
     def storage(self):
+        """Checkpoint storage.
+
+        Returns
+        -------
+        bool
+            ???.
+        """
         return self.args[1]
 
     @property
     def delete(self):
+        """Delete.
+
+        Returns
+        -------
+        bool
+            If "True", the checkpoint data is deleted.
+        """
         return self.args[2]
 
 
 class Write(CheckpointAction):
+    
     def __init__(self, n, storage):
+        self.type = "Write"
         super().__init__(n, storage)
 
     @property
     def n(self):
+        """Step.
+
+        Returns
+        -------
+        int
+            Current step.
+        """
         return self.args[0]
 
     @property
     def storage(self):
+        """Checkpoint write.
+
+        Returns
+        -------
+        bool
+            If "True", the checkpoint data at a step `n` is saved.
+        """
         return self.args[1]
 
+class WriteForward(CheckpointAction):
+    
+    def __init__(self, n, storage):
+        self.type = "WriteForward"
+        super().__init__(n, storage)
+
+    @property
+    def n(self):
+        """Step.
+
+        Returns
+        -------
+        int
+            Current step.
+        """
+        return self.args[0]
+
+    @property
+    def storage(self):
+        """Checkpoint write.
+
+        Returns
+        -------
+        bool
+            If "True", the checkpoint data at a step `n` is saved.
+        """
+        return self.args[1]
 
 class EndForward(CheckpointAction):
-    pass
+    """End forward action.
+    """
+    def __init__(self):
+        self.type = "EndForward"
 
 
 class EndReverse(CheckpointAction):
+    """End reverse action.
+    """
     def __init__(self, exhausted):
+        self.type = "EndReverse"
         super().__init__(exhausted)
 
     @property
     def exhausted(self):
+        """_summary_
+
+        Returns
+        -------
+        _type_
+            _description_
+        """
         return self.args[0]
 
 
@@ -166,17 +315,6 @@ class CheckpointSchedule(ABC):
     actions occur *after* forward advancement from snapshots).
 
     The iter method yields (action, data), with:
-
-    Clear(clear_ics, clear_data)
-    Clear checkpoint storage. clear_ics indicates whether stored initial
-    condition data should be cleared. clear_data indicates whether stored
-    non-linear dependency data should be cleared.
-
-    Configure(store_ics, store_data)
-    Configure checkpoint storage. store_ics indicates whether initial condition
-    data should be stored. store_data indicates whether non-linear dependency
-    data should be stored.
-
     Forward(n0, n1)
     Run the forward from the start of block n0 to the start of block n1.
 
@@ -199,8 +337,8 @@ class CheckpointSchedule(ABC):
 
     Atributes
     ----------
-    mas_n : int
-        Max.
+    max_n : int
+        Maximal steps of a forward solver.
     """
 
     def __init__(self, max_n=None):
@@ -218,6 +356,13 @@ class CheckpointSchedule(ABC):
 
         @functools.wraps(cls_iter)
         def iter(self):
+            """Checkpoint schedule Iterator.
+
+            Returns
+            -------
+            object
+                Iterator.
+            """
             if not hasattr(self, "_iter"):
                 self._iter = cls_iter(self)
             return self._iter
@@ -232,14 +377,20 @@ class CheckpointSchedule(ABC):
 
     @abstractmethod
     def iter(self):
+        """Abstract iterator.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def is_exhausted(self):
+        """_summary_
+        """
         raise NotImplementedError
 
     @abstractmethod
     def uses_disk_storage(self):
+        """_summary_
+        """
         raise NotImplementedError
 
     def n(self):
