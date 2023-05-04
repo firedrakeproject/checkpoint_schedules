@@ -1,15 +1,32 @@
+import math
 from .parameters import defaults
 from .basic_functions import (Operation as Op, Sequence, Function, beta)
 from .revolve import revolve, get_opt_0_table
-import math
 from functools import partial
 
 from .revolve_1d import get_opt_1d_table, revolve_1d
 
 
 def compute_mmax(cm, wd, rd, uf, **params):
-    """ Compute m_max, the bound on the optimal
-        period mX, as defined in the paper """
+    """Compute m_max, the bound on the optimal
+        period mX, as defined in the paper
+
+    Parameters
+    ----------
+    cm : _type_
+        _description_
+    wd : _type_
+        _description_
+    rd : _type_
+        _description_
+    uf : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     td1 = 0
     while beta(cm, td1) <= (wd + rd) / uf:
         td1 += 1
