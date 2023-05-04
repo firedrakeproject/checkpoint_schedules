@@ -1,8 +1,7 @@
 #!/usr/bin/python
 
 from .parameters import defaults
-from .basic_functions import (Operation as Op, Sequence, Function, Table,
-                              my_buddy, argmin)
+from .basic_functions import (Operation as Op, Sequence, Function, Table, argmin)
 from .revolve import revolve, get_opt_0_table
 from functools import partial
 
@@ -49,7 +48,7 @@ def revolve_1d(l, cm, opt_0=None, opt_1d=None, **params):
     sequence = Sequence(Function("1D-Revolve", l, cm), concat=parameters["concat"])
     Operation = partial(Op, params=parameters)
     if l == 0:
-        sequence.insert(Operation("Backward", my_buddy(-1, l-1)))
+        sequence.insert(Operation("Backward", 0))
         return sequence
     if l == 1:
         if cm == 0:
@@ -72,7 +71,7 @@ def revolve_1d(l, cm, opt_0=None, opt_1d=None, **params):
         list_mem = [j * uf + opt_0[cm][l - j] + rd + opt_1d[j-1] for j in range(1, l)]
     if min(list_mem) < opt_0[cm][l]:
         jmin = argmin(list_mem)
-        sequence.insert(Operation("Forward", [0, jmin - 1]))
+        sequence.insert(Operation("Forwards", [0, jmin - 1]))
         sequence.insert_sequence(
             revolve(l - jmin, cm, opt_0=opt_0, **parameters).shift(jmin)
         )
