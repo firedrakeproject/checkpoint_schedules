@@ -29,10 +29,6 @@ official_names = {
 }
 
 
-def my_buddy(index, last_index):
-    return index + 1
-
-
 def beta(x, y):
     if y < 0:
         return 0
@@ -87,12 +83,6 @@ class Operation:
             raise ValueError("Unreconized operation name: " + operation_type)
         self.type = operation_type
         self.index = operation_index
-        # if self.type == "Forward" and self.index[0] == self.index[1]:
-        #     self.type = "Forward"
-        #     self.index = self.index[0]
-        # if self.type == "Forward_branch" and self.index[1] == self.index[2]:
-        #     self.type = "Forward_branch"
-        #     self.index = [self.index[0], self.index[1]]
         self.params = params
 
     def __repr__(self):
@@ -358,9 +348,6 @@ class Sequence:
         for (i, op) in enumerate(self.sequence):
             if op.type == "Function":
                 self.sequence[i] = self.sequence[i].convert_old_to_branch(index)
-            # elif op.type == "Forward":
-            #     op.type = "Forward_branch"
-            #     op.index = [index, op.index]
             elif op.type == "Forward":
                 op.type = "Forward_branch"
                 op.index = [index] + op.index
@@ -405,9 +392,6 @@ class Sequence:
         for (i, op) in enumerate(self.sequence):
             if op.type == "Function":
                 self.sequence[i] = self.sequence[i].convert_new_to_branch(index)
-            # elif op.type == "Forward":
-            #     op.type = "Forward_branch"
-            #     op.index = [index, op.index]
             elif op.type == "Forward":
                 op.type = "Forward_branch"
                 op.index = [index] + op.index

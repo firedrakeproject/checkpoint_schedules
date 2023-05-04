@@ -54,16 +54,16 @@ def revolve_1d(l, cm, opt_0=None, opt_1d=None, **params):
     if l == 1:
         if cm == 0:
             sequence.insert(Operation("Forward", 0))
-            sequence.insert(Operation("Backward", my_buddy(0, l - 1)))
+            sequence.insert(Operation("Backward", 1))
             sequence.insert(Operation("Read_disk", 0))
-            sequence.insert(Operation("Backward", my_buddy(-1, l - 1)))
+            sequence.insert(Operation("Backward", 0))
             return sequence
         else:
             sequence.insert(Operation("Write_memory", 0))
             sequence.insert(Operation("Forward", 0))
-            sequence.insert(Operation("Backward", my_buddy(0, l - 1)))
+            sequence.insert(Operation("Backward", 1))
             sequence.insert(Operation("Read_memory", 0))
-            sequence.insert(Operation("Backward", my_buddy(-1, l - 1)))
+            sequence.insert(Operation("Backward", 0))
             sequence.insert(Operation("Discard_memory", 0))
             return sequence
     if one_read_disk:
@@ -72,7 +72,7 @@ def revolve_1d(l, cm, opt_0=None, opt_1d=None, **params):
         list_mem = [j * uf + opt_0[cm][l - j] + rd + opt_1d[j-1] for j in range(1, l)]
     if min(list_mem) < opt_0[cm][l]:
         jmin = argmin(list_mem)
-        sequence.insert(Operation("Forwards", [0, jmin - 1]))
+        sequence.insert(Operation("Forward", [0, jmin - 1]))
         sequence.insert_sequence(
             revolve(l - jmin, cm, opt_0=opt_0, **parameters).shift(jmin)
         )

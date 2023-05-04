@@ -1,6 +1,5 @@
 from .parameters import defaults
-from .basic_functions import (Operation as Op, Sequence, Function, my_buddy,
-                              argmin)
+from .basic_functions import (Operation as Op, Sequence, Function, argmin)
 from functools import partial
 
 
