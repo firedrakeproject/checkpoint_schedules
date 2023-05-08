@@ -1,25 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# For tlm_adjoint copyright information see ACKNOWLEDGEMENTS in the tlm_adjoint
-# root directory
-
-# This file is part of tlm_adjoint.
-#
-# tlm_adjoint is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, version 3 of the License.
-#
-# tlm_adjoint is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with tlm_adjoint.  If not, see <https://www.gnu.org/licenses/>.
-
-from checkpoint_schedules import \
-    Clear, Configure, Forward, Reverse, Read, Write, EndForward, EndReverse
 from checkpoint_schedules import HRevolveCheckpointSchedule
 
 import functools
@@ -31,15 +12,15 @@ def h_revolve(n, s):
 
     Parameters
     ----------
-    n : _type_
-        _description_
-    s : _type_
-        _description_
+    n : int
+        Number of forward step to execute in the AC graph.
+    s : tuple
+        The number of slots in each level of memory.
 
     Returns
     -------
-    _type_
-        _description_
+    object
+        H-Revolve generator.
     """
     if s <= 1:
         return (None,
@@ -49,13 +30,8 @@ def h_revolve(n, s):
                 {"RAM": s // 2, "disk": s - (s // 2)}, 1)
 
 
-# def mixed(n, s):
-#     return (MixedCheckpointSchedule(n, s),
-#             {"RAM": 0, "disk": s}, 1)
-
-
 @pytest.mark.parametrize(
-    "schedule, schedule_kwargs",
+    "schedule",
     [
         #   (memory, {}),
         #  (periodic_disk, {"period": 1}),
@@ -68,7 +44,7 @@ def h_revolve(n, s):
         #  (two_level, {"period": 7}),
         #  (two_level, {"period": 10}),
         pytest.param(
-            h_revolve, {},),
+            h_revolve),
         #  (mixed, {})
     ])
 @pytest.mark.parametrize("n, S", [(1, (0,)),
@@ -77,15 +53,13 @@ def h_revolve(n, s):
                                   (10, tuple(range(1, 10))),
                                   (100, tuple(range(1, 100))),
                                   (250, tuple(range(25, 250, 25)))])
-def test_validity(schedule, schedule_kwargs, n, S):
+def test_validity(schedule, n, S):
     """Test validity.
 
     Parameters
     ----------
     schedule : object
         Scheduler object.
-    schedule_kwargs : _type_
-        _description_
     n : int
         Number of forward step to execute in the AC graph.
     S : tuple
@@ -102,25 +76,32 @@ def test_validity(schedule, schedule_kwargs, n, S):
 
         model_n = 0
         model_r = 0
-
+        init_condition = 0
         store_ics = False
-        ics = set()
-        lfwd = set()
         store_data = False
+        ics = set()
         data = set()
-
+        sol = set()
         snapshots = {"RAM": {}, "disk": {}}
-        fwd_data = {"RAM": {}, "disk": {}}
+        fwd_chk = {"RAM": {}}
+        cp_schedule, storage_limits, data_limit = schedule(n, s)  # noqa: E501
 
-        cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs)  # noqa: E501
         if cp_schedule is None:
             pytest.skip("Incompatible with schedule type")
         assert cp_schedule.n() == 0
         assert cp_schedule.r() == 0
         assert cp_schedule.max_n() is None or cp_schedule.max_n() == n
+        
+        def initial_condition():
+            """Set the initial condition.
+            """
+            sol.add(init_condition)
+            ics.add(model_n)
 
+        initial_condition()
         while True:
             cp_action = next(cp_schedule)
+            print(cp_action)
             if cp_action.type == "Clear":
                 if cp_action.clear_ics:
                     ics.clear()
@@ -130,78 +111,94 @@ def test_validity(schedule, schedule_kwargs, n, S):
                 store_ics = cp_action.store_ics
                 store_data = cp_action.store_data
             elif cp_action.type == "Write":
-                if store_ics:
-                    ics.add(model_n)
-                assert ics is not None
-                snapshots[cp_action.storage][cp_action.n] = (set(ics), set(data))
+                assert len(ics) > 0 and len(sol) > 0
+                if len(ics) > 0:
+                    assert cp_action.n == max(ics)
+                snapshots[cp_action.storage][cp_action.n] = (set(ics), set(sol))
             elif cp_action.type == "WriteForward":
-                if store_data:
-                    lfwd.add(model_n)
-                assert lfwd is not None
-                fwd_data[cp_action.storage][cp_action.n] = (set(lfwd), set(data))
+                assert len(ics) == 0 and len(data) > 0
+                assert cp_action.n == max(data)
+                fwd_chk['RAM'][cp_action.n] = (set(data), set(sol))
             elif cp_action.type == "Forward":
-                assert len(ics) == 1
-                n1 = min(cp_action.n1, cp_schedule.max_n())
+                assert model_n is not None and model_n == cp_action.n0
+                assert cp_action.n0 < cp_action.n1
+                assert len(sol) == 1 and cp_action.n0 in sol
+                if cp_schedule.max_n() is not None:
+                    # Do not advance further than the current location of the adjoint
+                    assert cp_action.n1 <= n - model_r
+               
+                n1 = min(cp_action.n1, n)
+                if store_ics:
+                    # No forward restart data for these steps is stored
+                    assert n1 not in snapshots["RAM"] and n1 not in snapshots["disk"]
+                if store_data:
+                    # No non-linear dependency data for these steps is stored
+                    assert n1 not in fwd_chk['RAM']
                 model_n = n1
-                if n1 == cp_schedule.max_n():
+                if store_ics:
+                    ics.add(n1)
+                if store_data:
+                    data.add(n1)
+                if n1 == n:
                     cp_schedule.finalize(n1)
-                data.add(model_n)
+                sol = set()
+                sol.add(n1)
             elif cp_action.type == "Read":
+                # The checkpoint exists
+                assert cp_action.n in snapshots[cp_action.storage]
                 cp = snapshots[cp_action.storage][cp_action.n]
 
                 # No data is currently stored for this step
                 assert cp_action.n not in ics
-                assert cp_action.n not in data
-                
+        
                 # The checkpoint contains forward restart or non-linear dependency data
                 assert len(cp[0]) > 0 or len(cp[1]) > 0
-
+    
                 # The checkpoint data is before the current location of the adjoint
-                assert cp_action.n < n - model_r
+                assert cp_action.n <= n - model_r
+
                 model_n = None
-                if len(cp) > 0:
+
+                if len(cp[0]) > 0:
                     ics.clear()
-                    ics.update(cp)
-                if len(data) > 0:
-                    data.clear()
-                    data.update(cp)
-                model_n = cp_action.n
+                    ics.update(cp[0])
+                    model_n = cp_action.n
+
+                if len(cp[1]) > 0:
+                    sol.clear()
+                    sol.update(cp[1])
+
                 if cp_action.delete:
                     del snapshots[cp_action.storage][cp_action.n]
+
             elif cp_action.type == "Reverse":
-                assert len(lfwd) == 1 or len(ics) == 1
-                if len(lfwd) == 1:
-                    assert len(ics) == 0
-                if len(ics) == 1:
-                    assert len(lfwd) == 0
-                
                 # Start at the current location of the adjoint
                 assert cp_action.n1 == n - model_r
                 # Advance at least one step
                 assert cp_action.n0 < cp_action.n1
                 # Non-linear dependency data for these steps is stored
-                # assert data.issuperset(range(cp_action.n0, cp_action.n1))
+                sol.clear()
 
                 model_r += cp_action.n1 - cp_action.n0
-                if cp_action.delete:
-                    del fwd_data[cp_action.storage][cp_action.n]
+
             elif cp_action.type == "EndForward":
                 assert model_n is not None and model_n == cp_schedule.max_n()
             elif cp_action.type == "EndReverse":
                 assert model_r == cp_schedule.max_n()
-                assert len(lfwd) == 0
+                assert len(data) == 0
                 if not cp_action.exhausted:
-                    model_r = 0       
+                    model_r = 0
             # The schedule state is consistent with both the forward and
             # adjoint
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
-
+          
             # Checkpoint storage limits are not exceeded
             for storage_type, storage_limit in storage_limits.items():
                 assert len(snapshots[storage_type]) <= storage_limit
             # Data storage limit is not exceeded
+            
             assert min(1, len(ics)) + len(data) <= data_limit
 
-            if isinstance(cp_action, EndReverse):
+            if cp_action.type == "EndReverse":
                 break

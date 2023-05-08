@@ -178,6 +178,8 @@ class Reverse(CheckpointAction):
         """
         return self.args[0]
 
+    
+
 
 class Read(CheckpointAction):
     """Action read a checkpoint.
@@ -279,8 +281,9 @@ class WriteForward(CheckpointAction):
 class EndForward(CheckpointAction):
     """End forward action.
     """
-    def __init__(self):
+    def __init__(self, exhausted):
         self.type = "EndForward"
+        super().__init__(exhausted)
 
 
 class EndReverse(CheckpointAction):

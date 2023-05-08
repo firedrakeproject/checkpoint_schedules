@@ -82,8 +82,6 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
         def write_deferred_cp():
             nonlocal deferred_cp
             if deferred_cp is not None:
-                yield Clear(True, True)
-                yield Configure(True, False)
                 self.snapshots.add(deferred_cp[0])
                 yield Write(*deferred_cp)
                 deferred_cp = None
@@ -94,12 +92,20 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
             if cp_action == "Forward":
                 if n_0 != self._n:
                     raise RuntimeError("Invalid checkpointing state")            
+                
+                yield Clear(True, True)
+                w_cp_action, _ = action(i + 1)
+                if w_cp_action == "Write_Forward":
+                    yield Configure(False, True)
+                if w_cp_action == "Write":
+                    yield Configure(True, False)
+
                 self._n = n_1
                 yield Forward(n_0, n_1)
                 if self._n == self._max_n:
                     if self._r != 0:
                         raise RuntimeError("Invalid checkpointing state")
-                    yield EndForward()
+                    yield EndForward(True)
             elif cp_action == "Backward":
                 if n_0 != self._n:
                     raise RuntimeError("Invalid checkpointing state")
@@ -107,14 +113,15 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                     raise RuntimeError("Invalid checkpointing state")
                 
                 yield from write_deferred_cp()
+                d_cp_action, (d_n_0, _, d_storage) = action(i + 1)
+                if d_cp_action == "Discard_Forward":
+                    self.forward_data.remove(n_0)
                 if n_0 > 0:
                     self._r += 1
                     yield Reverse(n_0, n_0-1)
                 else:
                     Reverse(n_0, n_0)
-                d_cp_action, (d_n_0, _, d_storage) = action(i + 1)
-                if d_cp_action == "Discard_Forward":
-                    self.forward_data.remove(n_0)     
+                  
             elif cp_action == "Read":
                 if deferred_cp is not None:
                     raise RuntimeError("Invalid checkpointing state")
@@ -152,8 +159,6 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                     raise RuntimeError("Invalid checkpointing state")
 
                 self.forward_data.add(n_0)
-                yield Clear(True, True)
-                yield Configure(False, True)
                 yield WriteForward(n_0, storage)
 
             elif cp_action == "Discard":
