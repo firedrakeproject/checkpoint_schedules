@@ -86,6 +86,7 @@ class Configure(CheckpointAction):
     def store_data(self):
         return self.args[1]
 
+
 class Forward(CheckpointAction):
     """Abstract forward action.
 
