@@ -25,8 +25,6 @@ def solvers_with_hrevolve(fwd, bwd, chk_in_ram, chk_in_disk, steps):
         model_n = 0
         model_r = 0
         hrev_schedule = HRevolveCheckpointSchedule(steps, chk_in_ram, chk_in_disk)
-        print(hrev_schedule._schedule)
-        quit()
         storage_limits = {"RAM": chk_in_ram, "disk": chk_in_disk}
         init_condition = 0
         store_ics = False

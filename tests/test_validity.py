@@ -26,8 +26,8 @@ def h_revolve(n, s):
         return (None,
                 {"RAM": 0, "disk": 0}, 0)
     else:
-        return (HRevolveCheckpointSchedule(n, s // 2, (s // 2)),
-                {"RAM": s // 2, "disk": (s // 2)}, 1)
+        return (HRevolveCheckpointSchedule(n, s - s // 3, (s // 3)),
+                {"RAM": s - s // 3, "disk": (s // 3)}, 1)
 
 
 @pytest.mark.parametrize(
@@ -53,7 +53,7 @@ def h_revolve(n, s):
                                 #   (3, (1, 2)),
                                 #   (10, tuple(range(1, 10))),
                                 #   (100, tuple(range(1, 100))),
-                                  (25, tuple(range(2, 25, 2)))])
+                                  (250, tuple(range(20, 250, 20)))])
 def test_validity(schedule, n, S):
     """Test validity.
 
@@ -87,7 +87,7 @@ def test_validity(schedule, n, S):
         fwd_chk = {"RAM": {}}
        
         cp_schedule, storage_limits, data_limit = schedule(n, s)  # noqa: E501
-        print(cp_schedule._schedule)
+
         if cp_schedule is None:
             pytest.skip("Incompatible with schedule type")
         assert cp_schedule.n() == 0
@@ -193,11 +193,10 @@ def test_validity(schedule, n, S):
                     model_r = 0
             # The schedule state is consistent with both the forward and
             # adjoint
-            print(cp_action)
+            
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
             # Checkpoint storage limits are not exceeded
-            # print(storage_limits["RAM"])
             for storage_type, storage_limit in storage_limits.items():
                 assert len(snapshots[storage_type]) <= storage_limit
                 assert len(snapshots["RAM"]) + len(fwd_chk["RAM"]) <= storage_limits["RAM"] + 1
