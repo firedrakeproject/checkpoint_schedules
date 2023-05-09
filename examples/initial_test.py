@@ -193,9 +193,9 @@ class Backward():
 
 start = tm.time()
 init_condition = 0
-steps = 250
-sm_chk = 25
-sd_chk = 0
+steps = 10
+sm_chk = 2
+sd_chk = 1
 fwd = Forward(init_condition)
 bwd = Backward()
 solvers_with_hrevolve(fwd, bwd, sm_chk, sd_chk, steps)
