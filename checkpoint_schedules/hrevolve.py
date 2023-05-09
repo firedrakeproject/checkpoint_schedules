@@ -113,9 +113,10 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                     raise RuntimeError("Invalid checkpointing state")
                 
                 yield from write_deferred_cp()
-                d_cp_action, (d_n_0, _, d_storage) = action(i + 1)
-                if d_cp_action == "Discard_Forward":
-                    self.forward_data.remove(n_0)
+                if i < len(self._schedule) - 1:
+                    d_cp_action, (d_n_0, _, d_storage) = action(i + 1)
+                    if d_cp_action == "Discard_Forward":
+                        self.forward_data.remove(n_0)
                 if n_0 > 0:
                     self._r += 1
                     yield Reverse(n_0, n_0-1)
@@ -128,14 +129,14 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
 
                 if n_0 == self._max_n - self._r:
                     cp_delete = True
-            
-                d_cp_action, (d_n_0, _, d_storage) = action(i + 2)
-                if d_cp_action == "Discard":
-                    if d_n_0 != n_0 or d_storage != storage:
-                        raise RuntimeError("Invalid schedule")
-                    cp_delete = True
-                else:
-                    cp_delete = False
+                elif i < len(self._schedule) - 2:
+                    d_cp_action, (d_n_0, _, d_storage) = action(i + 2)
+                    if d_cp_action == "Discard":
+                        if d_n_0 != n_0 or d_storage != storage:
+                            raise RuntimeError("Invalid schedule")
+                        cp_delete = True
+                    else:
+                        cp_delete = False
                 yield Clear(True, True) 
                 if cp_delete:
                     self.snapshots.remove(n_0)

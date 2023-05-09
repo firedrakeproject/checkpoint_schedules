@@ -281,7 +281,6 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
         )
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence
-    print(wvect[K] + hoptp[K][l][cmem], hopt[K-1][l][cvect[K-1]])
     if wvect[K] + hoptp[K][l][cmem] < hopt[K-1][l][cvect[K-1]]:
         sequence.insert(Operation("Write", [K, 0]))
         sequence.insert_sequence(

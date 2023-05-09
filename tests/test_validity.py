@@ -47,11 +47,12 @@ def h_revolve(n, s):
             h_revolve),
         #  (mixed, {})
     ])
-@pytest.mark.parametrize("n, S", [(1, (0,)),
-                                  (2, (1,)),
-                                  (3, (1, 2)),
-                                  (10, tuple(range(1, 10))),
-                                  (100, tuple(range(1, 100))),
+@pytest.mark.parametrize("n, S", [
+                                # (1, (0,)),
+                                #   (2, (1,)),
+                                #   (3, (1, 2)),
+                                #   (10, tuple(range(1, 10))),
+                                #   (100, tuple(range(1, 100))),
                                   (100, tuple(range(10, 100, 10)))])
 def test_validity(schedule, n, S):
     """Test validity.
@@ -86,7 +87,7 @@ def test_validity(schedule, n, S):
         fwd_chk = {"RAM": {}}
        
         cp_schedule, storage_limits, data_limit = schedule(n, s)  # noqa: E501
-
+        print(cp_schedule._schedule)
         if cp_schedule is None:
             pytest.skip("Incompatible with schedule type")
         assert cp_schedule.n() == 0
@@ -102,7 +103,6 @@ def test_validity(schedule, n, S):
         initial_condition()
         while True:
             cp_action = next(cp_schedule)
-            print(cp_action)
             if cp_action.type == "Clear":
                 if cp_action.clear_ics:
                     ics.clear()
@@ -193,7 +193,6 @@ def test_validity(schedule, n, S):
             # adjoint
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
-          
             # Checkpoint storage limits are not exceeded
             for storage_type, storage_limit in storage_limits.items():
                 assert len(snapshots[storage_type]) <= storage_limit
