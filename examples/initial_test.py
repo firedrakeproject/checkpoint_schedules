@@ -25,13 +25,15 @@ def solvers_with_hrevolve(fwd, bwd, chk_in_ram, chk_in_disk, steps):
         model_n = 0
         model_r = 0
         hrev_schedule = HRevolveCheckpointSchedule(steps, chk_in_ram, chk_in_disk)
-
+        storage_limits = {"RAM": chk_in_ram, "disk": chk_in_disk}
+        init_condition = 0
         store_ics = False
         store_data = False
         ics = set()
         data = set()
+        sol = set()
         snapshots = {"RAM": {}, "disk": {}}
-        fwd_data = {"RAM": {}, "disk": {}}
+        fwd_chk = {"RAM": {}}
         if hrev_schedule is None:
             print("Incompatible with schedule type")
         
@@ -41,8 +43,13 @@ def solvers_with_hrevolve(fwd, bwd, chk_in_ram, chk_in_disk, steps):
                 hrev_schedule.max_n() is None
                 or hrev_schedule.max_n() == steps
             )
-        # set the initial condition
-        ic = fwd.ic
+        def initial_condition():
+            """Set the initial condition.
+            """
+            sol.add(init_condition)
+            ics.add(model_n)
+
+        initial_condition()
         while True:
             cp_action = next(hrev_schedule)
             if cp_action.type == "Clear":
@@ -54,32 +61,39 @@ def solvers_with_hrevolve(fwd, bwd, chk_in_ram, chk_in_disk, steps):
                 store_ics = cp_action.store_ics
                 store_data = cp_action.store_data
             elif cp_action.type == "Write":
-                if store_ics:
-                    ics.add(ic)
-                    ic = None
-                assert ics is not None
-                snapshots[cp_action.storage][cp_action.n] = (set(ics))
+                assert len(ics) > 0 and len(sol) > 0
+                if len(ics) > 0:
+                    assert cp_action.n == max(ics)
+                snapshots[cp_action.storage][cp_action.n] = (set(ics), set(sol))
             elif cp_action.type == "WriteForward":
-                assert ic==cp_action.n
-                data.add(ic)
-                ic = None
+                assert len(ics) == 0 and len(data) > 0
+                assert cp_action.n == max(data)
+                fwd_chk['RAM'][cp_action.n] = (set(data), set(sol))
             elif cp_action.type == "Forward":
-                assert len(ics) == 1
                 fwd.advance(cp_action.n0, cp_action.n1)
                 n1 = min(cp_action.n1, steps)
                 model_n = n1
+
+                if store_ics:
+                    ics.add(n1)
+                if store_data:
+                    data.add(n1)
+
                 if n1 == steps:
                     hrev_schedule.finalize(n1)
-                ic = n1
+                sol = set()
+                sol.add(n1)
             elif cp_action.type == "Read":
                 cp = snapshots[cp_action.storage][cp_action.n]
                 model_n = None
-                if len(cp) > 0:
+                if len(cp[0]) > 0:
                     ics.clear()
-                    ics.update(cp)
-                if len(data) > 0:
-                    data.clear()
-                    data.update(cp)
+                    ics.update(cp[0])
+                    model_n = cp_action.n
+
+                if len(cp[1]) > 0:
+                    sol.clear()
+                    sol.update(cp[1])
                 
                 model_n = cp_action.n
                 if cp_action.delete:
@@ -97,7 +111,11 @@ def solvers_with_hrevolve(fwd, bwd, chk_in_ram, chk_in_disk, steps):
             elif cp_action.type == "EndReverse":
                 assert model_r == steps
                 if not cp_action.exhausted:
-                    model_r = 0         
+                    model_r = 0       
+
+             # Checkpoint storage limits are not exceeded
+            for storage_type, storage_limit in storage_limits.items():
+                assert len(snapshots[storage_type]) <= storage_limit  
             assert model_n is None or model_n == hrev_schedule.n()
             assert model_r == hrev_schedule.r()
             if cp_action.type == "EndReverse":
@@ -175,8 +193,8 @@ class Backward():
 
 start = tm.time()
 init_condition = 0
-steps = 10
-sm_chk = 2
+steps = 250
+sm_chk = 25
 sd_chk = 0
 fwd = Forward(init_condition)
 bwd = Backward()

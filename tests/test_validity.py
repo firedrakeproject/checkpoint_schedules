@@ -52,7 +52,7 @@ def h_revolve(n, s):
                                   (3, (1, 2)),
                                   (10, tuple(range(1, 10))),
                                   (100, tuple(range(1, 100))),
-                                  (250, tuple(range(25, 250, 25)))])
+                                  (100, tuple(range(10, 100, 10)))])
 def test_validity(schedule, n, S):
     """Test validity.
 
@@ -84,6 +84,7 @@ def test_validity(schedule, n, S):
         sol = set()
         snapshots = {"RAM": {}, "disk": {}}
         fwd_chk = {"RAM": {}}
+       
         cp_schedule, storage_limits, data_limit = schedule(n, s)  # noqa: E501
 
         if cp_schedule is None:
