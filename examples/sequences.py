@@ -4,7 +4,7 @@ from checkpoint_schedules.hrevolve_sequence import \
 
 def test_hrevolve_l2():
     # Check that we reproduce Listing 2 from Herrmann and Pallez (2020).
-    sequence = hrevolve(20, [1, 2, 10], [0, 2, 3], [0, 2, 3])
+    sequence = hrevolve(10, [3, 0, 0], [0, 2, 3], [0, 2, 3])
     print(sequence)
     # assert sequence.storage[0] == [17, 14, 12, 9, 7, 3, 0]
     # assert sequence.storage[1] == [7, 12]
@@ -103,9 +103,9 @@ def test_periodic_disk_revolve_l7():
     # assert sequence.makespan == 25
 
 test_hrevolve_l2()
-test_disk_revolve_l3()
-test_disk_revolve_l4()
-test_revolve_1d_l4()
-test_disk_revolve_l5()
-test_periodic_disk_revolve_l6()
-test_periodic_disk_revolve_l7()
+# test_disk_revolve_l3()
+# test_disk_revolve_l4()
+# test_revolve_1d_l4()
+# test_disk_revolve_l5()
+# test_periodic_disk_revolve_l6()
+# test_periodic_disk_revolve_l7()
