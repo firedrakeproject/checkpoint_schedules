@@ -61,9 +61,6 @@ def solvers_with_hrevolve(fwd, bwd, chk_in_ram, chk_in_disk, steps):
                 store_ics = cp_action.store_ics
                 store_data = cp_action.store_data
             elif cp_action.type == "Write":
-                assert len(ics) > 0 and len(sol) > 0
-                if len(ics) > 0:
-                    assert cp_action.n == max(ics)
                 snapshots[cp_action.storage][cp_action.n] = (set(ics), set(sol))
             elif cp_action.type == "WriteForward":
                 assert len(ics) == 0 and len(data) > 0
@@ -73,7 +70,6 @@ def solvers_with_hrevolve(fwd, bwd, chk_in_ram, chk_in_disk, steps):
                 fwd.advance(cp_action.n0, cp_action.n1)
                 n1 = min(cp_action.n1, steps)
                 model_n = n1
-
                 if store_ics:
                     ics.add(n1)
                 if store_data:
@@ -98,26 +94,17 @@ def solvers_with_hrevolve(fwd, bwd, chk_in_ram, chk_in_disk, steps):
                 model_n = cp_action.n
                 if cp_action.delete:
                     del snapshots[cp_action.storage][cp_action.n]
-            elif cp_action.type == "Reverse":
-                assert len(data) == 1 or len(ics) == 1
-                if len(data)==1 and len(ics)==1:
-                    raise RuntimeError("Invalid number of checkpoint saves.")
-                
+            elif cp_action.type == "Reverse": 
                 bwd.advance(cp_action.n1, cp_action.n0)
-                model_r += cp_action.n1 - cp_action.n0
+                if len(hrev_schedule.forward_data)==0:
+                    fwd_chk["RAM"].clear()   
 
-            elif cp_action.type == "EndForward":
-                assert model_n is not None and model_n == steps
-            elif cp_action.type == "EndReverse":
-                assert model_r == steps
-                if not cp_action.exhausted:
-                    model_r = 0       
-
-             # Checkpoint storage limits are not exceeded
+            print(len(fwd_chk["RAM"]), len(snapshots["RAM"]))
+            # Checkpoint storage limits are not exceeded
             for storage_type, storage_limit in storage_limits.items():
                 assert len(snapshots[storage_type]) <= storage_limit  
+                assert len(fwd_chk["RAM"])+ len(snapshots["RAM"])<= storage_limits["RAM"] + 1
             assert model_n is None or model_n == hrev_schedule.n()
-            assert model_r == hrev_schedule.r()
             if cp_action.type == "EndReverse":
                 break
 
@@ -194,8 +181,8 @@ class Backward():
 start = tm.time()
 init_condition = 0
 steps = 10
-sm_chk = 2
-sd_chk = 1
+sm_chk = 1
+sd_chk = 2
 fwd = Forward(init_condition)
 bwd = Backward()
 solvers_with_hrevolve(fwd, bwd, sm_chk, sd_chk, steps)

@@ -182,6 +182,7 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
             hrevolve_aux(jmin - 1, K, cmem, cvect, wvect, rvect,
                          hoptp=hoptp, hopt=hopt, **params)
         )
+        
         return sequence
     else:
         sequence.insert_sequence(
@@ -287,6 +288,7 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
             hrevolve_aux(l, K, cmem, cvect, wvect, rvect,
                          hoptp=hoptp, hopt=hopt, **parameters)
         )
+        sequence.insert(Operation("Discard", [K, 0]))
         return sequence
     else:
         sequence.insert_sequence(

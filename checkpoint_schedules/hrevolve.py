@@ -117,12 +117,12 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
                     d_cp_action, (d_n_0, _, d_storage) = action(i + 1)
                     if d_cp_action == "Discard_Forward":
                         self.forward_data.remove(n_0)
+
                 if n_0 > 0:
                     self._r += 1
                     yield Reverse(n_0, n_0-1)
                 else:
                     Reverse(n_0, n_0)
-                  
             elif cp_action == "Read":
                 if deferred_cp is not None:
                     raise RuntimeError("Invalid checkpointing state")

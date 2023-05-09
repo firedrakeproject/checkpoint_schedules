@@ -53,7 +53,7 @@ def h_revolve(n, s):
                                 #   (3, (1, 2)),
                                 #   (10, tuple(range(1, 10))),
                                 #   (100, tuple(range(1, 100))),
-                                  (100, tuple(range(10, 100, 10)))])
+                                  (25, tuple(range(2, 25, 2)))])
 def test_validity(schedule, n, S):
     """Test validity.
 
@@ -119,6 +119,7 @@ def test_validity(schedule, n, S):
             elif cp_action.type == "WriteForward":
                 assert len(ics) == 0 and len(data) > 0
                 assert cp_action.n == max(data)
+                assert data == cp_schedule.forward_data
                 fwd_chk['RAM'][cp_action.n] = (set(data), set(sol))
             elif cp_action.type == "Forward":
                 assert model_n is not None and model_n == cp_action.n0
@@ -179,9 +180,10 @@ def test_validity(schedule, n, S):
                 assert cp_action.n0 < cp_action.n1
                 # Non-linear dependency data for these steps is stored
                 sol.clear()
-
+                
                 model_r += cp_action.n1 - cp_action.n0
-
+                if len(cp_schedule.forward_data)==0:
+                    fwd_chk["RAM"].clear()
             elif cp_action.type == "EndForward":
                 assert model_n is not None and model_n == cp_schedule.max_n()
             elif cp_action.type == "EndReverse":
@@ -191,13 +193,16 @@ def test_validity(schedule, n, S):
                     model_r = 0
             # The schedule state is consistent with both the forward and
             # adjoint
+            print(cp_action)
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
             # Checkpoint storage limits are not exceeded
+            # print(storage_limits["RAM"])
             for storage_type, storage_limit in storage_limits.items():
                 assert len(snapshots[storage_type]) <= storage_limit
+                assert len(snapshots["RAM"]) + len(fwd_chk["RAM"]) <= storage_limits["RAM"] + 1
+                
             # Data storage limit is not exceeded
-            
             assert min(1, len(ics)) + len(data) <= data_limit
 
             if cp_action.type == "EndReverse":
