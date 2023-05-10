@@ -26,8 +26,8 @@ def h_revolve(n, s):
         return (None,
                 {"RAM": 0, "disk": 0}, 0)
     else:
-        return (HRevolveCheckpointSchedule(n, 1, s),
-                {"RAM": 1, "disk": s}, 1)
+        return (HRevolveCheckpointSchedule(n, s - s // 3, (s // 3)),
+                {"RAM": s - s // 3, "disk": (s // 3)}, 1)
 
 
 @pytest.mark.parametrize(
