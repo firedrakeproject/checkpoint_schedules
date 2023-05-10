@@ -33,7 +33,7 @@ class HRevolveCheckpointSchedule(CheckpointSchedule):
         Cost of the forward steps.
     """
     def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk, *,
-                 wvect=(0.0, 0.1), rvect=(0.0, 0.1), cfwd=1.0, cbwd=1.0, **kwargs):
+                 wvect=(0.0, 1.1), rvect=(0.0, 1.1), cfwd=1.0, cbwd=1.0, **kwargs):
         
         super().__init__(max_n)
         self._snapshots_in_ram = snapshots_in_ram

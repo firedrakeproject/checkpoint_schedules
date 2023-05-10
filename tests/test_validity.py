@@ -26,8 +26,8 @@ def h_revolve(n, s):
         return (None,
                 {"RAM": 0, "disk": 0}, 0)
     else:
-        return (HRevolveCheckpointSchedule(n, s - s // 3, (s // 3)),
-                {"RAM": s - s // 3, "disk": (s // 3)}, 1)
+        return (HRevolveCheckpointSchedule(n, 1, s),
+                {"RAM": 1, "disk": s}, 1)
 
 
 @pytest.mark.parametrize(
@@ -53,7 +53,7 @@ def h_revolve(n, s):
                                 #   (3, (1, 2)),
                                 #   (10, tuple(range(1, 10))),
                                 #   (100, tuple(range(1, 100))),
-                                  (250, tuple(range(20, 250, 20)))])
+                                (250, tuple(range(20, 250, 20)))])
 def test_validity(schedule, n, S):
     """Test validity.
 
@@ -92,8 +92,10 @@ def test_validity(schedule, n, S):
             pytest.skip("Incompatible with schedule type")
         assert cp_schedule.n() == 0
         assert cp_schedule.r() == 0
+        assert s <= n
         assert cp_schedule.max_n() is None or cp_schedule.max_n() == n
-        
+        assert n >= 0
+
         def initial_condition():
             """Set the initial condition.
             """
