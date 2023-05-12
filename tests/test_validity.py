@@ -70,7 +70,7 @@ def h_revolve(n, s, p):
                                     (250, 125),
                                     (250, 150)
                                 ])
-@pytest.mark.parametrize("p", [1, 3, 5])
+@pytest.mark.parametrize("p", [2, 3, 5, 4])
 def test_validity(schedule, n, S, p):
     """Test validity.
 
