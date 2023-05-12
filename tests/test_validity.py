@@ -18,9 +18,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with tlm_adjoint.  If not, see <https://www.gnu.org/licenses/>.
 
-from hrevolve_checkpointing.checkpoint_schedules import \
+from checkpoint_schedules.schedule import \
     Clear, Configure, Forward, Reverse, Read, Write, EndForward, EndReverse
-from hrevolve_checkpointing.checkpoint_schedules import \
+from checkpoint_schedules import \
     (HRevolveCheckpointSchedule)
 
 import functools
@@ -83,18 +83,19 @@ def h_revolve(n, s):
     #  (two_level, {"period": 10}),
      pytest.param(
          h_revolve, {},
-         marks=pytest.mark.skipif(hrevolve is None,
-                                  reason="H-Revolve not available")),
-    #  (mixed, {})
+        #  marks=pytest.mark.skipif(hrevolve is None,
+        #                           reason="H-Revolve not available")),
+    #  (mixed, {}
+    )
      ]
      )
 @pytest.mark.parametrize("n, S", [
                                 #   (1, (0,)),
-                                  (5, (2,)),
+                                #   (5, (2,)),
                                 #   (3, (1, 2)),
                                 #   (10, tuple(range(1, 10))),
                                 #   (100, tuple(range(1, 100))),
-                                #   (10, tuple(range(5, 10, 5)))
+                                  (10, tuple(range(5, 10, 5)))
                                   ])
 def test_validity(schedule, schedule_kwargs,
                   n, S):
@@ -245,12 +246,9 @@ def test_validity(schedule, schedule_kwargs,
         assert cp_schedule.max_n() is None or cp_schedule.max_n() == n
        
         while True:
-            print(model_n, " 0")
-
             cp_action = next(cp_schedule)
+            print(cp_action)
             action(cp_action)
-            print(model_n, " 1")
-            print("----------------")
             # The schedule state is consistent with both the forward and
             # adjoint
             assert model_n is None or model_n == cp_schedule.n()
