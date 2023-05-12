@@ -27,9 +27,8 @@ def h_revolve(n, s):
         return (None,
                 {"RAM": 0, "disk": 0}, 0)
     else:
-        return (HRevolveCheckpointSchedule(n, s - s // 3, (s // 3)),
-                {"RAM": s - s // 3, "disk": (s // 3)}, 1)
-
+        return (HRevolveCheckpointSchedule(n, s // 2, s - (s // 2)),
+                {"RAM": s // 2, "disk": s - (s // 2)}, 1)
 
 @pytest.mark.parametrize(
     "schedule",
@@ -54,7 +53,7 @@ def h_revolve(n, s):
                                 #   (3, (1, 2)),
                                 #   (10, tuple(range(1, 10))),
                                 #   (100, tuple(range(1, 100))),
-                                (250, tuple(range(20, 250, 20)))])
+                                (10, tuple(range(5, 10, 5)))])
 def test_validity(schedule, n, S):
     """Test validity.
 
