@@ -44,7 +44,6 @@ class Clear(CheckpointAction):
         If True, the latest forward checkpoint data is coming clear.
     """
     def __init__(self, clear_ics, clear_data):
-        self.type = "Clear"
         super().__init__(clear_ics, clear_data)
 
     @property
@@ -68,7 +67,6 @@ class Configure(CheckpointAction):
 
     """
     def __init__(self, store_ics, store_data):
-        self.type = "Configure"
         super().__init__(store_ics, store_data)
 
     @property
@@ -86,6 +84,7 @@ class Configure(CheckpointAction):
     def store_data(self):
         return self.args[1]
 
+
 class Forward(CheckpointAction):
     """Abstract forward action.
 
@@ -97,7 +96,6 @@ class Forward(CheckpointAction):
         Final step.
     """
     def __init__(self, n0, n1):
-        self.type = "Forward"
         super().__init__(n0, n1)
 
     def __iter__(self):
@@ -143,7 +141,6 @@ class Reverse(CheckpointAction):
         Final step of reverse solver.  
     """
     def __init__(self, n1, n0):
-        self.type = "Reverse"
         super().__init__(n1, n0)
 
     def __iter__(self):
@@ -177,12 +174,13 @@ class Reverse(CheckpointAction):
         """
         return self.args[0]
 
+    
+
 
 class Read(CheckpointAction):
     """Action read a checkpoint.
     """
     def __init__(self, n, storage, delete):
-        self.type = "Read"
         super().__init__(n, storage, delete)
 
     @property
@@ -222,17 +220,16 @@ class Read(CheckpointAction):
 class Write(CheckpointAction):
     
     def __init__(self, n, storage):
-        self.type = "Write"
         super().__init__(n, storage)
 
     @property
     def n(self):
-        """Step.
+        """Return the Write step.
 
         Returns
         -------
         int
-            Current step.
+            Write step.
         """
         return self.args[0]
 
@@ -243,14 +240,21 @@ class Write(CheckpointAction):
         Returns
         -------
         bool
-            If "True", the checkpoint data at a step `n` is saved.
+            If "True", the checkpoint data is saved at a step `n`.
         """
         return self.args[1]
+
 
 class WriteForward(CheckpointAction):
+    """Write the latest forward step.
+    This action works to inform that there is a forward output checkpoint which 
+    is not save by the Write action. For instance, in the last step ('n = max_n') 
+    of the forward execution, the forward output is not saved in any levels.  
+    forward  
+    useful for 
+    """
     
     def __init__(self, n, storage):
-        self.type = "WriteForward"
         super().__init__(n, storage)
 
     @property
@@ -271,22 +275,19 @@ class WriteForward(CheckpointAction):
         Returns
         -------
         bool
-            If "True", the checkpoint data at a step `n` is saved.
+            If "True", the checkpoint data at a step 'n' is saved.
         """
         return self.args[1]
 
+
 class EndForward(CheckpointAction):
-    """End forward action.
-    """
-    def __init__(self):
-        self.type = "EndForward"
+    pass
 
 
 class EndReverse(CheckpointAction):
     """End reverse action.
     """
     def __init__(self, exhausted):
-        self.type = "EndReverse"
         super().__init__(exhausted)
 
     @property

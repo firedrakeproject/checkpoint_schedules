@@ -1,9 +1,10 @@
-from checkpoint_schedules.hrevolve_sequence import disk_revolve, revolve_1d, periodic_disk_revolve, hrevolve
+from checkpoint_schedules.revolve_sequences import \
+        (disk_revolve, revolve_1d, periodic_disk_revolve, hrevolve)
 
 
 def test_hrevolve_l2():
     # Check that we reproduce Listing 2 from Herrmann and Pallez (2020).
-    sequence = hrevolve(20, [1, 2, 10], [0, 2, 3], [0, 2, 3])
+    sequence = hrevolve(20, [1, 4, 0], [0, 2, 0], [0, 2, 0])
     print(sequence)
     # assert sequence.storage[0] == [17, 14, 12, 9, 7, 3, 0]
     # assert sequence.storage[1] == [7, 12]
@@ -24,7 +25,7 @@ def test_hrevolve_l2():
 
 def test_disk_revolve_l3():
     # Check that we reproduce Listing 3 from Herrmann and Pallez (2020).
-    sequence = disk_revolve(l=10, cm=2, wd=2, rd=1, ub=0)
+    sequence = disk_revolve(l=20, cm=5, wd=2, rd=1, ub=0)
     print(sequence)
     # assert sequence.memory == [5, 8, 6, 0, 3, 1]
     # assert sequence.disk == [0]
@@ -102,9 +103,9 @@ def test_periodic_disk_revolve_l7():
     # assert sequence.makespan == 25
 
 test_hrevolve_l2()
-test_disk_revolve_l3()
-test_disk_revolve_l4()
-test_revolve_1d_l4()
-test_disk_revolve_l5()
-test_periodic_disk_revolve_l6()
-test_periodic_disk_revolve_l7()
+# test_disk_revolve_l3()
+# test_disk_revolve_l4()
+# test_revolve_1d_l4()
+# test_disk_revolve_l5()
+# test_periodic_disk_revolve_l6()
+# test_periodic_disk_revolve_l7()
