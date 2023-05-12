@@ -8,7 +8,7 @@ import functools
 import pytest
 
 
-def h_revolve(n, s):
+def h_revolve(n, s, p):
     """Return H-Revolve sequence.
 
     Parameters
@@ -26,9 +26,18 @@ def h_revolve(n, s):
     if s <= 1:
         return (None,
                 {"RAM": 0, "disk": 0}, 0)
-    else:
-        return (HRevolveCheckpointSchedule(n, s // 2, s - (s // 2)),
-                {"RAM": s // 2, "disk": s - (s // 2)}, 1)
+    else:  
+        print(p)
+        s_disk = s//p
+        s_ram = abs(s - s_disk)
+        if s_ram == 0:
+            s_ram = 1
+            s_disk -= 1
+        print("s_ram = ", s_ram, "s_disk = ", s_disk)
+        assert (s_ram + s_disk) == s
+        return (HRevolveCheckpointSchedule(n, s_ram, s_disk),
+                {"RAM": s_ram, "disk": s_disk}, 1)
+                
 
 @pytest.mark.parametrize(
     "schedule",
@@ -48,13 +57,21 @@ def h_revolve(n, s):
         #  (mixed, {})
     ])
 @pytest.mark.parametrize("n, S", [
-                                # (1, (0,)),
-                                #   (2, (1,)),
-                                #   (3, (1, 2)),
-                                #   (10, tuple(range(1, 10))),
-                                #   (100, tuple(range(1, 100))),
-                                (10, tuple(range(5, 10, 5)))])
-def test_validity(schedule, n, S):
+                                    (25, 5), 
+                                    (25, 10), 
+                                    (25, 15),
+                                    (100, 10), 
+                                    (100, 20), 
+                                    (100, 30),
+                                    (250, 25), 
+                                    (250, 50), 
+                                    (250, 75),
+                                    (250, 100), 
+                                    (250, 125),
+                                    (250, 150)
+                                ])
+@pytest.mark.parametrize("p", [1, 3, 5])
+def test_validity(schedule, n, S, p):
     """Test validity.
 
     Parameters
@@ -159,7 +176,7 @@ def test_validity(schedule, n, S):
         assert len(cp[0]) > 0 or len(cp[1]) > 0
 
         # The checkpoint data is before the current location of the adjoint
-        print(cp_action.n, n, model_r)
+        # print(cp_action.n, n, model_r)
         assert cp_action.n <= n - model_r
 
         model_n = None
@@ -189,53 +206,55 @@ def test_validity(schedule, n, S):
         assert len(data) == 0
         if not cp_action.exhausted:
             model_r = 0
+   
+    # for s in S:
+    s=S
+    # for p0 in p:
+    p0 = p
+    print(f"{n=:d} {s=:d}")
 
-    for s in S:
-        print(f"{n=:d} {s=:d}")
+    model_n = 0
+    model_r = 0
+    init_condition = 0
+    store_ics = False
+    store_data = False
+    ics = set()
+    data = set()
+    sol = set()
+    snapshots = {"RAM": {}, "disk": {}}
+    fwd_chk = {"RAM": {}}
 
-        model_n = 0
-        model_r = 0
-        init_condition = 0
-        store_ics = False
-        store_data = False
-        ics = set()
-        data = set()
-        sol = set()
-        snapshots = {"RAM": {}, "disk": {}}
-        fwd_chk = {"RAM": {}}
-       
-        cp_schedule, storage_limits, data_limit = schedule(n, s)  # noqa: E501
-        print(cp_schedule._schedule)
-        if cp_schedule is None:
-            pytest.skip("Incompatible with schedule type")
-        assert cp_schedule.n() == 0
-        assert cp_schedule.r() == 0
-        assert s <= n
-        assert cp_schedule.max_n() is None or cp_schedule.max_n() == n
-        assert n >= 0
+    cp_schedule, storage_limits, data_limit = schedule(n, s, p0)  # noqa: E501
+    if cp_schedule is None:
+        pytest.skip("Incompatible with schedule type")
+    assert cp_schedule.n() == 0
+    assert cp_schedule.r() == 0
+    assert s <= n
+    assert cp_schedule.max_n() is None or cp_schedule.max_n() == n
+    assert n >= 0
 
-        def initial_condition(init_condition, sol, ics):
-            """Set the initial condition.
-            """
-            nonlocal model_n
-            sol.add(init_condition)
-            ics.add(model_n)
+    def initial_condition(init_condition, sol, ics):
+        """Set the initial condition.
+        """
+        nonlocal model_n
+        sol.add(init_condition)
+        ics.add(model_n)
 
-        initial_condition(init_condition, sol, ics)
-        c = 0
-        while True:
-            cp_action = next(cp_schedule) 
-            print(cp_action, c)       
-            action(cp_action)    
+    initial_condition(init_condition, sol, ics)
+    c = 0
+    while True:
+        cp_action = next(cp_schedule) 
+        # print(cp_action, c)       
+        action(cp_action)    
 
-            assert model_n is None or model_n == cp_schedule.n()
-            assert model_r == cp_schedule.r()
-            # Checkpoint storage limits are not exceeded
-            for storage_type, storage_limit in storage_limits.items():
-                assert len(snapshots[storage_type]) <= storage_limit
-                
-            # Data storage limit is not exceeded
-            assert min(1, len(ics)) + len(data) <= data_limit
-            c += 1
-            if isinstance(cp_action, EndReverse):
-                break
+        assert model_n is None or model_n == cp_schedule.n()
+        assert model_r == cp_schedule.r()
+        # Checkpoint storage limits are not exceeded
+        for storage_type, storage_limit in storage_limits.items():
+            assert len(snapshots[storage_type]) <= storage_limit
+            
+        # Data storage limit is not exceeded
+        assert min(1, len(ics)) + len(data) <= data_limit
+        c += 1
+        if isinstance(cp_action, EndReverse):
+            break

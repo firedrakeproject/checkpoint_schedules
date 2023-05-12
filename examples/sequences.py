@@ -1,4 +1,4 @@
-from checkpoint_schedules.hrevolve_sequence import \
+from checkpoint_schedules.revolve_sequences import \
         (disk_revolve, revolve_1d, periodic_disk_revolve, hrevolve)
 
 
