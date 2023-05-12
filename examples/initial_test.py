@@ -178,13 +178,13 @@ class Backward():
             i_n = i_np1
 
 
-start = tm.time()
-init_condition = 0
-steps = 25
-sm_chk = 2
-sd_chk = 2
-fwd = Forward(init_condition)
-bwd = Backward()
-solvers_with_hrevolve(fwd, bwd, sm_chk, sd_chk, steps)
-end = tm.time()
-print(end-start)
+# start = tm.time()
+# init_condition = 0
+# steps = 25
+# sm_chk = 2
+# sd_chk = 2
+# fwd = Forward(init_condition)
+# bwd = Backward()
+# solvers_with_hrevolve(fwd, bwd, sm_chk, sd_chk, steps)
+# end = tm.time()
+# print(end-start)
