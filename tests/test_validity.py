@@ -176,6 +176,7 @@ def test_validity(schedule, schedule_kwargs,
         assert len(cp[0]) > 0 or len(cp[1]) > 0
 
         # The checkpoint data is before the current location of the adjoint
+        print(cp_action.n, n, model_r)
         assert cp_action.n < n - model_r
 
         model_n = None
@@ -244,10 +245,10 @@ def test_validity(schedule, schedule_kwargs,
         assert cp_schedule.n() == 0
         assert cp_schedule.r() == 0
         assert cp_schedule.max_n() is None or cp_schedule.max_n() == n
-       
+        c = 0
         while True:
             cp_action = next(cp_schedule)
-            print(cp_action)
+            print(cp_action, c)
             action(cp_action)
             # The schedule state is consistent with both the forward and
             # adjoint
@@ -259,6 +260,6 @@ def test_validity(schedule, schedule_kwargs,
                 assert len(snapshots[storage_type]) <= storage_limit
             # Data storage limit is not exceeded
             assert min(1, len(ics)) + len(data) <= data_limit
-            
+            c += 1
             if isinstance(cp_action, EndReverse):
                 break
