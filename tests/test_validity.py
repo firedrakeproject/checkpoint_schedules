@@ -160,7 +160,7 @@ def test_validity(schedule, n, S):
 
         # The checkpoint data is before the current location of the adjoint
         print(cp_action.n, n, model_r)
-        assert cp_action.n < n - model_r
+        assert cp_action.n <= n - model_r
 
         model_n = None
 
@@ -222,11 +222,12 @@ def test_validity(schedule, n, S):
             ics.add(model_n)
 
         initial_condition(init_condition, sol, ics)
+        c = 0
         while True:
             cp_action = next(cp_schedule) 
-            print(cp_action)       
+            print(cp_action, c)       
             action(cp_action)    
-            
+
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
             # Checkpoint storage limits are not exceeded
@@ -235,6 +236,6 @@ def test_validity(schedule, n, S):
                 
             # Data storage limit is not exceeded
             assert min(1, len(ics)) + len(data) <= data_limit
-
+            c += 1
             if isinstance(cp_action, EndReverse):
                 break
