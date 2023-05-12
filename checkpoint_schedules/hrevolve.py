@@ -3,7 +3,7 @@
 # Add corect license text
 from .schedule import CheckpointSchedule, Clear, Configure, Forward, Reverse, \
     Read, Write, EndForward, EndReverse, WriteForward
-from .hrevolve_sequence import hrevolve
+from .revolve_sequences import hrevolve
 import logging
 
 __all__ = \
