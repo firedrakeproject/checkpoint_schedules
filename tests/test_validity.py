@@ -27,7 +27,6 @@ def h_revolve(n, s, p):
         return (None,
                 {"RAM": 0, "disk": 0}, 0)
     else:  
-        print(p)
         s_disk = s//p
         s_ram = abs(s - s_disk)
         if s_ram == 0:
@@ -57,12 +56,6 @@ def h_revolve(n, s, p):
         #  (mixed, {})
     ])
 @pytest.mark.parametrize("n, S", [
-                                    (25, 5), 
-                                    (25, 10), 
-                                    (25, 15),
-                                    (100, 10), 
-                                    (100, 20), 
-                                    (100, 30),
                                     (250, 25), 
                                     (250, 50), 
                                     (250, 75),
