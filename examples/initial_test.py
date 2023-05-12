@@ -1,136 +1,167 @@
+from checkpoint_schedules import \
+    (HRevolveCheckpointSchedule, Write, Clear, Configure,
+     Forward, EndForward, Reverse, Read, EndReverse, WriteForward)
+import functools
+import time as tm
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import time as tm
-from checkpoint_schedules import HRevolveCheckpointSchedule
 
 
-def solvers_with_hrevolve(fwd, bwd, chk_in_ram, chk_in_disk, steps):
-    """Forwad and Backward solvers with the employment of H-Revolve method.
+class Manage():
+    """Manage the forward and backward solvers.
 
-    Parameters
+    This object manage the solvers with the employment of the
+    hrevolve checkpointing.
+
+    Attributes
     ----------
-    fwd : object
+    forward : object
         The forward solver.
-    bwd : object
+    backward : object
         The backward solver.
-    chk_in_ram : int
-        Number of checkpoint stored in RAM.
-    chk_in_disk : int
-        Number of checkpoint stored in Disk.
-    steps : int
+    save_ram : int
+        Number of checkpoint that will be stored.
+    total_steps : int
         Total steps used to execute the solvers.
+
     """
-    S = (chk_in_ram,)
-    for s in S:
+    def __init__(self, forward, backward, save_ram, save_disk, total_steps):
+        self.save_ram = save_ram
+        self.save_disk = save_disk
+        self.forward = forward
+        self.backward = backward
+        self.tot_steps = total_steps
+
+    def actions(self):
+        """Actions.
+
+        Raises
+        ------
+        TypeError
+            _description_
+        """
+        @functools.singledispatch
+        def action(cp_action):
+            raise TypeError("Unexpected action")
+
+        @action.register(Clear)
+        def action_clear(cp_action):
+            if cp_action.clear_ics:
+                ics.clear()
+            if cp_action.clear_data:
+                data.clear()
+
+        @action.register(Configure)
+        def action_configure(cp_action):
+            nonlocal store_ics, store_data
+
+            store_ics = cp_action.store_ics
+            store_data = cp_action.store_data
+
+        @action.register(Write)
+        def action_write(cp_action):
+            snapshots[cp_action.storage][cp_action.n] = (set(ics), set(data))
+
+        @action.register(WriteForward)
+        def action_write_forward(cp_action):
+            assert len(ics) == 0 and len(data) > 0
+            assert cp_action.n == max(data)
+            
+        @action.register(Forward)
+        def action_forward(cp_action):
+            nonlocal model_n
+
+            self.forward.advance(cp_action.n0, cp_action.n1)
+
+            n1 = min(cp_action.n1, self.tot_steps)
+            model_n = n1
+            if store_ics:
+                ics.update(range(cp_action.n0, n1))
+            if store_data:
+                data.update(range(cp_action.n0, n1+1))
+            if n1 == self.tot_steps:
+                hrev_schedule.finalize(n1)
+
+        @action.register(Reverse)
+        def action_reverse(cp_action):
+            nonlocal model_r
+            self.backward.advance(cp_action.n1, cp_action.n0)
+            model_r += cp_action.n1 - cp_action.n0
+
+        @action.register(Read)
+        def action_read(cp_action):
+            nonlocal model_n
+            cp = snapshots[cp_action.storage][cp_action.n]
+            model_n = None
+
+            if len(cp[0]) > 0:
+                ics.clear()
+                ics.update(cp[0])
+                model_n = cp_action.n
+
+            if len(cp[1]) > 0:
+                data.clear()
+                data.update(cp[1])
+            
+            if cp_action.delete:
+                del snapshots[cp_action.storage][cp_action.n]
+
+        @action.register(EndForward)
+        def action_end_forward(cp_action):
+            # The correct number of forward steps has been taken
+            assert model_n is not None and model_n == self.tot_steps
+
+        @action.register(EndReverse)
+        def action_end_reverse(cp_action):
+            nonlocal model_r
+
+            # The correct number of adjoint steps has been taken
+            assert model_r == self.tot_steps
+
+            if not cp_action.exhausted:
+                model_r = 0
+
         model_n = 0
         model_r = 0
-        hrev_schedule = HRevolveCheckpointSchedule(steps, chk_in_ram, chk_in_disk)
-        storage_limits = {"RAM": chk_in_ram, "disk": chk_in_disk}
-        init_condition = 0
         store_ics = False
-        store_data = False
         ics = set()
+        store_data = False
         data = set()
-        sol = set()
+
         snapshots = {"RAM": {}, "disk": {}}
-        fwd_chk = {"RAM": {}}
+
+        hrev_schedule = HRevolveCheckpointSchedule(self.tot_steps, self.save_ram, self.save_disk)
         if hrev_schedule is None:
             print("Incompatible with schedule type")
-        
+
         assert hrev_schedule.n() == 0
         assert hrev_schedule.r() == 0
         assert (
                 hrev_schedule.max_n() is None
-                or hrev_schedule.max_n() == steps
+                or hrev_schedule.max_n() == self.tot_steps
             )
-        def initial_condition():
-            """Set the initial condition.
-            """
-            sol.add(init_condition)
-            ics.add(model_n)
-
-        initial_condition()
         while True:
             cp_action = next(hrev_schedule)
-            if cp_action.type == "Clear":
-                if cp_action.clear_ics:
-                    ics.clear()
-                if cp_action.clear_data:
-                    data.clear()
-            elif cp_action.type == "Configure":
-                store_ics = cp_action.store_ics
-                store_data = cp_action.store_data
-            elif cp_action.type == "Write":
-                snapshots[cp_action.storage][cp_action.n] = (set(ics), set(sol))
-            elif cp_action.type == "WriteForward":
-                assert len(ics) == 0 and len(data) > 0
-                assert cp_action.n == max(data)
-                fwd_chk['RAM'][cp_action.n] = (set(data), set(sol))
-            elif cp_action.type == "Forward":
-                fwd.advance(cp_action.n0, cp_action.n1)
-                n1 = min(cp_action.n1, steps)
-                model_n = n1
-                if store_ics:
-                    ics.add(n1)
-                if store_data:
-                    data.add(n1)
-
-                if n1 == steps:
-                    hrev_schedule.finalize(n1)
-                sol = set()
-                sol.add(n1)
-            elif cp_action.type == "Read":
-                cp = snapshots[cp_action.storage][cp_action.n]
-                model_n = None
-                if len(cp[0]) > 0:
-                    ics.clear()
-                    ics.update(cp[0])
-                    model_n = cp_action.n
-
-                if len(cp[1]) > 0:
-                    sol.clear()
-                    sol.update(cp[1])
-                
-                model_n = cp_action.n
-                if cp_action.delete:
-                    del snapshots[cp_action.storage][cp_action.n]
-            elif cp_action.type == "Reverse": 
-                bwd.advance(cp_action.n1, cp_action.n0)
-                if len(hrev_schedule.forward_data)==0:
-                    fwd_chk["RAM"].clear()   
-
-            print(len(fwd_chk["RAM"]), len(snapshots["RAM"]))
-            # Checkpoint storage limits are not exceeded
-            for storage_type, storage_limit in storage_limits.items():
-                assert len(snapshots[storage_type]) <= storage_limit  
-                assert len(fwd_chk["RAM"])+ len(snapshots["RAM"])<= storage_limits["RAM"] + 1
+            action(cp_action)
             assert model_n is None or model_n == hrev_schedule.n()
-            if cp_action.type == "EndReverse":
+            assert model_r == hrev_schedule.r()
+
+            if isinstance(cp_action, EndReverse):
                 break
 
 
-class Forward():
-    """Forward solver.
+class execute_fwd():
+    """Define the a forward solver.
 
     """
-    def __init__(self, ic):
+    def __init__(self):
+        self.exp = None
         self.chk_id = None
         self.steps = steps
         self.chk = None
-        self.ic = ic
-
-    def initial_condition(self):
-        """Initial condition.
-
-        Returns
-        -------
-        float
-            _description_
-        """
-        return self.ic
 
     def advance(self, n_0: int, n_1: int) -> None:
-        """A simple example to illustrate the forwad advance.
+        """Advance the foward equation.
 
         Parameters
         ----------
@@ -138,22 +169,23 @@ class Forward():
             Initial time step.
         n1
             Final time step.
+
         """
         print((">"*(n_1-n_0)).rjust(n_1))
         i_n = n_0
         while i_n < n_1:
             i_np1 = i_n + 1
             i_n = i_np1
- 
+        self.chk = i_n
            
     def getsteps(self) -> int:
         """Return the total time steps.
 
         """
-        return steps
+        return self.steps
    
 
-class Backward():
+class execute_bwd():
     """This object define the a forward solver.
 
     """
@@ -162,7 +194,7 @@ class Backward():
         self.sol = None
 
     def advance(self, n_1: int, n_0: int) -> None:
-        """A simple example to illustrate the forwad advance.
+        """Execute the backward equation.
 
         Parameters
         ----------
@@ -170,6 +202,7 @@ class Backward():
             Initial time step in reverse state.
         n0
             Final time step in reverse state.
+
         """
         print("<".rjust(n_1))
         i_n = n_1
@@ -178,13 +211,13 @@ class Backward():
             i_n = i_np1
 
 
-# start = tm.time()
-# init_condition = 0
-# steps = 25
-# sm_chk = 2
-# sd_chk = 2
-# fwd = Forward(init_condition)
-# bwd = Backward()
-# solvers_with_hrevolve(fwd, bwd, sm_chk, sd_chk, steps)
-# end = tm.time()
-# print(end-start)
+start = tm.time()
+steps = 200
+schk = 7
+sdisk = 0
+fwd = execute_fwd()
+bwd = execute_bwd()
+manage = Manage(fwd, bwd, schk, sdisk, steps)
+manage.actions()
+end = tm.time()
+print(end-start)
