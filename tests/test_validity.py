@@ -95,7 +95,7 @@ def h_revolve(n, s):
                                 #   (3, (1, 2)),
                                 #   (10, tuple(range(1, 10))),
                                 #   (100, tuple(range(1, 100))),
-                                  (10, tuple(range(5, 10, 5)))
+                                  (25, tuple(range(5, 25, 5)))
                                   ])
 def test_validity(schedule, schedule_kwargs,
                   n, S):
@@ -239,7 +239,7 @@ def test_validity(schedule, schedule_kwargs,
         snapshots = {"RAM": {}, "disk": {}}
        
         cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs)  # noqa: E501
-        # print(S, cp_schedule.max_n())
+        print(storage_limits)
         if cp_schedule is None:
             pytest.skip("Incompatible with schedule type")
         assert cp_schedule.n() == 0
