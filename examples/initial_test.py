@@ -214,7 +214,7 @@ class execute_bwd():
 start = tm.time()
 steps = 200
 schk = 7
-sdisk = 0
+sdisk = 7
 fwd = execute_fwd()
 bwd = execute_bwd()
 manage = Manage(fwd, bwd, schk, sdisk, steps)
