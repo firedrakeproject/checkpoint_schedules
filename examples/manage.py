@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+from tabulate import tabulate
 from checkpoint_schedules import \
     (HRevolveCheckpointSchedule, Write, Clear, Configure,
      Forward, EndForward, Reverse, Read, EndReverse)
+
 import functools
 
 __all__ = \
@@ -30,8 +31,9 @@ class Manage():
         Total steps used to execute the solvers.
 
     """
-    def __init__(self, forward, backward, save_chk, total_steps):
+    def __init__(self, forward, backward, save_chk, disk_chk, total_steps):
         self.save_chk = save_chk
+        self.disk_chk = disk_chk
         self.forward = forward
         self.backward = backward
         self.tot_steps = total_steps
@@ -133,7 +135,7 @@ class Manage():
 
             snapshots = {"RAM": {}, "disk": {}}
 
-            hrev_schedule = HRevolveCheckpointSchedule(self.tot_steps, self.save_chk, 0)
+            hrev_schedule = HRevolveCheckpointSchedule(self.tot_steps, self.save_chk, self.disk_chk)
 
             if hrev_schedule is None:
                 print("Incompatible with schedule type")
@@ -144,12 +146,19 @@ class Manage():
                     hrev_schedule.max_n() is None
                     or hrev_schedule.max_n() == self.tot_steps
                 )
+            c = 0
             while True:
                 cp_action = next(hrev_schedule)
-                self.action_list.append(cp_action)
+                self.action_list.append([c, cp_action])
                 action(cp_action)
                 assert model_n is None or model_n == hrev_schedule.n()
                 assert model_r == hrev_schedule.r()
-
+                c+=1
                 if isinstance(cp_action, EndReverse):
+                    # table = tabulate(self.action_list, headers="firstrow", tablefmt="grid")
+                    col_names = ["Index", "Actions"]
+  
+                    #display table
+                    print(tabulate(self.action_list, headers=col_names))
                     break
+

@@ -62,11 +62,11 @@ class Backward():
             i_n = i_np1
 
 start = tm.time()
-steps = 5
-schk = 2
+steps = 4
+schk = 1
 fwd = Forward()
 bwd = Backward()
-manage = Manage(fwd, bwd, schk, steps)
+manage = Manage(fwd, bwd, schk, 1, steps)
 manage.actions()
 end = tm.time()
 print(end-start)
