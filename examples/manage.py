@@ -136,7 +136,10 @@ class Manage():
             snapshots = {"RAM": {}, "disk": {}}
 
             hrev_schedule = HRevolveCheckpointSchedule(self.tot_steps, self.save_chk, self.disk_chk)
-            print(hrev_schedule._schedule)
+            print(" tlm_adjoint + original hrevolve sequence")
+            print("Total steps: ", self.tot_steps, ", Num. Checkpoint in RAM: ", self.save_chk, ", Num. Checkpoint in disk: ", self.disk_chk)
+            print("-------------------------------------------------------------------")
+            print(hrev_schedule._schedule) 
             if hrev_schedule is None:
                 print("Incompatible with schedule type")
 
