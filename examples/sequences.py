@@ -25,7 +25,7 @@ def test_hrevolve_l2():
 
 def test_disk_revolve_l3():
     # Check that we reproduce Listing 3 from Herrmann and Pallez (2020).
-    sequence = disk_revolve(l=20, cm=2, wd=2, rd=1, ub=0)
+    sequence = disk_revolve(l=10, cm=3, wd=2, rd=1, ub=0)
     print(sequence)
     # assert sequence.memory == [5, 8, 6, 0, 3, 1]
     # assert sequence.disk == [0]
