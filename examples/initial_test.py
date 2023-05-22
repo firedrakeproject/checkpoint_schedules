@@ -62,8 +62,8 @@ class Backward():
             i_n = i_np1
 
 start = tm.time()
-steps = 20
-schk = 2
+steps = 10
+schk = 3
 sdisk = 0
 fwd = Forward()
 bwd = Backward()
