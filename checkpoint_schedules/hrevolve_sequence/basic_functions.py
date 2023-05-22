@@ -91,7 +91,7 @@ class Operation:
         if type(self.index) is int:
             return official_names[self.type] + "_" + str(self.index)
         elif type(self.index) is list:
-            if self.type == "Forward":
+            if self.type == "Forward" or self.type == "Backward":
                 return official_names[self.type] + "_" + str(self.index[0]) + "->" + str(self.index[1])
             elif self.type == "Forward_branch":
                 return official_names[self.type] + "^" + str(self.index[0]) + "_" + str(self.index[1]) + "->" + str(self.index[2])
@@ -160,7 +160,7 @@ class Operation:
         if type(self.index) is int:
             self.index += size
         elif type(self.index) is list:
-            if self.type == "Forward":
+            if self.type == "Forward" or self.type == "Backward":
                 self.index[0] += size
                 self.index[1] += size
             elif self.type == "Forwards_multi":

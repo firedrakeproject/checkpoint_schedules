@@ -25,7 +25,7 @@ def test_hrevolve_l2():
 
 def test_disk_revolve_l3():
     # Check that we reproduce Listing 3 from Herrmann and Pallez (2020).
-    sequence = disk_revolve(l=10, cm=2, wd=2, rd=1, ub=0)
+    sequence = disk_revolve(l=20, cm=2, wd=2, rd=1, ub=0)
     print(sequence)
     # assert sequence.memory == [5, 8, 6, 0, 3, 1]
     # assert sequence.disk == [0]
@@ -72,7 +72,7 @@ def test_disk_revolve_l5():
 
 def test_periodic_disk_revolve_l6():
     # Check that we reproduce Listing 6 from Herrmann and Pallez (2020).
-    sequence = periodic_disk_revolve(l=10, cm=2, wd=2, rd=1, ub=0)
+    sequence = periodic_disk_revolve(l=10-1, cm=2, wd=2, rd=1, ub=0)
     print(sequence)
     # compare_sequences(
     #     str(sequence), '[WD_0, F_0->2, WD_3, F_3->5, WD_6, F_6->8, WM_9,'
@@ -102,10 +102,10 @@ def test_periodic_disk_revolve_l7():
     # assert sequence.disk == [0, 3, 6]
     # assert sequence.makespan == 25
 
-test_hrevolve_l2()
+# test_hrevolve_l2()
 test_disk_revolve_l3()
-test_disk_revolve_l4()
-test_revolve_1d_l4()
-test_disk_revolve_l5()
-test_periodic_disk_revolve_l6()
-test_periodic_disk_revolve_l7()
+# test_disk_revolve_l4()
+# test_revolve_1d_l4()
+# test_disk_revolve_l5()
+# test_periodic_disk_revolve_l6()
+# test_periodic_disk_revolve_l7()
