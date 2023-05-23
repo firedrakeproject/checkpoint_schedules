@@ -1,4 +1,4 @@
-from hrevolve import disk_revolve, revolve_1d, periodic_disk_revolve, hrevolve
+from checkpoint_schedules.hrevolve_sequence import disk_revolve, revolve_1d, periodic_disk_revolve, hrevolve
 
 
 def compare_sequences(sequence1, sequence2):
