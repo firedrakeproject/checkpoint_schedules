@@ -38,6 +38,8 @@ class Manage():
         self.backward = backward
         self.tot_steps = total_steps
         self.action_list = []
+        self.c = 0
+        self.c_back = total_steps
 
     def actions(self):
         """Actions.
@@ -73,7 +75,9 @@ class Manage():
         def action_forward(cp_action):
             nonlocal model_n
 
+            self.c += (cp_action.n1 - cp_action.n0)
             self.forward.advance(cp_action.n0, cp_action.n1)
+            self.action_list.append([self.c, cp_action])
 
             n1 = min(cp_action.n1, self.tot_steps)
             model_n = n1
@@ -87,6 +91,8 @@ class Manage():
         @action.register(Reverse)
         def action_reverse(cp_action):
             nonlocal model_r
+            self.action_list.append([self.c_back, cp_action])
+            self.c_back -= 1
             self.backward.advance(cp_action.n1, cp_action.n0)
             model_r += cp_action.n1 - cp_action.n0
 
@@ -152,7 +158,7 @@ class Manage():
             c = 0
             while True:
                 cp_action = next(hrev_schedule)
-                self.action_list.append([c, cp_action])
+                # self.action_list.append([c, cp_action])
                 action(cp_action)
                 assert model_n is None or model_n == hrev_schedule.n()
                 assert model_r == hrev_schedule.r()
@@ -160,8 +166,7 @@ class Manage():
                 if isinstance(cp_action, EndReverse):
                     # table = tabulate(self.action_list, headers="firstrow", tablefmt="grid")
                     col_names = ["Index", "Actions"]
-  
-                    #display table
-                    print(tabulate(self.action_list, headers=col_names))
+                    # #display table
+                    print(tabulate(self.action_list))
                     break
 
