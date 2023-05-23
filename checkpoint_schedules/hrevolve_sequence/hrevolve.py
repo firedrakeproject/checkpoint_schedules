@@ -120,32 +120,35 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
     if cmem == 0:
         raise KeyError("hrevolve_aux should not be call with cmem = 0. Contact developers.")
     if l == 0:
-        sequence.insert(Operation("Backward", 0))
+        sequence.insert(Operation("Backward", [1, 0]))
         return sequence
     if l == 1:
         if wvect[0] + rvect[0] < rvect[K]:
             sequence.insert(Operation("Write", [0, 0]))
         sequence.insert(Operation("Forward", [0, 1]))
         sequence.insert(Operation("Write_Forward", [0, 1]))
-        sequence.insert(Operation("Backward", 1))
+        sequence.insert(Operation("Backward", [1, 0]))
         sequence.insert(Operation("Discard_Forward", [0, 1]))
-        if wvect[0] + rvect[0] < rvect[K]:
-            sequence.insert(Operation("Read", [0, 0]))
-        else:
-            sequence.insert(Operation("Read", [K, 0]))
-        sequence.insert(Operation("Backward", 0))
+        # if wvect[0] + rvect[0] < rvect[K]:
+        #     sequence.insert(Operation("Read", [0, 0]))
+        # else:
+        #     sequence.insert(Operation("Read", [K, 0]))
+        # sequence.insert(Operation("Backward", 0))
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if K == 0 and cmem == 1:
         for index in range(l - 1, -1, -1):
             if index != l - 1:
                 sequence.insert(Operation("Read", [0, 0]))
-            sequence.insert(Operation("Forward", [0, index + 1]))
+            sequence.insert(Operation("Forward", [0, index]))
+            if sequence.sequence[-1].index[0] == sequence.sequence[-1].index[1]:
+                del sequence.sequence[-1]
+            sequence.insert(Operation("Forward", [index, index+1]))
             sequence.insert(Operation("Write_Forward", [0, index + 1]))
-            sequence.insert(Operation("Backward", index + 1))
+            sequence.insert(Operation("Backward", [index+1, index]))
             sequence.insert(Operation("Discard_Forward", [0, index + 1]))
-        sequence.insert(Operation("Read", [0, 0]))
-        sequence.insert(Operation("Backward", 0))
+        # sequence.insert(Operation("Read", [0, 0]))
+        # sequence.insert(Operation("Backward", [1, 0]))
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if K == 0:
@@ -159,7 +162,7 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
             )
             sequence.insert(Operation("Read", [0, 0]))
             sequence.insert_sequence(
-                hrevolve_aux(jmin - 1, 0, cmem, cvect, wvect, rvect,
+                hrevolve_aux(jmin, 0, cmem, cvect, wvect, rvect,
                              hoptp=hoptp, hopt=hopt, **params)
             )
             return sequence
@@ -179,7 +182,7 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
         )
         sequence.insert(Operation("Read", [K, 0]))
         sequence.insert_sequence(
-            hrevolve_aux(jmin - 1, K, cmem, cvect, wvect, rvect,
+            hrevolve_aux(jmin, K, cmem, cvect, wvect, rvect,
                          hoptp=hoptp, hopt=hopt, **params)
         )
         return sequence
@@ -259,7 +262,7 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
                         levels=len(cvect), concat=parameters["concat"])
     Operation = partial(Op, params=parameters)
     if l == 0:
-        sequence.insert(Operation("Backward", 0))
+        sequence.insert(Operation("Backward", [1, 0]))
         return sequence
     if K == 0 and cmem == 0:
         raise KeyError("It's impossible to execute an AC graph of size > 0 with no memory.")
@@ -267,10 +270,10 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
         sequence.insert(Operation("Write", [0, 0]))
         sequence.insert(Operation("Forward", [0, 1]))
         sequence.insert(Operation("Write_Forward", [0, 1]))
-        sequence.insert(Operation("Backward", 1))
+        sequence.insert(Operation("Backward", [1, 0]))
         sequence.insert(Operation("Discard_Forward", [0, 1]))
-        sequence.insert(Operation("Read", [0, 0]))
-        sequence.insert(Operation("Backward", 0))
+        # sequence.insert(Operation("Read", [0, 0]))
+        # sequence.insert(Operation("Backward", 0))
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if K == 0:

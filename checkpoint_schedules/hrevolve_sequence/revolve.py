@@ -144,7 +144,11 @@ def revolve(l, cm, opt_0=None, **params):
             if index != l - 1:
                 sequence.insert(Operation("Read_memory", 0))
             sequence.insert(Operation("Forward", [0, index]))
+            if sequence.sequence[-1].index[0] == sequence.sequence[-1].index[1]:
+                del sequence.sequence[-1]
             sequence.insert(Operation("Forward", [index, index+1]))
+            if sequence.sequence[-1].index[0] == sequence.sequence[-1].index[1]:
+                del sequence.sequence[-1]
             sequence.insert(Operation("Write_Forward_memory", index+1))
             sequence.insert(Operation("Backward", [index+1, index]))
             sequence.insert(Operation("Discard_Forward_memory", index+1))
