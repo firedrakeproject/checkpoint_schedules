@@ -63,7 +63,7 @@ class Backward():
 
 start = tm.time()
 steps = 10
-schk = 3
+schk = 2
 sdisk = 0
 fwd = Forward()
 bwd = Backward()
