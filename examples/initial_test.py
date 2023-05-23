@@ -69,5 +69,22 @@ fwd = Forward()
 bwd = Backward()
 manage = Manage(fwd, bwd, schk, sdisk, steps)
 manage.actions()
-end = tm.time()
+
+# end = tm.time()
 # print(end-start)
+
+steps = 1000
+schk = 200
+sdisk = 0
+manage = Manage(fwd, bwd, schk, sdisk, steps)
+manage.actions()
+steps = 1000
+schk = 20
+sdisk = 200
+manage = Manage(fwd, bwd, schk, sdisk, steps)
+manage.actions()
+steps = 100
+schk = 2
+sdisk = 10
+manage = Manage(fwd, bwd, schk, sdisk, steps)
+manage.actions()
