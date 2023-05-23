@@ -11,7 +11,7 @@ def compare_sequences(sequence1, sequence2):
 
 def test_hrevolve_l2():
     # Check that we reproduce Listing 2 from Herrmann and Pallez (2020).
-    sequence = hrevolve(4, [2, 0], [0, 0.1], [0, 0.1])
+    sequence = hrevolve(5, [2, 0], [0, 0.1], [0, 0.1])
     print(sequence)
     quit()
     assert sequence.storage[0] == [17, 14, 12, 9, 7, 3, 0]
