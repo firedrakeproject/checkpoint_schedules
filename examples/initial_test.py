@@ -45,6 +45,8 @@ class Manage():
         self.schedule = schedule
         self.period = period
         self.action_list = []
+        self.c = 0
+        self.c_back = total_steps
 
     def cp_schedule(self):
         """Return the schedule.
@@ -123,9 +125,9 @@ class Manage():
         @action.register(Forward)
         def action_forward(cp_action):
             nonlocal model_n
-
+            self.c += (cp_action.n1 - cp_action.n0)
             self.forward.advance(cp_action.n0, cp_action.n1)
-
+            self.action_list.append([self.c, cp_action])
             n1 = min(cp_action.n1, self.tot_steps)
             model_n = n1
             if store_ics:
@@ -137,6 +139,8 @@ class Manage():
 
         @action.register(Reverse)
         def action_reverse(cp_action):
+            self.action_list.append([self.c_back, cp_action])
+            self.c_back -= 1
             nonlocal model_r
             self.backward.advance(cp_action.n1, cp_action.n0)
             model_r += cp_action.n1 - cp_action.n0
@@ -171,6 +175,7 @@ class Manage():
 
         snapshots = {"RAM": {}, "disk": {}}
         cp_schedule = self.cp_schedule()
+        print(cp_schedule._schedule)
         if cp_schedule is None:
             print("Incompatible with schedule type")
 
@@ -183,8 +188,7 @@ class Manage():
         c = 0
         while True:
             cp_action = next(cp_schedule)
-            print(cp_action)
-            self.action_list.append([c, cp_action])
+            # self.action_list.append([c, cp_action])
             action(cp_action)
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
@@ -261,9 +265,9 @@ schedule_list = ['hrevolve', 'periodic_disk_revolve', 'disk_revolve', 'periodic_
                  'multistage', 'two_level', 'mixed']
 
 start = tm.time()
-steps = 4
+steps = 10
 schk = 2
-sdisk = 0
+sdisk = 1
 fwd = execute_fwd()
 bwd = execute_bwd()
 manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule='hrevolve')

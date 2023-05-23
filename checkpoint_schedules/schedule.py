@@ -145,7 +145,7 @@ class Reverse(CheckpointAction):
         Final step of reverse solver.  
     """
     def __init__(self, n1, n0):
-        self.type = "Reverse"
+
         super().__init__(n1, n0)
 
     def __iter__(self):
@@ -331,7 +331,7 @@ class WriteForward(CheckpointAction):
             If "True", the checkpoint data at a step `n` is saved.
         """
         return self.args[1]
-
+    
 class EndForward(CheckpointAction):
     pass
 

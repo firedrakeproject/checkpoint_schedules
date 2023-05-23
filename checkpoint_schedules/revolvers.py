@@ -36,7 +36,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         data, and then advancing the adjoint over that step.
     """
     def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk, *,
-                 wvect=(0.0, 0.1), rvect=(0.0, 0.1), cfwd=1.0, cbwd=2.0, **kwargs):
+                 wvect=(0.0, 0.1), rvect=(0.0, 0.1), cfwd=1.0, cbwd=1.0, **kwargs):
         
         super().__init__(max_n)
         self._snapshots_in_ram = snapshots_in_ram
@@ -96,7 +96,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                             raise RuntimeError("Invalid schedule")
                         yield Delete(n_1, dic_storage, delete_ics=True)
                   
-                    self.snapshots.remove(n_1)
+                        self.snapshots.remove(n_1)
             elif cp_action == "Read":
                 if deferred_cp is not None:
                     raise RuntimeError("Invalid checkpointing state")
@@ -153,7 +153,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             else:
                 raise RuntimeError(f"Unexpected action: {cp_action:s}")
             i += 1
-        yield Delete(True, True)
+        # yield Delete(True, True)
         if len(self.snapshots) != 0:
             raise RuntimeError("Invalid checkpointing state")
 
