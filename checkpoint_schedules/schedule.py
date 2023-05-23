@@ -16,7 +16,8 @@ __all__ = \
         "Configure",
         "EndForward",
         "EndReverse",
-        "CheckpointSchedule"
+        "CheckpointSchedule",
+        "Delete"
     ]
 
 
@@ -182,9 +183,8 @@ class Reverse(CheckpointAction):
 class Read(CheckpointAction):
     """Action read a checkpoint.
     """
-    def __init__(self, n, storage, delete):
-        self.type = "Read"
-        super().__init__(n, storage, delete)
+    def __init__(self, n, storage):
+        super().__init__(n, storage)
 
     @property
     def n(self):
@@ -208,22 +208,20 @@ class Read(CheckpointAction):
         """
         return self.args[1]
 
-    @property
-    def delete(self):
-        """Delete.
+    # @property
+    # def delete(self):
+    #     """Delete.
 
-        Returns
-        -------
-        bool
-            If "True", the checkpoint data is deleted.
-        """
-        return self.args[2]
-
+    #     Returns
+    #     -------
+    #     bool
+    #         If "True", the checkpoint data is deleted.
+    #     """
+    #     return self.args[2]
 
 class Write(CheckpointAction):
     
     def __init__(self, n, storage):
-        self.type = "Write"
         super().__init__(n, storage)
 
     @property
@@ -248,10 +246,68 @@ class Write(CheckpointAction):
         """
         return self.args[1]
 
+
+class Delete(CheckpointAction):
+    """Delete the type of checkpoint saved.
+
+    Args
+    ----
+    delete_ics : bool
+        If "True", the checkpoint stored in the snapshot is deleted.
+    delete_data : bool
+        If "True", the checkpoint data is deleded.
+
+    """
+    def __init__(self, n, storage, delete_ics=False, delete_data=False):
+        super().__init__(n, storage, delete_ics, delete_data)
+
+    @property
+    def n(self):
+        """Step.
+
+        Returns
+        -------
+        int
+            Current step.
+        """
+        return self.args[0]
+    
+    @property
+    def storage(self):
+        """Storage level of the forward checkpoint used in the reverse computation.
+
+        Returns
+        -------
+        str
+            Only "RAM" level.
+        """
+        return self.args[1]
+    
+    @property
+    def delete_ics(self):
+        """Delete the the checkpoint used to initialise the forward solver.
+        Returns
+        -------
+        bool
+            If "True" the checkopint stored in snapshot at "n" step in going to be deleted.
+        """
+        return self.args[2]
+
+    @property
+    def delete_data(self):
+        """Delete the the checkpoint used in the reverse computation.
+        Returns
+        -------
+        bool
+            If "True" the checkopint stored in data at "n" step in going to be deleted.
+        """
+        return self.args[3]
+
+
+
 class WriteForward(CheckpointAction):
     
     def __init__(self, n, storage):
-        self.type = "WriteForward"
         super().__init__(n, storage)
 
     @property
@@ -277,17 +333,13 @@ class WriteForward(CheckpointAction):
         return self.args[1]
 
 class EndForward(CheckpointAction):
-    """End forward action.
-    """
-    def __init__(self):
-        self.type = "EndForward"
+    pass
 
 
 class EndReverse(CheckpointAction):
     """End reverse action.
     """
     def __init__(self, exhausted):
-        self.type = "EndReverse"
         super().__init__(exhausted)
 
     @property

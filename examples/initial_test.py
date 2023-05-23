@@ -1,4 +1,4 @@
-from checkpoint_schedules import HRevolveCheckpointSchedule
+from checkpoint_schedules import RevolveCheckpointSchedule
     # (
     # # MemoryCheckpointSchedule,
     # #  PeriodicDiskCheckpointSchedule,
@@ -10,9 +10,10 @@ from checkpoint_schedules import HRevolveCheckpointSchedule
 from checkpoint_schedules import \
      (Write, Clear, Configure,
      Forward, EndForward, Reverse, 
-     Read, EndReverse, WriteForward)
+     Read, EndReverse, WriteForward, Delete)
 import functools
 import time as tm
+from tabulate import tabulate
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
@@ -33,7 +34,6 @@ class Manage():
         Number of checkpoint that will be stored.
     total_steps : int
         Total steps used to execute the solvers.
-
     """
     def __init__(self, forward, backward, total_steps, save_ram=None,
                  save_disk=None, period=None, schedule='hrevolve'):
@@ -50,7 +50,7 @@ class Manage():
         """Return the schedule.
         """
         if self.schedule == 'hrevolve':
-            return HRevolveCheckpointSchedule(
+            return RevolveCheckpointSchedule(
                 self.tot_steps, snapshots_in_ram=self.save_ram,
                 snapshots_on_disk=self.save_disk)
         # elif self.schedule == 'disk_revolve':
@@ -100,13 +100,23 @@ class Manage():
             store_ics = cp_action.store_ics
             store_data = cp_action.store_data
 
+        @action.register(Delete)
+        def action_configure(cp_action):
+            # nonlocal model_n
+            # model_n = cp_action.n
+            if cp_action.delete_ics:
+                del snapshots[cp_action.storage][cp_action.n]
+
+            if cp_action.delete_data:
+                data.clear()
+
         @action.register(Write)
         def action_write(cp_action):
             snapshots[cp_action.storage][cp_action.n] = (set(ics), set(data))
 
         @action.register(WriteForward)
         def action_write_forward(cp_action):
-            print("---")
+            pass
             # assert len(ics) == 0 and len(data) > 0
             # assert cp_action.n == max(data)
             
@@ -121,7 +131,7 @@ class Manage():
             if store_ics:
                 ics.update(range(cp_action.n0, n1))
             if store_data:
-                data.update(range(cp_action.n0, n1+1))
+                data.update(range(cp_action.n0, n1))
             if n1 == self.tot_steps:
                 cp_schedule.finalize(n1)
 
@@ -134,20 +144,8 @@ class Manage():
         @action.register(Read)
         def action_read(cp_action):
             nonlocal model_n
-            cp = snapshots[cp_action.storage][cp_action.n]
+            # cp = snapshots[cp_action.storage][cp_action.n]
             model_n = None
-
-            if len(cp[0]) > 0:
-                ics.clear()
-                ics.update(cp[0])
-                model_n = cp_action.n
-
-            if len(cp[1]) > 0:
-                data.clear()
-                data.update(cp[1])
-            
-            if cp_action.delete:
-                del snapshots[cp_action.storage][cp_action.n]
 
         @action.register(EndForward)
         def action_end_forward(cp_action):
@@ -167,8 +165,8 @@ class Manage():
         model_n = 0
         model_r = 0
         store_ics = False
-        ics = set()
         store_data = False
+        ics = set()
         data = set()
 
         snapshots = {"RAM": {}, "disk": {}}
@@ -182,15 +180,20 @@ class Manage():
                 cp_schedule.max_n() is None
                 or cp_schedule.max_n() == self.tot_steps
             )
+        c = 0
         while True:
             cp_action = next(cp_schedule)
-            self.action_list.append(cp_action)
+            print(cp_action)
+            self.action_list.append([c, cp_action])
             action(cp_action)
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
-
+            c += 1
             if isinstance(cp_action, EndReverse):
-                # print(self.action_list, len(self.action_list))
+                col_names = ["Index", "Actions"]
+                # #display table
+                print(tabulate(self.action_list))
+              
                 break
 
 
@@ -242,7 +245,6 @@ class execute_bwd():
 
         Parameters
         ----------
-     PeriodicDiskCheckpointSchedule,
         n1
             Initial time step in reverse state.
         n0
@@ -279,6 +281,5 @@ manage.actions()
 # manage.actions()
 # end = tm.time()
 
-print(end-start)
 
 
