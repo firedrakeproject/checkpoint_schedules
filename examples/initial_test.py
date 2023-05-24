@@ -73,32 +73,39 @@ manage.actions()
 # end = tm.time()
 # print(end-start)
 
-steps = 10
-schk = 6
-sdisk = 1
+steps = 100
+schk = 32
+sdisk = 20
 fwd = Forward()
 bwd = Backward()
 manage = Manage(fwd, bwd, schk, sdisk, steps)
 manage.actions()
-steps = 10
-schk = 5
-sdisk = 1
+steps = 1500
+schk = 125
+sdisk = 200
+fwd = Forward()
+bwd = Backward()
 manage = Manage(fwd, bwd, schk, sdisk, steps)
 manage.actions()
-steps = 10
-schk = 4
-sdisk = 1
-manage = Manage(fwd, bwd, schk, sdisk, steps)
-manage.actions()
+# steps = 10
+# schk = 5
+# sdisk = 1
+# manage = Manage(fwd, bwd, schk, sdisk, steps)
+# manage.actions()
+# steps = 10
+# schk = 4
+# sdisk = 1
+# manage = Manage(fwd, bwd, schk, sdisk, steps)
+# manage.actions()
 
-steps = 10
-schk = 3
-sdisk = 1
-manage = Manage(fwd, bwd, schk, sdisk, steps)
-manage.actions()
+# steps = 10
+# schk = 3
+# sdisk = 1
+# manage = Manage(fwd, bwd, schk, sdisk, steps)
+# manage.actions()
 
-steps = 10
-schk = 1
-sdisk = 0
-manage = Manage(fwd, bwd, schk, sdisk, steps)
-manage.actions()
+# steps = 10
+# schk = 1
+# sdisk = 0
+# manage = Manage(fwd, bwd, schk, sdisk, steps)
+# manage.actions()
