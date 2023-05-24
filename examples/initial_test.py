@@ -75,30 +75,30 @@ manage.actions()
 
 steps = 10
 schk = 6
-sdisk = 0
+sdisk = 1
 fwd = Forward()
 bwd = Backward()
 manage = Manage(fwd, bwd, schk, sdisk, steps)
 manage.actions()
 steps = 10
 schk = 5
-sdisk = 0
+sdisk = 1
 manage = Manage(fwd, bwd, schk, sdisk, steps)
 manage.actions()
 steps = 10
 schk = 4
-sdisk = 0
+sdisk = 1
 manage = Manage(fwd, bwd, schk, sdisk, steps)
 manage.actions()
 
 steps = 10
 schk = 3
-sdisk = 0
+sdisk = 1
 manage = Manage(fwd, bwd, schk, sdisk, steps)
 manage.actions()
 
 steps = 10
-schk = 2
+schk = 1
 sdisk = 0
 manage = Manage(fwd, bwd, schk, sdisk, steps)
 manage.actions()
