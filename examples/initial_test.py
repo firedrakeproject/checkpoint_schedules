@@ -266,8 +266,8 @@ schedule_list = ['hrevolve', 'periodic_disk_revolve', 'disk_revolve', 'periodic_
 
 start = tm.time()
 steps = 5
-schk = 1
-sdisk = 2
+schk = 2
+sdisk = 0
 fwd = execute_fwd()
 bwd = execute_bwd()
 manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule='hrevolve')
