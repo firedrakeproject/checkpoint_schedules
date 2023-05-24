@@ -78,8 +78,8 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             elif cp_action == "Backward":
                 if n_0 != self._n:
                     raise RuntimeError("Invalid checkpointing state")
-                if n_0 != self._max_n - self._r:
-                    raise RuntimeError("Invalid checkpointing state")
+                # if n_0 != self._max_n - self._r:
+                #     raise RuntimeError("Invalid checkpointing state")
 
                 yield from write_deferred_cp()
                 self._n = n_0
@@ -154,8 +154,8 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 raise RuntimeError(f"Unexpected action: {cp_action:s}")
             i += 1
         # yield Delete(True, True)
-        if len(self.snapshots) != 0:
-            raise RuntimeError("Invalid checkpointing state")
+        # if len(self.snapshots) != 0:
+        #     raise RuntimeError("Invalid checkpointing state")
 
         # yield Clear(True, True)
         

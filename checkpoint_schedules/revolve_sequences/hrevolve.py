@@ -97,7 +97,9 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
         raise KeyError("hrevolve_aux should not be call with cmem = 0. Contact developers.")
     if l == 0:
         sequence.insert(Operation("Forward", [0, 1]))
+        sequence.insert(Operation("Write_Forward", [0, 1]))
         sequence.insert(Operation("Backward", [1, 0]))
+        sequence.insert(Operation("Discard_Forward", [0, 1]))
         return sequence
     if l == 1:
         if wvect[0] + rvect[0] < rvect[K]:
@@ -121,7 +123,7 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
                 sequence.insert(Operation("Forward", [0, index]))
             sequence.insert(Operation("Forward", [index, index+1]))
             sequence.insert(Operation("Write_Forward", [0, index + 1]))
-            sequence.insert(Operation("Backward", [index+1, index]))
+            sequence.insert(Operation("Backward", [index + 1, index]))
             sequence.insert(Operation("Discard_Forward", [0, index + 1]))
         # sequence.insert(Operation("Read", [0, 0]))
         # sequence.insert(Operation("Backward", [1, 0]))
