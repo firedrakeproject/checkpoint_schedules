@@ -272,6 +272,11 @@ fwd = execute_fwd()
 bwd = execute_bwd()
 manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule='hrevolve')
 manage.actions()
+steps = 1500
+schk = 125
+sdisk = 200
+manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule='hrevolve')
+manage.actions()
 # steps = 10
 # schk = 5
 # sdisk = 1
