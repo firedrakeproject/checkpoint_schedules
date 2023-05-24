@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from .parameters import defaults
 from .basic_functions import (Operation as Op, Sequence, Function, my_buddy,
                               argmin)
@@ -171,7 +173,6 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
                          hoptp=hoptp, hopt=hopt, **parameters)
         )
         return sequence
-    print(wvect[K] + hoptp[K][l][cmem], hopt[K-1][l][cvect[K-1]])
     if wvect[K] + hoptp[K][l][cmem] < hopt[K-1][l][cvect[K-1]]:
         sequence.insert(Operation("Write", [K, 0]))
         sequence.insert_sequence(
