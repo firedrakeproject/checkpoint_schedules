@@ -10,7 +10,7 @@ Software  46(2), 2020.
 """
 
 from .parameters import defaults
-from .basic_functions import (Operation as Op, Sequence, Function, argmin, argmin0)
+from .basic_functions import (Operation as Op, Sequence, Function, argmin)
 from functools import partial
 
 
@@ -154,24 +154,17 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
     if K == 0:
         list_mem = [j * uf + hopt[0][l - j][cmem - 1] + rvect[0] + hoptp[0][j - 1][cmem] for j in range(1, l)]
         if min(list_mem) < hoptp[0][l][1]:
-            jmin = argmin0(list_mem)
-            if jmin>0:
-                sequence.insert(Operation("Forward", [0, jmin]))
-                sequence.insert_sequence(
-                    hrevolve_recurse(l - jmin, 0, cmem - 1, cvect, wvect, rvect,
-                                    hoptp=hoptp, hopt=hopt, **params).shift(jmin)
-                )
-            else:
-                sequence.insert_sequence(
-                    hrevolve_aux(l, 0, cmem-1, cvect, wvect, rvect,
-                                    hoptp=hoptp, hopt=hopt, **params)
-                    )
-            if jmin>0:
-                sequence.insert(Operation("Read", [0, 0]))
-                sequence.insert_sequence(
-                    hrevolve_aux(jmin, 0, cmem, cvect, wvect, rvect,
-                                hoptp=hoptp, hopt=hopt, **params)
-                )
+            jmin = argmin(list_mem)
+            sequence.insert(Operation("Forward", [0, jmin]))
+            sequence.insert_sequence(
+                hrevolve_recurse(l - jmin, 0, cmem - 1, cvect, wvect, rvect,
+                                 hoptp=hoptp, hopt=hopt, **params).shift(jmin)
+            )
+            sequence.insert(Operation("Read", [0, 0]))
+            sequence.insert_sequence(
+                hrevolve_aux(jmin, 0, cmem, cvect, wvect, rvect,
+                             hoptp=hoptp, hopt=hopt, **params)
+            )
             return sequence
         else:
             sequence.insert_sequence(
@@ -181,7 +174,7 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
             return sequence
     list_mem = [j * uf + hopt[K][l - j][cmem - 1] + rvect[K] + hoptp[K][j - 1][cmem] for j in range(1, l)]
     if min(list_mem) < hopt[K-1][l][cvect[K-1]]:
-        jmin = argmin0(list_mem)
+        jmin = argmin(list_mem)
         sequence.insert(Operation("Forward", [0, jmin]))
         sequence.insert_sequence(
             hrevolve_recurse(l - jmin, K, cmem - 1, cvect, wvect, rvect,
