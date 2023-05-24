@@ -140,9 +140,8 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
         for index in range(l - 1, -1, -1):
             if index != l - 1:
                 sequence.insert(Operation("Read", [0, 0]))
-            sequence.insert(Operation("Forward", [0, index]))
-            if sequence.sequence[-1].index[0] == sequence.sequence[-1].index[1]:
-                del sequence.sequence[-1]
+            if index != 0:
+                sequence.insert(Operation("Forward", [0, index]))
             sequence.insert(Operation("Forward", [index, index+1]))
             sequence.insert(Operation("Write_Forward", [0, index + 1]))
             sequence.insert(Operation("Backward", [index+1, index]))
