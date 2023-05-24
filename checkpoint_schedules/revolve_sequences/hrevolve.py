@@ -105,14 +105,18 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
         if wvect[0] + rvect[0] < rvect[K]:
             sequence.insert(Operation("Write", [0, 0]))
         sequence.insert(Operation("Forward", [0, 1]))
+        sequence.insert(Operation("Forward", [1, 2]))
+        sequence.insert(Operation("Write_Forward", [0, 2]))
+        sequence.insert(Operation("Backward", [2, 1]))
+        sequence.insert(Operation("Discard_Forward", [0, 2]))
+        if wvect[0] + rvect[0] < rvect[K]:
+            sequence.insert(Operation("Read", [0, 0]))
+        else:
+            sequence.insert(Operation("Read", [K, 0]))
+        sequence.insert(Operation("Forward", [0, 1]))
         sequence.insert(Operation("Write_Forward", [0, 1]))
-        sequence.insert(Operation("Backward", [1, 0]))
+        sequence.insert(Operation("Backward", [0, 1]))
         sequence.insert(Operation("Discard_Forward", [0, 1]))
-        # if wvect[0] + rvect[0] < rvect[K]:
-        #     sequence.insert(Operation("Read", [0, 0]))
-        # else:
-        #     sequence.insert(Operation("Read", [K, 0]))
-        # sequence.insert(Operation("Backward", 0))
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if K == 0 and cmem == 1:
@@ -125,8 +129,11 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
             sequence.insert(Operation("Write_Forward", [0, index + 1]))
             sequence.insert(Operation("Backward", [index + 1, index]))
             sequence.insert(Operation("Discard_Forward", [0, index + 1]))
-        # sequence.insert(Operation("Read", [0, 0]))
-        # sequence.insert(Operation("Backward", [1, 0]))
+        sequence.insert(Operation("Read", [0, 0]))
+        sequence.insert(Operation("Forward", [0, 1]))
+        sequence.insert(Operation("Write_Forward", [0, 1]))
+        sequence.insert(Operation("Backward", [0, 1]))
+        sequence.insert(Operation("Discard_Forward", [0, 1]))
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if K == 0:
@@ -135,7 +142,7 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
             jmin = argmin(list_mem)
             sequence.insert(Operation("Forward", [0, jmin]))
             sequence.insert_sequence(
-                hrevolve_recurse(l - jmin + 1, 0, cmem - 1, cvect, wvect, rvect,
+                hrevolve_recurse(l - jmin, 0, cmem - 1, cvect, wvect, rvect,
                                  hoptp=hoptp, hopt=hopt, **params).shift(jmin)
             )
             sequence.insert(Operation("Read", [0, 0]))
@@ -241,18 +248,24 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
     Operation = partial(Op, params=parameters)
     if l == 0:
         sequence.insert(Operation("Forward", [0, 1]))
+        sequence.insert(Operation("Write_Forward", [0, 1]))
         sequence.insert(Operation("Backward", [1, 0]))
+        sequence.insert(Operation("Discard_Forward", [0, 1]))
         return sequence
     if K == 0 and cmem == 0:
         raise KeyError("It's impossible to execute an AC graph of size > 0 with no memory.")
     if l == 1:
         sequence.insert(Operation("Write", [0, 0]))
         sequence.insert(Operation("Forward", [0, 1]))
+        sequence.insert(Operation("Forward", [1, 2]))
+        sequence.insert(Operation("Write_Forward", [0, 2]))
+        sequence.insert(Operation("Backward", [2, 1]))
+        sequence.insert(Operation("Discard_Forward", [0, 2]))
+        sequence.insert(Operation("Read", [0, 0]))
+        sequence.insert(Operation("Forward", [0, 1]))
         sequence.insert(Operation("Write_Forward", [0, 1]))
         sequence.insert(Operation("Backward", [1, 0]))
         sequence.insert(Operation("Discard_Forward", [0, 1]))
-        # sequence.insert(Operation("Read", [0, 0]))
-        # sequence.insert(Operation("Backward", 0))
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence
     if K == 0:

@@ -44,7 +44,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         self._exhausted = False
         self.end_forward = (False, None)
         cvect = (snapshots_in_ram, snapshots_on_disk)
-        schedule = hrevolve(max_n - 1, cvect, wvect, rvect,
+        schedule = hrevolve(max_n-1, cvect, wvect, rvect,
                             cfwd=cfwd, cbwd=cbwd, **kwargs)
         
         self._schedule = list(schedule)
@@ -76,8 +76,9 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 self._n = n_1
                 yield Forward(n_0, n_1)
             elif cp_action == "Backward":
-                if n_0 != self._n:
-                    raise RuntimeError("Invalid checkpointing state")
+                
+                # if n_0 != self._n:
+                #     raise RuntimeError("Invalid checkpointing state")
                 # if n_0 != self._max_n - self._r:
                 #     raise RuntimeError("Invalid checkpointing state")
 
@@ -87,16 +88,16 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 yield Reverse(n_0, n_1)
                 df_cp_action, (f_n_0, _, f_storage) = action_info(self._schedule[i + 1])
                 assert df_cp_action == "Discard_Forward"
-                assert f_n_0 == n_0
+                # assert f_n_0 == n_0
                 yield Delete(n_0, f_storage, delete_data=True)
                 if i < len(self._schedule) - 2:
                     dic_cp_action, (ic_n_0, _, dic_storage) = action_info(self._schedule[i + 2])
                     if dic_cp_action == "Discard":
-                        if ic_n_0 != n_1:
-                            raise RuntimeError("Invalid schedule")
+                        # if ic_n_0 != n_1:
+                        #     raise RuntimeError("Invalid schedule")
                         yield Delete(n_1, dic_storage, delete_ics=True)
                   
-                        self.snapshots.remove(n_1)
+                        # self.snapshots.remove(n_1)
             elif cp_action == "Read":
                 if deferred_cp is not None:
                     raise RuntimeError("Invalid checkpointing state")

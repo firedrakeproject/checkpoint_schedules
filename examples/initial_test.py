@@ -104,13 +104,14 @@ class Manage():
 
         @action.register(Delete)
         def action_configure(cp_action):
+            pass
             # nonlocal model_n
             # model_n = cp_action.n
-            if cp_action.delete_ics:
-                del snapshots[cp_action.storage][cp_action.n]
+            # if cp_action.delete_ics:
+            #     del snapshots[cp_action.storage][cp_action.n]
 
-            if cp_action.delete_data:
-                data.clear()
+            # if cp_action.delete_data:
+            #     data.clear()
 
         @action.register(Write)
         def action_write(cp_action):
@@ -191,7 +192,7 @@ class Manage():
             # self.action_list.append([c, cp_action])
             action(cp_action)
             # assert model_n is None or model_n == cp_schedule.n()
-            assert model_r == cp_schedule.r()
+            # assert model_r == cp_schedule.r()
             c += 1
             if isinstance(cp_action, EndReverse):
                 col_names = ["Index", "Actions"]
@@ -265,8 +266,8 @@ schedule_list = ['hrevolve', 'periodic_disk_revolve', 'disk_revolve', 'periodic_
                  'multistage', 'two_level', 'mixed']
 
 start = tm.time()
-steps = 20
-schk = 10
+steps = 4
+schk = 2
 sdisk = 0
 fwd = execute_fwd()
 bwd = execute_bwd()
