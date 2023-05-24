@@ -62,9 +62,9 @@ class Backward():
             i_n = i_np1
 
 
-steps = 100
-schk = 3
-sdisk = 30
+steps = 5
+schk = 1
+sdisk = 3
 fwd = Forward()
 bwd = Backward()
 manage = Manage(fwd, bwd, schk, sdisk, steps)
