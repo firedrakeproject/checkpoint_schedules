@@ -265,7 +265,7 @@ schedule_list = ['hrevolve', 'periodic_disk_revolve', 'disk_revolve', 'periodic_
                  'multistage', 'two_level', 'mixed']
 
 start = tm.time()
-steps = 4
+steps = 5
 schk = 2
 sdisk = 0
 fwd = execute_fwd()
