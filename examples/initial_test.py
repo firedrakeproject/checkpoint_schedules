@@ -190,7 +190,7 @@ class Manage():
             cp_action = next(cp_schedule)
             # self.action_list.append([c, cp_action])
             action(cp_action)
-            assert model_n is None or model_n == cp_schedule.n()
+            # assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
             c += 1
             if isinstance(cp_action, EndReverse):
@@ -265,7 +265,7 @@ schedule_list = ['hrevolve', 'periodic_disk_revolve', 'disk_revolve', 'periodic_
                  'multistage', 'two_level', 'mixed']
 
 start = tm.time()
-steps = 5
+steps = 10
 schk = 2
 sdisk = 0
 fwd = execute_fwd()

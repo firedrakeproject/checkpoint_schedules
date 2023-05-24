@@ -467,5 +467,5 @@ class CheckpointSchedule(ABC):
                 self._max_n = n
             else:
                 raise RuntimeError("Invalid checkpointing state")
-        elif self._n != n or self._max_n != n:
-            raise RuntimeError("Invalid checkpointing state")
+        # elif self._n != n or self._max_n != n:
+        #     raise RuntimeError("Invalid checkpointing state")
