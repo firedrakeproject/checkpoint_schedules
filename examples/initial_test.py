@@ -62,7 +62,7 @@ class Backward():
             i_n = i_np1
 
 
-steps = 5
+steps = 4
 schk = 2
 sdisk = 0
 fwd = Forward()
