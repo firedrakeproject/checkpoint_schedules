@@ -265,50 +265,14 @@ schedule_list = ['hrevolve', 'periodic_disk_revolve', 'disk_revolve', 'periodic_
                  'multistage', 'two_level', 'mixed']
 
 start = tm.time()
-steps = 100
-schk = 32
-sdisk = 20
+steps = 5
+schk = 2
+sdisk = 0
 fwd = execute_fwd()
 bwd = execute_bwd()
 manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule='hrevolve')
 manage.actions()
-steps = 1500
-schk = 125
-sdisk = 200
-manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule='hrevolve')
-manage.actions()
-# steps = 10
-# schk = 5
-# sdisk = 1
-# manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule='hrevolve')
-# manage.actions()
-# steps = 10
-# schk = 4
-# sdisk = 1
-# manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule='hrevolve')
-# manage.actions()
-# steps = 10
-# schk = 3
-# sdisk = 1
-# manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule='hrevolve')
-# manage.actions()
-# steps = 10
-# schk = 1
-# sdisk = 0
-# manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule='hrevolve')
-# manage.actions()
-# manage = Manage(fwd, bwd, steps, period=2, schedule='periodic_disk')
-# manage.actions()
-# manage = Manage(fwd, bwd, steps, save_ram=3, schedule='periodic_disk_revolve')
-# manage.actions()
-# manage = Manage(fwd, bwd, steps, save_disk=4, period=2, schedule='disk_revolve')
-# manage.actions()
-# manage = Manage(fwd, bwd, steps, save_disk=4, schedule='mixed')
-# manage.actions()
-# # manage = Manage(fwd, bwd, steps, save_ram=3, save_disk=1, schedule='multistage')
-# manage.actions()
-# manage.actions()
-# end = tm.time()
+
 
 
 
