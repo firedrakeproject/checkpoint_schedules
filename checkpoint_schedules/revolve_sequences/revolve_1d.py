@@ -105,25 +105,36 @@ def revolve_1d(l, cm, opt_0=None, opt_1d=None, **params):
     sequence = Sequence(Function("1D-Revolve", l, cm), concat=parameters["concat"])
     operation = partial(Op, params=parameters)
     if l == 0:
+        sequence.insert(operation("Write_Forward", [0, 1]))
+        sequence.insert(operation("Forward", [0, 1]))
         sequence.insert(operation("Backward", [1, 0]))
+        sequence.insert(operation("Discard_Forward", [0, 1]))
         return sequence
     if l == 1:
         if cm == 0:
             sequence.insert(operation("Forward", [0, 1]))
+            sequence.insert(operation("Write_Forward_memory", 2))
+            sequence.insert(operation("Forward", [1, 2]))
+            sequence.insert(operation("Backward", [2, 1]))
+            sequence.insert(operation("Discard_Forward_memory", 2))
+            sequence.insert(operation("Read_disk", 0))
             sequence.insert(operation("Write_Forward_memory", 1))
+            sequence.insert(operation("Forward", [0, 1]))
             sequence.insert(operation("Backward", [1, 0]))
             sequence.insert(operation("Discard_Forward_memory", 1))
-            # sequence.insert(operation("Read_disk", 0))
-            # sequence.insert(operation("Backward", 0))
             return sequence
         else:
             sequence.insert(operation("Write_memory", 0))
             sequence.insert(operation("Forward", [0, 1]))
+            sequence.insert(operation("Write_Forward_memory", 2))
+            sequence.insert(operation("Forward", [1, 2]))
+            sequence.insert(operation("Backward", [2, 1]))
+            sequence.insert(operation("Discard_Forward_memory", 2))
+            sequence.insert(operation("Read_memory", 0))
             sequence.insert(operation("Write_Forward_memory", 1))
+            sequence.insert(operation("Forward", [0, 1]))
             sequence.insert(operation("Backward", [1, 0]))
             sequence.insert(operation("Discard_Forward_memory", 1))
-            # sequence.insert(operation("Read_memory", 0))
-            # sequence.insert(operation("Backward", 0))
             sequence.insert(operation("Discard_memory", 0))
             return sequence
     if one_read_disk:

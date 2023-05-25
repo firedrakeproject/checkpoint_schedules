@@ -44,7 +44,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         self._exhausted = False
         self.end_forward = (False, None)
         cvect = (snapshots_in_ram, snapshots_on_disk)
-        schedule = hrevolve(max_n-1, cvect, wvect, rvect,
+        schedule = hrevolve(max_n, cvect, wvect, rvect,
                             cfwd=cfwd, cbwd=cbwd, **kwargs)
         
         self._schedule = list(schedule)
@@ -119,7 +119,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 #         yield from write_deferred_cp()
 
             elif cp_action == "Write_Forward":
-                d_cp_action, (d_n_0, _, d_storage) = action_info(self._schedule[i + 2])
+                d_cp_action, (d_n_0, _, d_storage) = action_info(self._schedule[i + 3])
                 if d_cp_action != "Discard_Forward":
                     raise RuntimeError("Invalid checkpointing state")
                 
@@ -146,7 +146,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             elif cp_action == "Discard_Forward":
                 if i < 2:
                     raise RuntimeError("Invalid schedule")
-                r_cp_action, (df_n_0, _, df_storage) = action_info(self._schedule[i - 2])
+                r_cp_action, (df_n_0, _, df_storage) = action_info(self._schedule[i - 3])
                 if r_cp_action != "Write_Forward" \
                         or df_n_0 != n_0 \
                         or df_storage != storage:

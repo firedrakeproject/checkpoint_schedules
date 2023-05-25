@@ -131,11 +131,15 @@ def revolve(l, cm, opt_0=None, **params):
     elif l == 1:
         sequence.insert(Operation("Write_memory", 0))
         sequence.insert(Operation("Forward", [0, 1]))
+        sequence.insert(Operation("Write_Forward_memory", 2))
+        sequence.insert(Operation("Forward", [1, 2]))
+        sequence.insert(Operation("Backward", [2, 1]))
+        sequence.insert(Operation("Discard_Forward_memory", 2))
+        sequence.insert(Operation("Read_memory", 0))
         sequence.insert(Operation("Write_Forward_memory", 1))
+        sequence.insert(Operation("Forward", [0, 1]))
         sequence.insert(Operation("Backward", [1, 0]))
         sequence.insert(Operation("Discard_Forward_memory", 1))
-        # sequence.insert(Operation("Read_memory", 0))
-        # sequence.insert(Operation("Backward", 0))
         sequence.insert(Operation("Discard_memory", 0))
         return sequence
     elif cm == 1:
@@ -143,17 +147,17 @@ def revolve(l, cm, opt_0=None, **params):
         for index in range(l - 1, -1, -1):
             if index != l - 1:
                 sequence.insert(Operation("Read_memory", 0))
-            sequence.insert(Operation("Forward", [0, index]))
-            if sequence.sequence[-1].index[0] == sequence.sequence[-1].index[1]:
-                del sequence.sequence[-1]
-            sequence.insert(Operation("Forward", [index, index+1]))
-            if sequence.sequence[-1].index[0] == sequence.sequence[-1].index[1]:
-                del sequence.sequence[-1]
-            sequence.insert(Operation("Write_Forward_memory", index+1))
-            sequence.insert(Operation("Backward", [index+1, index]))
-            sequence.insert(Operation("Discard_Forward_memory", index+1))
-        # sequence.insert(Operation("Read_memory", 0))
-        # sequence.insert(Operation("Backward", 0))
+            if index != 0:
+                sequence.insert(Operation("Forward", [0, index]))
+            sequence.insert(Operation("Write_Forward_memory", index + 1))
+            sequence.insert(Operation("Forward", [index, index + 1]))
+            sequence.insert(Operation("Backward", [index + 1, index]))
+            sequence.insert(Operation("Discard_Forward_memory", index + 1))
+        sequence.insert(Operation("Read_memory", 0))
+        sequence.insert(Operation("Write_Forward_memory", 1))
+        sequence.insert(Operation("Forward", [0, 1]))
+        sequence.insert(Operation("Backward", [0, 1]))
+        sequence.insert(Operation("Discard_Forward_memory", [0, 1]))
         sequence.insert(Operation("Discard_memory", 0))
         return sequence
     list_mem = [j*parameters["uf"] + opt_0[cm-1][l-j] + opt_0[cm][j-1] for j in range(1, l)]
@@ -165,6 +169,6 @@ def revolve(l, cm, opt_0=None, **params):
     )
     sequence.insert(Operation("Read_memory", 0))
     sequence.insert_sequence(
-        revolve(jmin, cm, opt_0=opt_0, **parameters).remove_useless_wm()
+        revolve(jmin - 1, cm, opt_0=opt_0, **parameters).remove_useless_wm()
     )
     return sequence
