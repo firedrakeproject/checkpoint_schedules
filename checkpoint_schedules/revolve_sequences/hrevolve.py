@@ -115,7 +115,7 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
             sequence.insert(Operation("Read", [K, 0]))
         sequence.insert(Operation("Write_Forward", [0, 1]))
         sequence.insert(Operation("Forward", [0, 1]))
-        sequence.insert(Operation("Backward", [0, 1]))
+        sequence.insert(Operation("Backward", [1, 0]))
         sequence.insert(Operation("Discard_Forward", [0, 1]))
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence
@@ -123,16 +123,16 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
         for index in range(l - 1, -1, -1):
             if index != l - 1:
                 sequence.insert(Operation("Read", [0, 0]))
-            if index != 0:
-                sequence.insert(Operation("Forward", [0, index]))
-            sequence.insert(Operation("Write_Forward", [0, index + 1]))
-            sequence.insert(Operation("Forward", [index, index+1]))
-            sequence.insert(Operation("Backward", [index + 1, index]))
-            sequence.insert(Operation("Discard_Forward", [0, index + 1]))
+            if index + 1 != 0:
+                sequence.insert(Operation("Forward", [0, index + 1]))
+            sequence.insert(Operation("Write_Forward", [0, index + 2]))
+            sequence.insert(Operation("Forward", [index + 1, index + 2]))
+            sequence.insert(Operation("Backward", [index + 2, index + 1]))
+            sequence.insert(Operation("Discard_Forward", [0, index + 2]))
         sequence.insert(Operation("Read", [0, 0]))
         sequence.insert(Operation("Write_Forward", [0, 1]))
         sequence.insert(Operation("Forward", [0, 1]))
-        sequence.insert(Operation("Backward", [0, 1]))
+        sequence.insert(Operation("Backward", [1, 0]))
         sequence.insert(Operation("Discard_Forward", [0, 1]))
         sequence.insert(Operation("Discard", [0, 0]))
         return sequence

@@ -44,7 +44,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         self._exhausted = False
         self.end_forward = (False, None)
         cvect = (snapshots_in_ram, snapshots_on_disk)
-        schedule = hrevolve(max_n, cvect, wvect, rvect,
+        schedule = hrevolve(max_n - 1, cvect, wvect, rvect,
                             cfwd=cfwd, cbwd=cbwd, **kwargs)
         
         self._schedule = list(schedule)
