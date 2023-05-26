@@ -98,7 +98,7 @@ class Manage():
             nonlocal model_n
             self.c += (cp_action.n1 - cp_action.n0)
             self.forward.advance(cp_action.n0, cp_action.n1)
-            # self.action_list.append([self.c, cp_action])
+            self.action_list.append([self.c, cp_action])
             n1 = min(cp_action.n1, self.tot_steps)
             model_n = n1
             if cp_action.clear:
@@ -114,7 +114,7 @@ class Manage():
 
         @action.register(Reverse)
         def action_reverse(cp_action):
-            # self.action_list.append([self.c_back, cp_action])
+            self.action_list.append([self.c_back, cp_action])
             self.c_back -= 1
             nonlocal model_r
             self.backward.advance(cp_action.n1, cp_action.n0)
@@ -163,7 +163,7 @@ class Manage():
         c = 0
         while True:
             cp_action = next(cp_schedule)
-            self.action_list.append([c, cp_action])
+            # self.action_list.append([c, cp_action])
             action(cp_action)
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
