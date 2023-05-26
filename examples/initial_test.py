@@ -8,9 +8,7 @@ from checkpoint_schedules import RevolveCheckpointSchedule
     # #  MixedCheckpointSchedule
     # )
 from checkpoint_schedules import \
-     (Write, Clear, Configure,
-     Forward, EndForward, Reverse, 
-     Read, EndReverse, WriteForward, Delete)
+     (Forward, EndForward, Reverse, Read, EndReverse, Delete)
 import functools
 import time as tm
 from tabulate import tabulate
@@ -36,13 +34,12 @@ class Manage():
         Total steps used to execute the solvers.
     """
     def __init__(self, forward, backward, total_steps, save_ram=None,
-                 save_disk=None, period=None, schedule='hrevolve'):
+                 save_disk=None, period=None):
         self.save_ram = save_ram
         self.save_disk = save_disk
         self.forward = forward
         self.backward = backward
         self.tot_steps = total_steps
-        self.schedule = schedule
         self.period = period
         self.action_list = []
         self.c = 0
@@ -51,10 +48,10 @@ class Manage():
     def cp_schedule(self):
         """Return the schedule.
         """
-        if self.schedule == 'hrevolve':
-            return RevolveCheckpointSchedule(
-                self.tot_steps, snapshots_in_ram=self.save_ram,
-                snapshots_on_disk=self.save_disk)
+        # if self.schedule == 'hrevolve':
+        return RevolveCheckpointSchedule(
+            self.tot_steps, snapshots_in_ram=self.save_ram,
+            snapshots_on_disk=self.save_disk)
         # elif self.schedule == 'disk_revolve':
         #     assert self.save_disk is not None
         #     return RevolveCheckpointSchedule(
@@ -88,63 +85,42 @@ class Manage():
         def action(cp_action):
             raise TypeError("Unexpected action")
 
-        @action.register(Clear)
-        def action_clear(cp_action):
-            if cp_action.clear_ics:
-                ics.clear()
-            if cp_action.clear_data:
-                data.clear()
-
-        @action.register(Configure)
-        def action_configure(cp_action):
-            nonlocal store_ics, store_data
-
-            store_ics = cp_action.store_ics
-            store_data = cp_action.store_data
-
         @action.register(Delete)
-        def action_configure(cp_action):
-            pass
-            # nonlocal model_n
-            # model_n = cp_action.n
-            # if cp_action.delete_ics:
-            #     del snapshots[cp_action.storage][cp_action.n]
+        def action_delete(cp_action):
+            # pass
+            nonlocal model_n
+            model_n = None
+            del snapshots[cp_action.storage][cp_action.n]
 
-            # if cp_action.delete_data:
-            #     data.clear()
 
-        @action.register(Write)
-        def action_write(cp_action):
-            snapshots[cp_action.storage][cp_action.n] = (set(ics), set(data))
-
-        @action.register(WriteForward)
-        def action_write_forward(cp_action):
-            pass
-            # assert len(ics) == 0 and len(data) > 0
-            # assert cp_action.n == max(data)
-            
         @action.register(Forward)
         def action_forward(cp_action):
             nonlocal model_n
             self.c += (cp_action.n1 - cp_action.n0)
             self.forward.advance(cp_action.n0, cp_action.n1)
-            self.action_list.append([self.c, cp_action])
+            # self.action_list.append([self.c, cp_action])
             n1 = min(cp_action.n1, self.tot_steps)
             model_n = n1
-            if store_ics:
+            if cp_action.clear:
+                ics.clear()
+            if cp_action.write_ics:
                 ics.update(range(cp_action.n0, n1))
-            if store_data:
+                snapshots[cp_action.storage][cp_action.n0] = set(ics)
+            if cp_action.write_data:
                 data.update(range(cp_action.n0, n1))
+            
             if n1 == self.tot_steps:
                 cp_schedule.finalize(n1)
 
         @action.register(Reverse)
         def action_reverse(cp_action):
-            self.action_list.append([self.c_back, cp_action])
+            # self.action_list.append([self.c_back, cp_action])
             self.c_back -= 1
             nonlocal model_r
             self.backward.advance(cp_action.n1, cp_action.n0)
             model_r += cp_action.n1 - cp_action.n0
+            if cp_action.clear_fwd_data:
+                data.clear()
 
         @action.register(Read)
         def action_read(cp_action):
@@ -161,16 +137,14 @@ class Manage():
         def action_end_reverse(cp_action):
             nonlocal model_r
 
-            # # The correct number of adjoint steps has been taken
-            # assert model_r == self.tot_steps
+            # The correct number of adjoint steps has been taken
+            assert model_r == self.tot_steps
 
             if not cp_action.exhausted:
                 model_r = 0
 
         model_n = 0
         model_r = 0
-        store_ics = False
-        store_data = False
         ics = set()
         data = set()
 
@@ -189,16 +163,15 @@ class Manage():
         c = 0
         while True:
             cp_action = next(cp_schedule)
-            # self.action_list.append([c, cp_action])
+            self.action_list.append([c, cp_action])
             action(cp_action)
-            # assert model_n is None or model_n == cp_schedule.n()
-            # assert model_r == cp_schedule.r()
+            assert model_n is None or model_n == cp_schedule.n()
+            assert model_r == cp_schedule.r()
             c += 1
             if isinstance(cp_action, EndReverse):
                 col_names = ["Index", "Actions"]
                 # #display table
-                print(tabulate(self.action_list))
-              
+                print(tabulate(self.action_list))  
                 break
 
 
@@ -267,11 +240,11 @@ schedule_list = ['hrevolve', 'periodic_disk_revolve', 'disk_revolve', 'periodic_
 
 start = tm.time()
 steps = 100
-schk = 10
-sdisk = 70
+schk = 30
+sdisk = 20
 fwd = execute_fwd()
 bwd = execute_bwd()
-manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule='hrevolve')
+manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk)
 manage.actions()
 
 

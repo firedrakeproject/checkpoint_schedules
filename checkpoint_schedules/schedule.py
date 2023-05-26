@@ -10,10 +10,6 @@ __all__ = \
         "Forward",
         "Reverse",
         "Read",
-        "Write",
-        "WriteForward",
-        "Clear",
-        "Configure",
         "EndForward",
         "EndReverse",
         "CheckpointSchedule",
@@ -34,59 +30,6 @@ class CheckpointAction:
     def __eq__(self, other):
         return type(self) == type(other) and self.args == other.args
 
-class Clear(CheckpointAction):
-    """Clear checkpoint data.
-
-    Args
-    ----
-    clear_ics : bool
-        If "True", the checkpoint used to restart the forward solver is comming clear.
-    clear_data : bool
-        If True, the latest forward checkpoint data is coming clear.
-    """
-    def __init__(self, clear_ics, clear_data):
-        self.type = "Clear"
-        super().__init__(clear_ics, clear_data)
-
-    @property
-    def clear_ics(self):
-        return self.args[0]
-
-    @property
-    def clear_data(self):
-        return self.args[1]
-
-
-class Configure(CheckpointAction):
-    """Configure the type of checkpoint that is being saved.
-
-    Args
-    ----
-    store_ics : bool
-        If "True", the checkpoint data is coming save at the step give by 'Write' action.
-    store_data : bool
-        If "True", the latest checkpoint data is coming save.
-
-    """
-    def __init__(self, store_ics, store_data):
-        self.type = "Configure"
-        super().__init__(store_ics, store_data)
-
-    @property
-    def store_ics(self):
-        """
-
-        Returns
-        -------
-        _type_
-            _description_
-        """
-        return self.args[0]
-
-    @property
-    def store_data(self):
-        return self.args[1]
-
 
 class Forward(CheckpointAction):
     """Abstract forward action.
@@ -94,13 +37,19 @@ class Forward(CheckpointAction):
     Args
     ----
     n0 : int
-        initial step.
+        Initial step.
     n1 : int
         Final step.
+    write_ics : bool
+        If "True", the checkpoint at the time 'n1'.
+    storage : str
+        Level of the checkpoint storage, either "RAM" or "disk".
+    write_ics_n0 : bool
+        Determine if the checkpoint at the time 'n0' is saved. It is "True"
+        only in the initial forward calculation.
     """
-    def __init__(self, n0, n1):
-        self.type = "Forward"
-        super().__init__(n0, n1)
+    def __init__(self, n0, n1, write_ics, write_data, storage, clear_buffer=True):
+        super().__init__(n0, n1, write_ics, write_data, storage, clear_buffer)
 
     def __iter__(self):
         yield from range(self.n0, self.n1)
@@ -113,26 +62,83 @@ class Forward(CheckpointAction):
 
     @property
     def n0(self):
-        """Initial step of the forward mode.
+        """Initial step of the forward solver.
 
         Returns
         -------
-        float
+        int
             Initial step.
         """
         return self.args[0]
 
     @property
     def n1(self):
-        """Final step of the forward mode.
+        """Final step of the forward solver.
 
         Returns
         -------
-        float
+        int
             Final step.
         """
         return self.args[1]
 
+    @property
+    def write_ics(self):
+        """Inform if the checkpoint at the step 'self.args[1]' is going
+        to be save.
+
+        Returns
+        -------
+        bool
+            If 'True', the checkpoint at the step 'self.args[1]' is going to be save.
+        """
+        return self.args[2]
+    
+    @property
+    def write_data(self):
+        """Inform if the forward data at the step 'self.args[1]' is going
+        to be save.
+
+        Returns
+        -------
+        bool
+            If 'True', the forward data at the step 'self.args[1]' is going to be save.
+        """
+        return self.args[3]
+    
+    @property
+    def storage(self):
+        """Level where the checkpoint is saved.
+
+        Returns
+        -------
+        str
+            Either "RAM" or "disk".
+        """
+        return self.args[4]
+    
+    @property
+    def clear(self):
+        """Clear buffer.
+
+        Returns
+        -------
+        bool
+            If 'True', .
+        """
+        return self.args[5]
+    
+    # @property
+    # def storage_n0(self):
+    #     """Level where the checkpoint at 'n0' is saved.
+
+    #     Returns
+    #     -------
+    #     bool
+    #         If 'True', the checkpoint at the step 'self.args[0]' is going to be saved.
+    #     """
+    #     return self.args[6]
+    
 
 class Reverse(CheckpointAction):
     """Reverse action.
@@ -144,9 +150,9 @@ class Reverse(CheckpointAction):
     n0 : int
         Final step of reverse solver.  
     """
-    def __init__(self, n1, n0):
+    def __init__(self, n1, n0, clear_fwd_data):
 
-        super().__init__(n1, n0)
+        super().__init__(n1, n0, clear_fwd_data)
 
     def __iter__(self):
         yield from range(self.n1 - 1, self.n0 - 1, -1)
@@ -179,6 +185,8 @@ class Reverse(CheckpointAction):
         """
         return self.args[0]
 
+    def clear_fwd_data(self):
+        return self.args[2]
 
 class Read(CheckpointAction):
     """Action read a checkpoint.
@@ -188,61 +196,23 @@ class Read(CheckpointAction):
 
     @property
     def n(self):
-        """Step.
+        """Curren read step.
 
         Returns
         -------
         int
-            Current step.
+            The step.
         """
         return self.args[0]
 
     @property
     def storage(self):
-        """Checkpoint storage.
+        """Checkpoint storage level.
 
         Returns
         -------
-        bool
-            ???.
-        """
-        return self.args[1]
-
-    # @property
-    # def delete(self):
-    #     """Delete.
-
-    #     Returns
-    #     -------
-    #     bool
-    #         If "True", the checkpoint data is deleted.
-    #     """
-    #     return self.args[2]
-
-class Write(CheckpointAction):
-    
-    def __init__(self, n, storage):
-        super().__init__(n, storage)
-
-    @property
-    def n(self):
-        """Step.
-
-        Returns
-        -------
-        int
-            Current step.
-        """
-        return self.args[0]
-
-    @property
-    def storage(self):
-        """Checkpoint write.
-
-        Returns
-        -------
-        bool
-            If "True", the checkpoint data at a step `n` is saved.
+        str
+            Either "RAM" or "disk".
         """
         return self.args[1]
 
@@ -255,58 +225,10 @@ class Delete(CheckpointAction):
     delete_ics : bool
         If "True", the checkpoint stored in the snapshot is deleted.
     delete_data : bool
-        If "True", the checkpoint data is deleded.
-
+        If "True", the forward data is deleted.
+    storage : str
+        Storage level that the checkpoint is going to be deleted.
     """
-    def __init__(self, n, storage, delete_ics=False, delete_data=False):
-        super().__init__(n, storage, delete_ics, delete_data)
-
-    @property
-    def n(self):
-        """Step.
-
-        Returns
-        -------
-        int
-            Current step.
-        """
-        return self.args[0]
-    
-    @property
-    def storage(self):
-        """Storage level of the forward checkpoint used in the reverse computation.
-
-        Returns
-        -------
-        str
-            Only "RAM" level.
-        """
-        return self.args[1]
-    
-    @property
-    def delete_ics(self):
-        """Delete the the checkpoint used to initialise the forward solver.
-        Returns
-        -------
-        bool
-            If "True" the checkopint stored in snapshot at "n" step in going to be deleted.
-        """
-        return self.args[2]
-
-    @property
-    def delete_data(self):
-        """Delete the the checkpoint used in the reverse computation.
-        Returns
-        -------
-        bool
-            If "True" the checkopint stored in data at "n" step in going to be deleted.
-        """
-        return self.args[3]
-
-
-
-class WriteForward(CheckpointAction):
-    
     def __init__(self, n, storage):
         super().__init__(n, storage)
 
@@ -320,24 +242,49 @@ class WriteForward(CheckpointAction):
             Current step.
         """
         return self.args[0]
-
+    
     @property
     def storage(self):
-        """Checkpoint write.
+        """Storage level that the checkpoint is going to be deleted.
 
         Returns
         -------
-        bool
-            If "True", the checkpoint data at a step `n` is saved.
+        str
+            Either "RAM" or disk.
         """
         return self.args[1]
     
+    # @property
+    # def delete_ics(self):
+    #     """Storage level that the checkpoint is going to be deleted.
+
+    #     Returns
+    #     -------
+    #     str
+    #         Either "RAM" or disk.
+    #     """
+    #     return self.args[2]
+    
+    # @property
+    # def delete_data(self):
+    #     """Storage level that the checkpoint is going to be deleted.
+
+    #     Returns
+    #     -------
+    #     str
+    #         Either "RAM" or disk.
+    #     """
+    #     return self.args[3]
+
+
 class EndForward(CheckpointAction):
+    """Action used if the Forward solver is ended.
+    """
     pass
 
 
 class EndReverse(CheckpointAction):
-    """End reverse action.
+    """Action used if the Reverse solver is ended.
     """
     def __init__(self, exhausted):
         super().__init__(exhausted)
@@ -453,12 +400,26 @@ class CheckpointSchedule(ABC):
         return self._r
 
     def max_n(self):
+        """The number of forward steps in the initial forward calculation.
+
+        Returns
+        -------
+        int
+            The number of forward steps.
+        """
         return self._max_n
 
     def is_running(self):
         return hasattr(self, "_iter")
 
     def finalize(self, n):
+        """Verify if the solver is finalized.
+
+        Parameters
+        ----------
+        n : int
+            Current solver step.
+        """
         if n < 1:
             raise ValueError("n must be positive")
         if self._max_n is None:
@@ -467,5 +428,5 @@ class CheckpointSchedule(ABC):
                 self._max_n = n
             else:
                 raise RuntimeError("Invalid checkpointing state")
-        # elif self._n != n or self._max_n != n:
-        #     raise RuntimeError("Invalid checkpointing state")
+        elif self._n != n or self._max_n != n:
+            raise RuntimeError("Invalid checkpointing state")
