@@ -11,7 +11,7 @@ from checkpoint_schedules import \
      (Forward, EndForward, Reverse, Read, EndReverse, Delete)
 import functools
 # import time as tm
-# from tabulate import tabulate
+from tabulate import tabulate
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
@@ -172,7 +172,7 @@ class Manage():
             if isinstance(cp_action, EndReverse):
                 # col_names = ["Index", "Actions"]
                 # #display table
-                # print(tabulate(self.action_list))  
+                print(tabulate(self.action_list))  
                 break
 
 
@@ -240,9 +240,9 @@ schedule_list = ['hrevolve', 'periodic_disk_revolve', 'disk_revolve', 'periodic_
                  'multistage', 'two_level', 'mixed']
 
 # start = tm.time()
-steps = 100
-schk = 30
-sdisk = 20
+steps = 10
+schk = 2
+sdisk = 1
 fwd = execute_fwd()
 bwd = execute_bwd()
 manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk)
