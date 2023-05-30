@@ -134,7 +134,7 @@ def test_validity(schedule, schedule_kwargs,
         elif len(data) > 0:
             assert cp_action.n0 == min(data)
 
-        snapshots[cp_action.storage][cp_action.n0] = set(ics), set(data)
+        snapshots[cp_action.storage][cp_action.n0] = (set(ics), set(data))
         if n1 == n:
             cp_schedule.finalize(n1)
 
