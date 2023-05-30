@@ -108,11 +108,11 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                     raise RuntimeError("Invalid checkpointing state")   
                 self._r += 1
                 yield Reverse(n_0, n_1, clear_fwd_data=True)
-                r_cp_action, (r_n0, _, _) = action_info(self._schedule[i - 3])
+                r_cp_action, (r_n0, _, r_storage) = action_info(self._schedule[i - 3])
                 if r_cp_action == "Read":
                     assert r_n0 == n_1
                     snapshots.remove(n_1)
-                    yield Delete(n_1, storage)
+                    yield Delete(n_1, r_storage)
             elif cp_action == "Read":
                 if deferred_cp is not None:
                     raise RuntimeError("Invalid checkpointing state")

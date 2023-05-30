@@ -122,6 +122,7 @@ def test_validity(schedule, schedule_kwargs,
             data.clear()
         if cp_action.write_ics:
             ics.update(range(cp_action.n0, n1))
+            snapshots[cp_action.storage][cp_action.n0] = set(ics)
         if cp_action.write_data:
             data.update(range(cp_action.n0, n1))
 
@@ -134,7 +135,6 @@ def test_validity(schedule, schedule_kwargs,
         elif len(data) > 0:
             assert cp_action.n0 == min(data)
 
-        snapshots[cp_action.storage][cp_action.n0] = (set(ics), set(data))
         if n1 == n:
             cp_schedule.finalize(n1)
 
@@ -150,6 +150,8 @@ def test_validity(schedule, schedule_kwargs,
         assert data.issuperset(range(cp_action.n0, cp_action.n1))
 
         model_r += cp_action.n1 - cp_action.n0
+        if cp_action.clear_fwd_data:
+            data.clear()
 
     @action.register(Read)
     def action_read(cp_action):
@@ -165,22 +167,17 @@ def test_validity(schedule, schedule_kwargs,
         assert cp_action.n not in data
 
         # The checkpoint contains forward restart or non-linear dependency data
-        assert len(cp[0]) > 0 or len(cp[1]) > 0
+        assert len(cp) > 0
 
         # The checkpoint data is before the current location of the adjoint
         assert cp_action.n < n - model_r
 
         model_n = None
-        if len(cp[0]) > 0:
+        if len(cp) > 0:
             ics.clear()
-            ics.update(cp[0])
+            ics.update(cp)
             model_n = cp_action.n
 
-        if len(cp[1]) > 0:
-            data.clear()
-            data.update(cp[1])
-
-    
     @action.register(Delete)
     def action_delete(cp_action):
         # pass
@@ -213,7 +210,6 @@ def test_validity(schedule, schedule_kwargs,
         data = set()
 
         snapshots = {"RAM": {}, "disk": {}}
-       
         cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs)  # noqa: E501
         if cp_schedule is None:
             pytest.skip("Incompatible with schedule type")
@@ -223,7 +219,7 @@ def test_validity(schedule, schedule_kwargs,
         c = 0
         while True:
             cp_action = next(cp_schedule)
-            print(cp_action, c)
+            print(cp_action)
             action(cp_action)
             # The schedule state is consistent with both the forward and
             # adjoint
@@ -233,6 +229,7 @@ def test_validity(schedule, schedule_kwargs,
             # Checkpoint storage limits are not exceeded
             for storage_type, storage_limit in storage_limits.items():
                 assert len(snapshots[storage_type]) <= storage_limit
+                assert len(data) <= 1
             # Data storage limit is not exceeded
             assert min(1, len(ics)) + len(data) <= data_limit
             c += 1
