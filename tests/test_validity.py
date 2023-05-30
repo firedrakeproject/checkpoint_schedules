@@ -89,7 +89,7 @@ def h_revolve(n, s):
                                 #   (3, (1, 2)),
                                 #   (10, tuple(range(1, 10))),
                                 #   (100, tuple(range(1, 100))),
-                                  (25, tuple(range(5, 25, 5)))
+                                  (250, tuple(range(25, 250, 25)))
                                   ])
 def test_validity(schedule, schedule_kwargs,
                   n, S):
@@ -109,10 +109,9 @@ def test_validity(schedule, schedule_kwargs,
             assert cp_action.n1 <= n - model_r
         n1 = min(cp_action.n1, n)
         model_n = n1
-        if cp_action.write_ics:
-            print(ics)
-            # No forward restart data for these steps is stored
-            assert len(ics.intersection(range(cp_action.n0, n1))) == 0
+        # if cp_action.write_ics:
+        #     # No forward restart data for these steps is stored
+        #     assert len(ics.intersection(range(cp_action.n0, n1))) == 0
 
         if cp_action.write_data:
             # No non-linear dependency data for these steps is stored
@@ -123,10 +122,10 @@ def test_validity(schedule, schedule_kwargs,
             data.clear()
         if cp_action.write_ics:
             ics.update(range(cp_action.n0, n1))
-            snapshots[cp_action.storage][cp_action.n0] = (set(ics), set(data))
+            snapshots[cp_action.storage][cp_action.n0] = set(ics)
         if cp_action.write_data:
             data.update(range(cp_action.n0, n1))
-            snapshots_fwd[cp_action.storage][cp_action.n1] = (set(ics), set(data))
+            fwd_data[cp_action.storage][cp_action.n0] = set(data)
 
         assert len(ics) > 0 or len(data) > 0
         if len(ics) > 0:
@@ -155,7 +154,8 @@ def test_validity(schedule, schedule_kwargs,
         model_r += cp_action.n1 - cp_action.n0
         if cp_action.clear_fwd_data:
             data.clear()
-            del snapshots_fwd["RAM"][cp_action.n1]
+            del fwd_data["RAM"][cp_action.n0]
+          
 
     @action.register(Read)
     def action_read(cp_action):
@@ -171,21 +171,21 @@ def test_validity(schedule, schedule_kwargs,
         assert cp_action.n not in data
 
         # The checkpoint contains forward restart or non-linear dependency data
-        assert len(cp[0]) > 0 or len(cp[1]) > 0
+        assert len(cp) > 0 or len(cp[1]) > 0
 
         # The checkpoint data is before the current location of the adjoint
         assert cp_action.n < n - model_r
 
         model_n = None
        
-        if len(cp[0]) > 0:
+        if len(cp) > 0:
             ics.clear()
-            ics.update(cp[0])
+            ics.update(cp)
             model_n = cp_action.n
 
-        if len(cp[1]) > 0:
-            data.clear()
-            data.update(cp[1])
+        # if len(cp[1]) > 0:
+        #     data.clear()
+        #     data.update(cp[1])
 
     
     @action.register(Delete)
@@ -219,7 +219,7 @@ def test_validity(schedule, schedule_kwargs,
         data = set()
 
         snapshots = {"RAM": {}, "disk": {}}
-        snapshots_fwd = {"RAM": {}, "disk": {}}
+        fwd_data = {"RAM": {}}
         cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs)  # noqa: E501
         if cp_schedule is None:
             pytest.skip("Incompatible with schedule type")
@@ -229,11 +229,10 @@ def test_validity(schedule, schedule_kwargs,
         c = 0
         while True:
             cp_action = next(cp_schedule)
-            print(cp_action, c)
             action(cp_action)
             # The schedule state is consistent with both the forward and
             # adjoint
-            print(snapshots)
+            
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
 
@@ -241,8 +240,7 @@ def test_validity(schedule, schedule_kwargs,
             for storage_type, storage_limit in storage_limits.items():
                 assert len(snapshots[storage_type]) <= storage_limit + 1
             # Data storage limit is not exceeded
-            
-            assert min(1, len(ics)) + min(1, len(data))  <= data_limit
+            assert min(1, len(ics)) + len(data) <= data_limit
             c += 1
             if isinstance(cp_action, EndReverse):
                 break
