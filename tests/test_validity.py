@@ -116,14 +116,25 @@ def test_validity(schedule, schedule_kwargs,
         if cp_action.write_data:
             # No non-linear dependency data for these steps is stored
             assert len(data.intersection(range(cp_action.n0, n1))) == 0
-        
-        if cp_action.write_ics:
+
+        if cp_action.clear:
             ics.clear()
-            ics.update(range(cp_action.n0, n1))
-            snapshots[cp_action.storage][cp_action.n0] = set(ics)
-        if cp_action.write_data:
             data.clear()
+        if cp_action.write_ics:
+            ics.update(range(cp_action.n0, n1))
+        if cp_action.write_data:
             data.update(range(cp_action.n0, n1))
+
+        assert len(ics) > 0 or len(data) > 0
+        if len(ics) > 0:
+            if len(data) > 0:
+                assert cp_action.n0 == min(min(ics), min(data))
+            else:
+                assert cp_action.n0 == min(ics)
+        elif len(data) > 0:
+            assert cp_action.n0 == min(data)
+
+        snapshots[cp_action.storage][cp_action.n0] = set(ics), set(data)
         if n1 == n:
             cp_schedule.finalize(n1)
 
@@ -150,16 +161,25 @@ def test_validity(schedule, schedule_kwargs,
         cp = snapshots[cp_action.storage][cp_action.n]
 
         # No data is currently stored for this step
-        # assert cp_action.n not in ics
-        # assert cp_action.n not in data
+        assert cp_action.n not in ics
+        assert cp_action.n not in data
+
         # The checkpoint contains forward restart or non-linear dependency data
-        assert len(cp) > 0 or len(data) > 0
+        assert len(cp[0]) > 0 or len(cp[1]) > 0
 
         # The checkpoint data is before the current location of the adjoint
         assert cp_action.n < n - model_r
 
         model_n = None
-        model_n = cp_action.n
+        if len(cp[0]) > 0:
+            ics.clear()
+            ics.update(cp[0])
+            model_n = cp_action.n
+
+        if len(cp[1]) > 0:
+            data.clear()
+            data.update(cp[1])
+
     
     @action.register(Delete)
     def action_delete(cp_action):
@@ -211,10 +231,10 @@ def test_validity(schedule, schedule_kwargs,
             assert model_r == cp_schedule.r()
 
             # Checkpoint storage limits are not exceeded
-            # for storage_type, storage_limit in storage_limits.items():
-            #     assert len(snapshots[storage_type]) <= storage_limit
+            for storage_type, storage_limit in storage_limits.items():
+                assert len(snapshots[storage_type]) <= storage_limit
             # Data storage limit is not exceeded
-            # assert min(1, len(ics)) + len(data) <= data_limit
+            assert min(1, len(ics)) + len(data) <= data_limit
             c += 1
             if isinstance(cp_action, EndReverse):
                 break
