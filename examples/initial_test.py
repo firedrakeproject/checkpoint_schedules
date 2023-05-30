@@ -10,8 +10,8 @@ from checkpoint_schedules import RevolveCheckpointSchedule
 from checkpoint_schedules import \
      (Forward, EndForward, Reverse, Read, EndReverse, Delete)
 import functools
-import time as tm
-from tabulate import tabulate
+# import time as tm
+# from tabulate import tabulate
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
@@ -170,9 +170,9 @@ class Manage():
             assert model_r == cp_schedule.r()
             c += 1
             if isinstance(cp_action, EndReverse):
-                col_names = ["Index", "Actions"]
+                # col_names = ["Index", "Actions"]
                 # #display table
-                print(tabulate(self.action_list))  
+                # print(tabulate(self.action_list))  
                 break
 
 
@@ -239,7 +239,7 @@ class execute_bwd():
 schedule_list = ['hrevolve', 'periodic_disk_revolve', 'disk_revolve', 'periodic_disk',
                  'multistage', 'two_level', 'mixed']
 
-start = tm.time()
+# start = tm.time()
 steps = 100
 schk = 30
 sdisk = 20
