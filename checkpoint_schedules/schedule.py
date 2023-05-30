@@ -234,12 +234,12 @@ class Delete(CheckpointAction):
 
     @property
     def n(self):
-        """Step.
+        """Return the Write step.
 
         Returns
         -------
         int
-            Current step.
+            Write step.
         """
         return self.args[0]
     
@@ -275,6 +275,7 @@ class Delete(CheckpointAction):
     #         Either "RAM" or disk.
     #     """
     #     return self.args[3]
+
 
 
 class EndForward(CheckpointAction):

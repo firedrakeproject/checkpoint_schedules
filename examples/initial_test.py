@@ -32,6 +32,7 @@ class Manage():
         Number of checkpoint that will be stored.
     total_steps : int
         Total steps used to execute the solvers.
+
     """
     def __init__(self, forward, backward, total_steps, save_ram=None,
                  save_disk=None, period=None):
@@ -145,6 +146,7 @@ class Manage():
         model_n = 0
         model_r = 0
         ics = set()
+        store_data = False
         data = set()
 
         snapshots = {"RAM": {}, "disk": {}}
