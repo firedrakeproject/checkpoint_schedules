@@ -134,8 +134,9 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             elif cp_action == "Discard":
                 if i < 2:
                     raise RuntimeError("Invalid schedule")
+                print(n_0, snapshots)
                 snapshots.remove(n_0)
-                print(n_0)
+                
                 yield Delete(n_0, storage)
             elif cp_action == "Discard_Forward":
                 if n_0 != self._n:

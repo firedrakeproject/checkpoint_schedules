@@ -1,11 +1,11 @@
 from checkpoint_schedules import RevolveCheckpointSchedule
     # (
-    # # MemoryCheckpointSchedule,
-    # #  PeriodicDiskCheckpointSchedule,
-    # #  MultistageCheckpointSchedule,
-    # #  TwoLevelCheckpointSchedule,
+    # MemoryCheckpointSchedule,
+    #  PeriodicDiskCheckpointSchedule,
+    #  MultistageCheckpointSchedule,
+    #  TwoLevelCheckpointSchedule,
      
-    # #  MixedCheckpointSchedule
+    #  MixedCheckpointSchedule
     # )
 from checkpoint_schedules import \
      (Forward, EndForward, Reverse, Read, EndReverse, Delete)
@@ -48,10 +48,10 @@ class Manage():
     def cp_schedule(self):
         """Return the schedule.
         """
-        # if self.schedule == 'hrevolve':
-        return RevolveCheckpointSchedule(
-            self.tot_steps, snapshots_in_ram=self.save_ram,
-            snapshots_on_disk=self.save_disk)
+        if self.schedule == 'hrevolve':
+            return RevolveCheckpointSchedule(
+                self.tot_steps, snapshots_in_ram=self.save_ram,
+                snapshots_on_disk=self.save_disk)
         # elif self.schedule == 'disk_revolve':
         #     assert self.save_disk is not None
         #     return RevolveCheckpointSchedule(
