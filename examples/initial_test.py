@@ -48,10 +48,9 @@ class Manage():
     def cp_schedule(self):
         """Return the schedule.
         """
-        if self.schedule == 'hrevolve':
-            return RevolveCheckpointSchedule(
-                self.tot_steps, snapshots_in_ram=self.save_ram,
-                snapshots_on_disk=self.save_disk)
+        return RevolveCheckpointSchedule(
+            self.tot_steps, snapshots_in_ram=self.save_ram,
+            snapshots_on_disk=self.save_disk)
         # elif self.schedule == 'disk_revolve':
         #     assert self.save_disk is not None
         #     return RevolveCheckpointSchedule(

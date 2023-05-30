@@ -394,9 +394,23 @@ class CheckpointSchedule(ABC):
         raise NotImplementedError
 
     def n(self):
+        """Forward step.
+
+        Returns
+        -------
+        int 
+            Forward step.
+        """
         return self._n
 
     def r(self):
+        """Reverse step.
+
+        Returns
+        -------
+        int 
+            Reverse step.
+        """
         return self._r
 
     def max_n(self):

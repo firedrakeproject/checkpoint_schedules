@@ -144,7 +144,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             else:
                 raise RuntimeError(f"Unexpected action: {cp_action:s}")
             i += 1
-        print(snapshots)
+        
         if len(snapshots) > self._snapshots_on_disk:
             raise RuntimeError("Invalid checkpointing state")
         
