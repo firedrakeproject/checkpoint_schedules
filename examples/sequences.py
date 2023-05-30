@@ -4,7 +4,7 @@ from checkpoint_schedules.revolve_sequences import \
 
 def test_hrevolve_l2():
     # Check that we reproduce Listing 2 from Herrmann and Pallez (2020).
-    sequence = hrevolve(20, [1, 4, 0], [0, 2, 0], [0, 2, 0])
+    sequence = hrevolve(5, [2, 1], [0, 2], [0, 2])
     print(sequence)
     # assert sequence.storage[0] == [17, 14, 12, 9, 7, 3, 0]
     # assert sequence.storage[1] == [7, 12]
@@ -25,7 +25,7 @@ def test_hrevolve_l2():
 
 def test_disk_revolve_l3():
     # Check that we reproduce Listing 3 from Herrmann and Pallez (2020).
-    sequence = disk_revolve(l=20, cm=5, wd=2, rd=1, ub=0)
+    sequence = disk_revolve(l=4, cm=2, wd=0, rd=2, ub=0)
     print(sequence)
     # assert sequence.memory == [5, 8, 6, 0, 3, 1]
     # assert sequence.disk == [0]
@@ -41,7 +41,7 @@ def test_disk_revolve_l3():
 
 def test_disk_revolve_l4():
     # Check that we reproduce Listing 4 from Herrmann and Pallez (2020).
-    sequence = disk_revolve(l=100, cm=2, wd=10, rd=2, ub=0, concat=2)
+    sequence = disk_revolve(l=5, cm=2, wd=10, rd=2, ub=0, concat=2)
     print(sequence)
     # compare_sequences(
     #     str(sequence), '[WD_0, F_0->15, WD_16, F_16->31, WD_32,'
@@ -54,7 +54,7 @@ def test_disk_revolve_l4():
 
 def test_revolve_1d_l4():
     # Check that we reproduce Listing 4 from Herrmann and Pallez (2020).
-    sequence = revolve_1d(l=15, cm=2, rd=2, concat=1)
+    sequence = revolve_1d(l=15, cm=2, rd=2)
     print(sequence)
     # compare_sequences(
     #     str(sequence), '[F_0->5, Revolve(9, 2), RD_0, Revolve(5, 2)]'
@@ -72,7 +72,7 @@ def test_disk_revolve_l5():
 
 def test_periodic_disk_revolve_l6():
     # Check that we reproduce Listing 6 from Herrmann and Pallez (2020).
-    sequence = periodic_disk_revolve(l=10, cm=2, wd=2, rd=1, ub=0)
+    sequence = periodic_disk_revolve(l=10-1, cm=2, wd=2, rd=1, ub=0)
     print(sequence)
     # compare_sequences(
     #     str(sequence), '[WD_0, F_0->2, WD_3, F_3->5, WD_6, F_6->8, WM_9,'
