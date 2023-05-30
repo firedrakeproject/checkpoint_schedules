@@ -90,9 +90,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                     write_ics = True
                     write_data = False
                     snapshots.add(w_n0)
-                elif w_cp_action == "Write_Forward":
-                    if w_n0 != n_1:
-                        raise RuntimeError("Invalid write forward index.")
+                else:
                     write_ics = False
                     write_data = True
 
