@@ -63,7 +63,7 @@ def h_revolve(n, s):
 
 
 @pytest.mark.parametrize(
-    "schedule",
+    "schedule, schedule_kwargs",
     [
     # (memory, {}),
     #  (periodic_disk, {"period": 1}),
