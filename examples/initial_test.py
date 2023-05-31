@@ -146,7 +146,6 @@ class Manage():
         model_n = 0
         model_r = 0
         ics = set()
-        store_data = False
         data = set()
 
         snapshots = {"RAM": {}, "disk": {}}
@@ -164,7 +163,7 @@ class Manage():
         c = 0
         while True:
             cp_action = next(cp_schedule)
-            # self.action_list.append([c, cp_action])
+            self.action_list.append([c, cp_action])
             action(cp_action)
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
@@ -240,9 +239,9 @@ schedule_list = ['hrevolve', 'periodic_disk_revolve', 'disk_revolve', 'periodic_
                  'multistage', 'two_level', 'mixed']
 
 # start = tm.time()
-steps = 10
+steps = 30
 schk = 2
-sdisk = 1
+sdisk = 10
 fwd = execute_fwd()
 bwd = execute_bwd()
 manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk)

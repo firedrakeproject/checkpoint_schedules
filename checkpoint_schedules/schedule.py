@@ -41,15 +41,18 @@ class Forward(CheckpointAction):
     n1 : int
         Final step.
     write_ics : bool
-        If "True", the checkpoint at the time 'n1'.
+        This variable determine if the checkpont used to restart the forward
+        solver will be written. If "True", the checkpoint at the time 'n0' is
+        written.
+    write_data : bool
+        This variable determine if the checkpont used in the reverse 
+        computation will be written. If "True", the checkpoint at the time 'n1' is
+        written.
     storage : str
         Level of the checkpoint storage, either "RAM" or "disk".
-    write_ics_n0 : bool
-        Determine if the checkpoint at the time 'n0' is saved. It is "True"
-        only in the initial forward calculation.
     """
-    def __init__(self, n0, n1, write_ics, write_data, storage, clear_buffer=True):
-        super().__init__(n0, n1, write_ics, write_data, storage, clear_buffer)
+    def __init__(self, n0, n1, write_ics, write_data, storage):
+        super().__init__(n0, n1, write_ics, write_data, storage)
 
     def __iter__(self):
         yield from range(self.n0, self.n1)
@@ -85,24 +88,24 @@ class Forward(CheckpointAction):
     @property
     def write_ics(self):
         """Inform if the checkpoint at the step 'self.args[1]' is going
-        to be save.
+        to be saved.
 
         Returns
         -------
         bool
-            If 'True', the checkpoint at the step 'self.args[1]' is going to be save.
+            If 'True', the checkpoint at the step 'self.args[1]' is going to be saved.
         """
         return self.args[2]
     
     @property
     def write_data(self):
         """Inform if the forward data at the step 'self.args[1]' is going
-        to be save.
+        to be saved.
 
         Returns
         -------
         bool
-            If 'True', the forward data at the step 'self.args[1]' is going to be save.
+            If 'True', the forward data at the step 'self.args[1]' is going to be saved.
         """
         return self.args[3]
     
@@ -117,28 +120,6 @@ class Forward(CheckpointAction):
         """
         return self.args[4]
     
-    @property
-    def clear(self):
-        """Clear buffer.
-
-        Returns
-        -------
-        bool
-            If 'True', .
-        """
-        return self.args[5]
-    
-    # @property
-    # def storage_n0(self):
-    #     """Level where the checkpoint at 'n0' is saved.
-
-    #     Returns
-    #     -------
-    #     bool
-    #         If 'True', the checkpoint at the step 'self.args[0]' is going to be saved.
-    #     """
-    #     return self.args[6]
-    
 
 class Reverse(CheckpointAction):
     """Reverse action.
@@ -149,6 +130,9 @@ class Reverse(CheckpointAction):
         Initial step of reverse solver.
     n0 : int
         Final step of reverse solver.  
+    clear_fwd_data : bool
+        Determine if the forward data used in the reverse computation will be 
+        cleaned. If "True", the intermediate forward data is cleaned.
     """
     def __init__(self, n1, n0, clear_fwd_data):
 
@@ -217,7 +201,7 @@ class Read(CheckpointAction):
         return self.args[1]
 
 
-class Delete(CheckpointAction):
+class Transfer(CheckpointAction):
     """Delete the type of checkpoint saved.
 
     Args
@@ -229,8 +213,8 @@ class Delete(CheckpointAction):
     storage : str
         Storage level that the checkpoint is going to be deleted.
     """
-    def __init__(self, n, storage):
-        super().__init__(n, storage)
+    def __init__(self, n, to_storage):
+        super().__init__(n, to_storage)
 
     @property
     def n(self):
@@ -250,7 +234,7 @@ class Delete(CheckpointAction):
         Returns
         -------
         str
-            Either "RAM" or disk.
+            Either "RAM" or "disk".
         """
         return self.args[1]
     

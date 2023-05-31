@@ -74,7 +74,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
 
         i = 0
         while i < len(self._schedule):
-            cp_action, (n_0, n_1, storage) = action_info(self._schedule[i])
+            cp_action, (n_0, n_1, storage) = _convert_action(self._schedule[i])
             if i == 0:
                 assert cp_action == "Write"
             if cp_action == "Forward":
@@ -83,7 +83,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                     raise RuntimeError("Invalid checkpointing state")
                 self._n = n_1
                 
-                w_cp_action, (w_n0, _, w_storage) = action_info(self._schedule[i - 1])
+                w_cp_action, (w_n0, _, w_storage) = _convert_action(self._schedule[i - 1])
                 if w_cp_action == "Write":
                     if w_n0 != n_0:
                         raise RuntimeError("Invalid write index.")
@@ -106,7 +106,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                     raise RuntimeError("Invalid checkpointing state")   
                 self._r += 1
                 yield Reverse(n_0, n_1, clear_fwd_data=True)
-                r_cp_action, (r_n0, _, r_storage) = action_info(self._schedule[i - 3])
+                r_cp_action, (r_n0, _, r_storage) = _convert_action(self._schedule[i - 3])
                 if r_cp_action == "Read":
                     assert r_n0 == n_1
                     snapshots.remove(n_1)
@@ -122,7 +122,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             elif cp_action == "Write_Forward":
                 if n_0 != self._n + 1:
                     raise RuntimeError("Invalid checkpointing state")
-                d_cp_action, (d_n0, _, w_storage) = action_info(self._schedule[i + 3])
+                d_cp_action, (d_n0, _, w_storage) = _convert_action(self._schedule[i + 3])
                 if (d_cp_action != "Discard_Forward"
                     or d_n0 != n_0 or w_storage != storage):
                     if w_n0 != n_0:
@@ -165,7 +165,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         return self._snapshots_on_disk > 0
 
 
-def action_info(action_n):
+def _convert_action(action_n):
     """Provide information of the action at the step "n".
 
     Parameters
