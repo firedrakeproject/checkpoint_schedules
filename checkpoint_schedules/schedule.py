@@ -3,17 +3,16 @@
 
 from abc import ABC, abstractmethod
 import functools
-
+from enum import Enum
 __all__ = \
     [
         "CheckpointAction",
         "Forward",
         "Reverse",
-        "Read",
+        "Transfer",
         "EndForward",
         "EndReverse",
         "CheckpointSchedule",
-        "Delete"
     ]
 
 
@@ -202,19 +201,10 @@ class Read(CheckpointAction):
 
 
 class Transfer(CheckpointAction):
-    """Delete the type of checkpoint saved.
-
-    Args
-    ----
-    delete_ics : bool
-        If "True", the checkpoint stored in the snapshot is deleted.
-    delete_data : bool
-        If "True", the forward data is deleted.
-    storage : str
-        Storage level that the checkpoint is going to be deleted.
+    """Transfer from the snapshot to a space.
     """
-    def __init__(self, n, to_storage):
-        super().__init__(n, to_storage)
+    def __init__(self, n, from_storage, to_storage, delete=False):
+        super().__init__(n, from_storage, to_storage, delete)
 
     @property
     def n(self):
@@ -228,8 +218,8 @@ class Transfer(CheckpointAction):
         return self.args[0]
     
     @property
-    def storage(self):
-        """Storage level that the checkpoint is going to be deleted.
+    def from_storage(self):
+        """Level where the checkpoint is saved.
 
         Returns
         -------
@@ -238,28 +228,27 @@ class Transfer(CheckpointAction):
         """
         return self.args[1]
     
-    # @property
-    # def delete_ics(self):
-    #     """Storage level that the checkpoint is going to be deleted.
+    @property
+    def to_storage(self):
+        """Level where the checkpoint is saved.
 
-    #     Returns
-    #     -------
-    #     str
-    #         Either "RAM" or disk.
-    #     """
-    #     return self.args[2]
+        Returns
+        -------
+        str
+            Either "RAM" or "disk".
+        """
+        return self.args[2]
     
-    # @property
-    # def delete_data(self):
-    #     """Storage level that the checkpoint is going to be deleted.
+    @property
+    def delete(self):
+        """Delete the checkpoint data saved in the snapshot.
 
-    #     Returns
-    #     -------
-    #     str
-    #         Either "RAM" or disk.
-    #     """
-    #     return self.args[3]
-
+        Returns
+        -------
+        bool
+            Inform if the snapshot data will be deleted.
+        """
+        return self.args[3]
 
 
 class EndForward(CheckpointAction):
@@ -429,3 +418,10 @@ class CheckpointSchedule(ABC):
                 raise RuntimeError("Invalid checkpointing state")
         elif self._n != n or self._max_n != n:
             raise RuntimeError("Invalid checkpointing state")
+
+class SnapshotSpace(Enum):
+    """Tranfer to .
+    """
+    NONE = None
+    CHK = 0
+    RAM = 1

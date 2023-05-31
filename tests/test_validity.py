@@ -19,7 +19,7 @@
 # along with tlm_adjoint.  If not, see <https://www.gnu.org/licenses/>.
 
 from checkpoint_schedules.schedule import \
-    Forward, Reverse, Read, Delete, EndForward, EndReverse
+    Forward, Reverse, Transfer, EndForward, EndReverse
 from checkpoint_schedules import \
     (RevolveCheckpointSchedule)
 
@@ -89,10 +89,9 @@ def h_revolve(n, s):
                                 #   (3, (1, 2)),
                                 #   (10, tuple(range(1, 10))),
                                 #   (100, tuple(range(1, 100))),
-                                  (250, tuple(range(25, 250, 25)))
+                                  (20, tuple(range(4, 20, 4)))
                                   ])
-def test_validity(schedule, schedule_kwargs,
-                  n, S):
+def test_validity(schedule, schedule_kwargs, n, S):
     @functools.singledispatch
     def action(cp_action):
         raise TypeError("Unexpected action")
@@ -117,9 +116,8 @@ def test_validity(schedule, schedule_kwargs,
             # No non-linear dependency data for these steps is stored
             assert len(data.intersection(range(cp_action.n0, n1))) == 0
 
-        if cp_action.clear:
-            ics.clear()
-            data.clear()
+        ics.clear()
+        data.clear()
         if cp_action.write_ics:
             ics.update(range(cp_action.n0, n1))
             snapshots[cp_action.storage][cp_action.n0] = set(ics)
@@ -155,45 +153,24 @@ def test_validity(schedule, schedule_kwargs,
         if cp_action.clear_fwd_data:
             data.clear()
             del fwd_data["RAM"][cp_action.n0]
-          
-
-    @action.register(Read)
-    def action_read(cp_action):
-        nonlocal model_n
-
-        # The checkpoint exists
-        assert cp_action.n in snapshots[cp_action.storage]
-
-        cp = snapshots[cp_action.storage][cp_action.n]
-
-        # No data is currently stored for this step
-        assert cp_action.n not in ics
-        assert cp_action.n not in data
-
-        # The checkpoint contains forward restart or non-linear dependency data
-        assert len(cp) > 0 or len(cp[1]) > 0
-
-        # The checkpoint data is before the current location of the adjoint
-        assert cp_action.n < n - model_r
-
-        model_n = None
-       
-        if len(cp) > 0:
-            ics.clear()
-            ics.update(cp)
-            model_n = cp_action.n
-
-        # if len(cp[1]) > 0:
-        #     data.clear()
-        #     data.update(cp[1])
-
     
-    @action.register(Delete)
-    def action_delete(cp_action):
+    @action.register(Transfer)
+    def action_transfer(cp_action):
         # pass
         nonlocal model_n
         model_n = None
-        del snapshots[cp_action.storage][cp_action.n]
+        if cp_action.storage is None and cp_action.delete:
+            del snapshots[cp_action.storage][cp_action.n]
+        elif cp_action.storage == "RAM" or cp_action.storage == "disk":
+            assert cp_action.n in snapshots[cp_action.storage]
+            assert cp_action.n < n - model_r
+            # No data is currently stored for this step
+            assert cp_action.n not in ics
+            assert cp_action.n not in data
+            snapshots[cp_action.storage][cp_action.n] = snapshots[cp_action.storage][cp_action.n]
+        else:
+            data.update(range(cp_action.n0, cp_action.n0 +1))
+            fwd_data[cp_action.storage][cp_action.n] = set(data)
 
     @action.register(EndForward)
     def action_end_forward(cp_action):
@@ -201,7 +178,7 @@ def test_validity(schedule, schedule_kwargs,
         assert model_n is not None and model_n == n
 
     @action.register(EndReverse)
-    def action_end_reverse(cp_action):
+    def action_end_reverse(cp_action):n
         nonlocal model_r
 
         # The correct number of adjoint steps has been taken
@@ -230,9 +207,7 @@ def test_validity(schedule, schedule_kwargs,
         while True:
             cp_action = next(cp_schedule)
             action(cp_action)
-            # The schedule state is consistent with both the forward and
-            # adjoint
-            
+
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
 

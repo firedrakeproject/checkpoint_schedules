@@ -6,8 +6,8 @@
 
 # This file is part of tlm_adjoint.
 
-from .schedule import CheckpointSchedule, Forward, Reverse, Delete,\
-    Read, EndForward, EndReverse
+from .schedule import CheckpointSchedule, Forward, Reverse, Transfer,\
+    EndForward, EndReverse
 from .revolve_sequences import hrevolve
 
 import logging
@@ -110,15 +110,21 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 if r_cp_action == "Read":
                     assert r_n0 == n_1
                     snapshots.remove(n_1)
-                    yield Delete(n_1, r_storage)
+                    yield Transfer(r_n0, r_storage, None, delete=True)
             elif cp_action == "Read":
                 if deferred_cp is not None:
                     raise RuntimeError("Invalid checkpointing state")
                 self._n = n_0
-                yield Read(n_0, storage)
+                n_cp_action, (w_n0, _, n_storage) = _convert_action(self._schedule[i + 1])
+                if n_cp_action == "Write":
+                    yield Transfer(n_0, storage, n_storage)
+                elif n_cp_action == "Write_Forward" or n_cp_action == "Forward":
+                    yield Transfer(n_0, storage, "CHK")
+                else:
+                    raise RuntimeError("Invalid checkpointing state")
             elif cp_action == "Write":
                 if n_0 != self._n:
-                    raise RuntimeError("Invalid checkpointing state")
+                    raise RuntimeError("Invalid write action index")
             elif cp_action == "Write_Forward":
                 if n_0 != self._n + 1:
                     raise RuntimeError("Invalid checkpointing state")
@@ -153,7 +159,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             _description_
         """
         return self._exhausted
-
+    
     def uses_disk_storage(self):
         """_summary_
 
@@ -166,12 +172,12 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
 
 
 def _convert_action(action_n):
-    """Provide information of the action at the step "n".
+    """Convert the revolver schedules to ....
 
     Parameters
     ----------
     action_n : object
-        Action object.
+        Action object.checkpointing state
 
     Returns
     -------

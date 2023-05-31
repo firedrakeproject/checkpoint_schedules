@@ -8,7 +8,7 @@ from checkpoint_schedules import RevolveCheckpointSchedule
     #  MixedCheckpointSchedule
     # )
 from checkpoint_schedules import \
-     (Forward, EndForward, Reverse, Read, EndReverse, Delete)
+     (Forward, EndForward, Reverse, Transfer, EndReverse)
 import functools
 # import time as tm
 from tabulate import tabulate
@@ -85,24 +85,16 @@ class Manage():
         def action(cp_action):
             raise TypeError("Unexpected action")
 
-        @action.register(Delete)
-        def action_delete(cp_action):
-            # pass
-            nonlocal model_n
-            model_n = None
-            del snapshots[cp_action.storage][cp_action.n]
-
-
         @action.register(Forward)
         def action_forward(cp_action):
             nonlocal model_n
             self.c += (cp_action.n1 - cp_action.n0)
             self.forward.advance(cp_action.n0, cp_action.n1)
-            self.action_list.append([self.c, cp_action])
+            # self.action_list.append([self.c, cp_action])
             n1 = min(cp_action.n1, self.tot_steps)
             model_n = n1
-            if cp_action.clear:
-                ics.clear()
+            
+            ics.clear()
             if cp_action.write_ics:
                 ics.update(range(cp_action.n0, n1))
                 snapshots[cp_action.storage][cp_action.n0] = set(ics)
@@ -114,7 +106,7 @@ class Manage():
 
         @action.register(Reverse)
         def action_reverse(cp_action):
-            self.action_list.append([self.c_back, cp_action])
+            # self.action_list.append([self.c_back, cp_action])
             self.c_back -= 1
             nonlocal model_r
             self.backward.advance(cp_action.n1, cp_action.n0)
@@ -122,12 +114,22 @@ class Manage():
             if cp_action.clear_fwd_data:
                 data.clear()
 
-        @action.register(Read)
-        def action_read(cp_action):
+        @action.register(Transfer)
+        def action_transfer(cp_action):
+            # pass
             nonlocal model_n
-            # cp = snapshots[cp_action.storage][cp_action.n]
             model_n = None
-
+            if cp_action.to_storage is None and cp_action.delete:
+                del snapshots[cp_action.from_storage][cp_action.n]
+            elif cp_action.to_storage == "RAM" or cp_action.to_storage == "disk":
+                assert cp_action.n in snapshots[cp_action.from_storage]
+                assert cp_action.n < self.tot_steps - model_r
+                # No data is currently stored for this step
+                assert cp_action.n not in ics
+                assert cp_action.n not in data
+                snapshots[cp_action.to_storage][cp_action.n] = snapshots[cp_action.from_storage][cp_action.n]
+            else:
+                data.update(range(cp_action.n, cp_action.n + 1))
         @action.register(EndForward)
         def action_end_forward(cp_action):
             # The correct number of forward steps has been taken
@@ -239,9 +241,9 @@ schedule_list = ['hrevolve', 'periodic_disk_revolve', 'disk_revolve', 'periodic_
                  'multistage', 'two_level', 'mixed']
 
 # start = tm.time()
-steps = 30
+steps = 10
 schk = 2
-sdisk = 10
+sdisk = 5
 fwd = execute_fwd()
 bwd = execute_bwd()
 manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk)
