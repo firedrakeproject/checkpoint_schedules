@@ -111,7 +111,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                     assert r_n0 == n_1
                     snapshots.remove(n_1)
                     # if r_storage == "RAM":
-                    yield Transfer(n_1, r_storage, None, delete=True)
+                    # yield Transfer(n_1, r_storage, None, delete=True)
             elif cp_action == "Read":
                 if deferred_cp is not None:
                     raise RuntimeError("Invalid checkpointing state")
@@ -146,7 +146,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             elif cp_action == "Discard":
                 if i < 2:
                     raise RuntimeError("Invalid schedule")
-                # yield Transfer(n_0, storage, None, delete=True)
+                yield Transfer(n_0, storage, None, delete=True)
             elif cp_action == "Discard_Forward":
                 if n_0 != self._n:
                     raise RuntimeError("Invalid checkpointing state")
