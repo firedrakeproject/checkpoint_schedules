@@ -110,15 +110,23 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 if r_cp_action == "Read":
                     assert r_n0 == n_1
                     snapshots.remove(n_1)
-                    yield Transfer(r_n0, r_storage, None, delete=True)
+                    # if r_storage == "RAM":
+                    yield Transfer(n_1, r_storage, None, delete=True)
             elif cp_action == "Read":
                 if deferred_cp is not None:
                     raise RuntimeError("Invalid checkpointing state")
                 self._n = n_0
-                n_cp_action, (w_n0, _, n_storage) = _convert_action(self._schedule[i + 1])
+                n_cp_action, (w_n0, _, w_storage) = _convert_action(self._schedule[i + 1])
+                f_cp_action, (f_n0, _, _) = _convert_action(self._schedule[i + 2])
                 if n_cp_action == "Write":
-                    yield Transfer(n_0, storage, n_storage)
-                elif n_cp_action == "Write_Forward" or n_cp_action == "Forward":
+                    assert n_0 == w_n0
+                    yield Transfer(n_0, storage, w_storage)
+                elif n_cp_action == "Write_Forward":
+                    assert f_cp_action == "Forward"
+                    assert n_0 == f_n0
+                    yield Transfer(n_0, storage, "CHK")
+                elif n_cp_action == "Forward":
+                    assert n_0 == w_n0
                     yield Transfer(n_0, storage, "CHK")
                 else:
                     raise RuntimeError("Invalid checkpointing state")
@@ -138,14 +146,16 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             elif cp_action == "Discard":
                 if i < 2:
                     raise RuntimeError("Invalid schedule")
+                # yield Transfer(n_0, storage, None, delete=True)
             elif cp_action == "Discard_Forward":
                 if n_0 != self._n:
                     raise RuntimeError("Invalid checkpointing state")
             else:
                 raise RuntimeError(f"Unexpected action: {cp_action:s}")
             i += 1
-        if len(snapshots) > self._snapshots_on_disk:
-            raise RuntimeError("Invalid checkpointing state")
+     
+        if len(snapshots) > 0:
+            raise RuntimeError("Unexpected snapshot number.")
         
         self._exhausted = True
         yield EndReverse(True)

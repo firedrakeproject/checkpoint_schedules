@@ -119,9 +119,9 @@ class Manage():
             # pass
             nonlocal model_n
             model_n = None
-            if cp_action.to_storage is None and cp_action.delete:
+            if cp_action.delete:
                 del snapshots[cp_action.from_storage][cp_action.n]
-            elif cp_action.to_storage == "RAM" or cp_action.to_storage == "disk":
+            elif cp_action.to_storage != "CHK":
                 assert cp_action.n in snapshots[cp_action.from_storage]
                 assert cp_action.n < self.tot_steps - model_r
                 # No data is currently stored for this step
@@ -130,6 +130,7 @@ class Manage():
                 snapshots[cp_action.to_storage][cp_action.n] = snapshots[cp_action.from_storage][cp_action.n]
             else:
                 data.update(range(cp_action.n, cp_action.n + 1))
+
         @action.register(EndForward)
         def action_end_forward(cp_action):
             # The correct number of forward steps has been taken
@@ -167,6 +168,7 @@ class Manage():
             cp_action = next(cp_schedule)
             self.action_list.append([c, cp_action])
             action(cp_action)
+            print(cp_action, snapshots)
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
             c += 1
@@ -241,8 +243,8 @@ schedule_list = ['hrevolve', 'periodic_disk_revolve', 'disk_revolve', 'periodic_
                  'multistage', 'two_level', 'mixed']
 
 # start = tm.time()
-steps = 10
-schk = 2
+steps = 100
+schk = 5
 sdisk = 5
 fwd = execute_fwd()
 bwd = execute_bwd()
