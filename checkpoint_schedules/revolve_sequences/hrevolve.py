@@ -150,7 +150,10 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
                 hrevolve_aux(jmin - 1, 0, cmem, cvect, wvect, rvect,
                              hoptp=hoptp, hopt=hopt, **params)
             )
-            if sequence.sequence[-1].sequence[-1].type != "Discard":
+            aux = sequence
+            while aux.type == 'Function':
+                aux = aux.sequence[-1]
+            if aux.type != "Discard":
                 sequence.insert(Operation("Discard", [0, 0]))
             return sequence
         else:

@@ -80,13 +80,13 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             if cp_action == "Forward":
                 assert i > 0
                 if n_0 != self._n:
-                    raise RuntimeError("Invalid checkpointing state")
+                    raise RuntimeError("Invalid forward step.")
                 self._n = n_1
                 
                 w_cp_action, (w_n0, _, w_storage) = _convert_action(self._schedule[i - 1])
                 if w_cp_action == "Write":
                     if w_n0 != n_0:
-                        raise RuntimeError("Invalid write index.")
+                        raise RuntimeError("Invalid index.")
                     write_ics = True
                     write_data = False
                     snapshots.add(w_n0)
