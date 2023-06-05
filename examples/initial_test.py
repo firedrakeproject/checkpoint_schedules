@@ -95,7 +95,7 @@ class Manage():
             model_n = None
             if cp_action.delete:
                 del snapshots[cp_action.from_storage][cp_action.n]
-            elif cp_action.to_storage != "CHK":
+            elif cp_action.to_storage != "checkpoint":
                 assert cp_action.n in snapshots[cp_action.from_storage]
                 assert cp_action.n < self.tot_steps - model_r
                 # No data is currently stored for this step
@@ -128,7 +128,6 @@ class Manage():
         snapshots = {"RAM": {}, "disk": {}}
         cp_schedule = RevolveCheckpointSchedule(self.tot_steps, self.save_ram,
                                                 snaps_on_disk=self.save_disk, schedule=self.schedule)
-        print(cp_schedule._schedule)
         if cp_schedule is None:
             print("Incompatible with schedule type")
 
@@ -150,8 +149,8 @@ class Manage():
             if isinstance(cp_action, EndReverse):
                 # col_names = ["Index", "Actions"]
                 # #display table
-                print(snapshots)
-                print(tabulate(self.action_list))  
+                # print(snapshots)
+                # print(tabulate(self.action_list))  
                 break
 
 
@@ -176,7 +175,7 @@ class execute_fwd():
             Final time step.
 
         """
-        print((">"*(n_1-n_0)).rjust(n_1))
+        # print((">"*(n_1-n_0)).rjust(n_1))
         i_n = n_0
         while i_n < n_1:
             i_np1 = i_n + 1
@@ -209,7 +208,7 @@ class execute_bwd():
             Final time step in reverse state.
 
         """
-        print("<".rjust(n_1))
+        # print("<".rjust(n_1))
         i_n = n_1
         while i_n > n_0:
             i_np1 = i_n - 1
@@ -217,12 +216,12 @@ class execute_bwd():
 
 
 # start = tm.time()
-steps = 4
-schk = 1
-sdisk = 0
+steps = 250
+schk = 10
+sdisk = 5
 fwd = execute_fwd()
 bwd = execute_bwd()
-manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule=2)
+manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule=1)
 manage.actions()
 
 

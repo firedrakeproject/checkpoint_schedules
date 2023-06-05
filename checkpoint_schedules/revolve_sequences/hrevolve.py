@@ -170,17 +170,12 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
             hrevolve_recurse(l - jmin, K, cmem - 1, cvect, wvect, rvect,
                              hoptp=hoptp, hopt=hopt, **params).shift(jmin)
         )
-        
-        # sequence.insert(Operation("Discard", [0, jmin]))
+
         sequence.insert(Operation("Read", [K, 0]))
-        # if K > 0:
-        #     sequence.insert(Operation("Write", [0, 0]))
         sequence.insert_sequence(
             hrevolve_aux(jmin - 1, K, cmem, cvect, wvect, rvect,
                          hoptp=hoptp, hopt=hopt, **params)
         )
-        if sequence.sequence[-1].sequence[-1].type != "Discard":
-            sequence.insert(Operation("Discard", [K, 0]))
         return sequence
     else:
         sequence.insert_sequence(

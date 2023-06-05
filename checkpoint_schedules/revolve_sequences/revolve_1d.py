@@ -105,10 +105,10 @@ def revolve_1d(l, cm, opt_0=None, opt_1d=None, **params):
     sequence = Sequence(Function("1D-Revolve", l, cm), concat=parameters["concat"])
     operation = partial(Op, params=parameters)
     if l == 0:
-        sequence.insert(operation("Write_Forward", [0, 1]))
+        sequence.insert(operation("Write_Forward_memory", 1))
         sequence.insert(operation("Forward", [0, 1]))
         sequence.insert(operation("Backward", [1, 0]))
-        sequence.insert(operation("Discard_Forward", [0, 1]))
+        sequence.insert(operation("Discard_Forward_memory", 1))
         return sequence
     if l == 1:
         if cm == 0:
