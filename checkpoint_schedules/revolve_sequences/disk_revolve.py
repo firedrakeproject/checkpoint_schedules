@@ -101,6 +101,7 @@ def disk_revolve(l, cm, opt_0=None, opt_1d=None,
     rd = parameters["rd"]
     wd = parameters["wd"]
     one_read_disk = parameters["one_read_disk"]
+
     if opt_0 is None:
         opt_0 = get_opt_0_table(l, cm, **parameters)
     if opt_1d is None and not one_read_disk:
@@ -111,10 +112,10 @@ def disk_revolve(l, cm, opt_0=None, opt_1d=None,
     sequence = Sequence(Function("Disk-Revolve", l, cm), concat=parameters["concat"])
     Operation = partial(Op, params=parameters)
     if l == 0:
-        sequence.insert(Operation("Write_Forward_memory", [0, 1]))
+        sequence.insert(Operation("Write_Forward_memory", 1))
         sequence.insert(Operation("Forward", [0, 1]))
         sequence.insert(Operation("Backward", [1, 0]))
-        sequence.insert(Operation("Discard_Forward_memory", [0, 1]))
+        sequence.insert(Operation("Discard_Forward_memory",  1))
         return sequence
     if l == 1:
         if cm == 0:

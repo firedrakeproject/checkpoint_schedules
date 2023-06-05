@@ -123,7 +123,10 @@ def revolve(l, cm, opt_0=None, **params):
     sequence = Sequence(Function("Revolve", l, cm), concat=parameters["concat"])
     Operation = partial(Op, params=parameters)
     if l == 0:
+        sequence.insert(Operation("Write_Forward_memory", 1))
+        sequence.insert(Operation("Forward", [0, 1]))
         sequence.insert(Operation("Backward", [1, 0]))
+        sequence.insert(Operation("Discard_Forward_memory", 1))
         sequence.insert(Operation("Discard_memory", 0))
         return sequence
     elif cm == 0:
@@ -147,17 +150,17 @@ def revolve(l, cm, opt_0=None, **params):
         for index in range(l - 1, -1, -1):
             if index != l - 1:
                 sequence.insert(Operation("Read_memory", 0))
-            if index != 0:
-                sequence.insert(Operation("Forward", [0, index]))
-            sequence.insert(Operation("Write_Forward_memory", index + 1))
-            sequence.insert(Operation("Forward", [index, index + 1]))
-            sequence.insert(Operation("Backward", [index + 1, index]))
-            sequence.insert(Operation("Discard_Forward_memory", index + 1))
+            if index + 1 != 0:
+                sequence.insert(Operation("Forward", [0, index + 1]))
+            sequence.insert(Operation("Write_Forward_memory", index + 2))
+            sequence.insert(Operation("Forward", [index + 1, index + 2]))
+            sequence.insert(Operation("Backward", [index + 2, index + 1]))
+            sequence.insert(Operation("Discard_Forward_memory", index + 2))
         sequence.insert(Operation("Read_memory", 0))
         sequence.insert(Operation("Write_Forward_memory", 1))
         sequence.insert(Operation("Forward", [0, 1]))
-        sequence.insert(Operation("Backward", [0, 1]))
-        sequence.insert(Operation("Discard_Forward_memory", [0, 1]))
+        sequence.insert(Operation("Backward", [1, 0]))
+        sequence.insert(Operation("Discard_Forward_memory", 1))
         sequence.insert(Operation("Discard_memory", 0))
         return sequence
     list_mem = [j*parameters["uf"] + opt_0[cm-1][l-j] + opt_0[cm][j-1] for j in range(1, l)]

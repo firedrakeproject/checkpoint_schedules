@@ -34,8 +34,8 @@ class Manage():
         Total steps used to execute the solvers.
 
     """
-    def __init__(self, forward, backward, total_steps, save_ram=None,
-                 save_disk=None, period=None):
+    def __init__(self, forward, backward, total_steps, schedule='hrevolve', save_ram=0,
+                 save_disk=0, period=None):
         self.save_ram = save_ram
         self.save_disk = save_disk
         self.forward = forward
@@ -45,23 +45,25 @@ class Manage():
         self.action_list = []
         self.c = 0
         self.c_back = total_steps
+        self.schedule = schedule
 
     def cp_schedule(self):
         """Return the schedule.
         """
-        return RevolveCheckpointSchedule(
-            self.tot_steps, snapshots_in_ram=self.save_ram,
-            snapshots_on_disk=self.save_disk)
-        # elif self.schedule == 'disk_revolve':
-        #     assert self.save_disk is not None
-        #     return RevolveCheckpointSchedule(
-        #         self.tot_steps, snapshots_on_disk=self.save_disk,
-        #         revolve_sequence=self.schedule)
-        # elif self.schedule == 'periodic_disk_revolve':
-        #     assert self.save_ram is not None
-        #     return RevolveCheckpointSchedule(
-        #         self.tot_steps, snapshots_in_ram=self.save_ram,
-        #         revolve_sequence=self.schedule)
+        if self.schedule == 'hrevolve':
+            return RevolveCheckpointSchedule(
+                self.tot_steps, self.save_ram,
+                self.save_disk, self.schedule)
+        elif self.schedule == 'disk_revolve':
+            assert self.save_disk is not None
+            return RevolveCheckpointSchedule(
+                self.tot_steps, self.save_ram,
+                self.save_disk, self.schedule)
+        elif self.schedule == 'periodic_disk_revolve':
+            assert self.save_ram is not None
+            return RevolveCheckpointSchedule(
+                self.tot_steps, self.save_ram,
+                self.save_disk, self.schedule)
         # elif self.schedule == 'periodic_disk':
         #     assert self.period is not None
         #     return PeriodicDiskCheckpointSchedule(self.period)
@@ -243,12 +245,12 @@ schedule_list = ['hrevolve', 'periodic_disk_revolve', 'disk_revolve', 'periodic_
                  'multistage', 'two_level', 'mixed']
 
 # start = tm.time()
-steps = 25
-schk = 5
+steps = 100
+schk = 0
 sdisk = 5
 fwd = execute_fwd()
 bwd = execute_bwd()
-manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk)
+manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule='disk_revolve')
 manage.actions()
 
 

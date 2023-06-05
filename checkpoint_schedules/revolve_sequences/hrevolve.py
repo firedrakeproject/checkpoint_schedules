@@ -196,13 +196,15 @@ def hrevolve(l, cvect, wvect, rvect, **params):
     Parameters
     ----------
     l : int
-        Number of forward step.
+        The number of forward steps in the initial forward calculation.
     cvect : tuple
         The number of slots in each level of memory.
     wvect : tuple
-        The cost of writing to each level of memory.
+        A two element defining the write cost associated with saving a forward 
+        restart checkpoint to RAM (first element) and disk (second element).
     rvect : tuple
-        The cost of reading from each level of memory.
+        A two element defining the read cost associated with loading a forward 
+        restart checkpoint from RAM (first element) and disk (second element).
 
     Returns
     -------
