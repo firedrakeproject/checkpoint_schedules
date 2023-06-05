@@ -34,7 +34,7 @@ class Manage():
         Total steps used to execute the solvers.
 
     """
-    def __init__(self, forward, backward, total_steps, schedule='hrevolve', save_ram=0,
+    def __init__(self, forward, backward, total_steps, schedule=0, save_ram=0,
                  save_disk=0, period=None):
         self.save_ram = save_ram
         self.save_disk = save_disk
@@ -46,34 +46,6 @@ class Manage():
         self.c = 0
         self.c_back = total_steps
         self.schedule = schedule
-
-    def cp_schedule(self):
-        """Return the schedule.
-        """
-        if self.schedule == 'hrevolve':
-            return RevolveCheckpointSchedule(
-                self.tot_steps, self.save_ram,
-                self.save_disk, self.schedule)
-        elif self.schedule == 'disk_revolve':
-            assert self.save_disk is not None
-            return RevolveCheckpointSchedule(
-                self.tot_steps, self.save_ram,
-                self.save_disk, self.schedule)
-        elif self.schedule == 'periodic_disk_revolve':
-            assert self.save_ram is not None
-            return RevolveCheckpointSchedule(
-                self.tot_steps, self.save_ram,
-                self.save_disk, self.schedule)
-        # elif self.schedule == 'periodic_disk':
-        #     assert self.period is not None
-        #     return PeriodicDiskCheckpointSchedule(self.period)
-        # elif self.schedule == 'two_level':
-        #     assert self.period is not None
-        #     return TwoLevelCheckpointSchedule(self.period, self.save_disk)
-        # elif self.schedule == 'mixed':
-        #     return MixedCheckpointSchedule(self.tot_steps, self.save_disk)
-        # elif self.schedule == 'multistage':
-        #     return MultistageCheckpointSchedule(self.tot_steps, self.save_ram, self.save_disk)
 
     def actions(self):
         """Actions.
@@ -154,7 +126,8 @@ class Manage():
         data = set()
 
         snapshots = {"RAM": {}, "disk": {}}
-        cp_schedule = self.cp_schedule()
+        cp_schedule = RevolveCheckpointSchedule(self.tot_steps, self.save_ram,
+                                                snaps_on_disk=self.save_disk, schedule=self.schedule)
         print(cp_schedule._schedule)
         if cp_schedule is None:
             print("Incompatible with schedule type")
@@ -170,13 +143,14 @@ class Manage():
             cp_action = next(cp_schedule)
             self.action_list.append([c, cp_action])
             action(cp_action)
-            print(cp_action, snapshots)
+            # print(cp_action, snapshots)
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
             c += 1
             if isinstance(cp_action, EndReverse):
                 # col_names = ["Index", "Actions"]
                 # #display table
+                print(snapshots)
                 print(tabulate(self.action_list))  
                 break
 
@@ -241,16 +215,14 @@ class execute_bwd():
             i_np1 = i_n - 1
             i_n = i_np1
 
-schedule_list = ['hrevolve', 'periodic_disk_revolve', 'disk_revolve', 'periodic_disk',
-                 'multistage', 'two_level', 'mixed']
 
 # start = tm.time()
-steps = 100
-schk = 0
-sdisk = 5
+steps = 4
+schk = 1
+sdisk = 0
 fwd = execute_fwd()
 bwd = execute_bwd()
-manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule='disk_revolve')
+manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule=2)
 manage.actions()
 
 

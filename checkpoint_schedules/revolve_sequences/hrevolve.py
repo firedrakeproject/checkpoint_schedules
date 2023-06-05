@@ -211,8 +211,8 @@ def hrevolve(l, cvect, wvect, rvect, **params):
     object
         The optimal sequence of makespan HOpt(l, architecture).
     """
-    params["wd"] = wvect
-    params["rd"] = rvect
+    # params["wd"] = wvect
+    # params["rd"] = rvect
     return hrevolve_recurse(l, len(cvect)-1, cvect[-1], cvect, wvect, rvect,
                             hoptp=None, hopt=None, **params)
 
@@ -252,8 +252,7 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
     KeyError
         If `K = 0` and `cmem = 0`.
     """
-    parameters = dict(defaults)
-    parameters.update(params)
+    parameters = dict(params)
     if (hoptp is None) or (hopt is None):
         (hoptp, hopt) = get_hopt_table(l, cvect, wvect, rvect, **parameters)
     sequence = Sequence(Function("HRevolve", l, [K, cmem]),

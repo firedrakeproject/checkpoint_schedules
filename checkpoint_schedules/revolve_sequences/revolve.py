@@ -50,7 +50,7 @@ def opt_0_closed_formula(l, cm, uf, ub, **params):
     return ((l+1) * (t+1) - beta(cm+1, t)) * uf + (l+1) * ub
 
 
-def get_opt_0_table(lmax, mmax, uf, ub, print_table, **params):
+def get_opt_0_table(lmax, mmax, uf, ub, print_table=None, **params):
     """Return the Opt_0 tables.
 
     Parameters

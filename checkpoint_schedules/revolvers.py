@@ -10,6 +10,7 @@ from .schedule import CheckpointSchedule, Forward, Reverse, Transfer,\
     EndForward, EndReverse
 from .revolve_sequences import hrevolve, disk_revolve, periodic_disk_revolve
 import logging
+from enum import Enum
 
 __all__ = \
     [
@@ -28,36 +29,27 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
        The maximum number of forward restart checkpoints to store in memory.
     snapshots_on_disk : int
         The maximum number of forward restart checkpoints to store on disk.
-    wvect : tuple, optional
-        A two element defining the write cost associated with saving a forward 
-        restart checkpoint to RAM (first element) and disk (second element).
-    rvect : tuple, optional
-        A two element defining the read cost associated with loading a forward 
-        restart checkpoint from RAM (first element) and disk (second element).
-    uf : float, optional
+    f_cost : float, optional
         The cost of advancing the forward one step.
-    ub : float, optional
-        The cost of advancing the forward one step, storing non-linear 
-        dependency data, and then advancing the adjoint over that step.
+    b_cost : float, optional
+        The cost of advancing the adjoint over that step.
+    wvect : float, optional
+        The write cost associated with saving a forward restart checkpoint to disk (second element).
+    rvect : float, optional
+        The read cost associated with loading a forward restart checkpoint from disk (second element).
+    
+    Notes
+    -----
+    The write and read cost with saving a forward restart checkpoint to RAM is 0.
     """
 
-    def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk, schedule, *,
-                 wvect=(0.0, 0.1), rvect=(0.0, 0.1), uf=1.0, ub=2.0, **kwargs):
+    def __init__(self, max_n, snap_in_ram, snaps_on_disk=0, f_cost=1, b_cost=1, w_cost=2.0, r_cost=2.0, schedule=0):
         super().__init__(max_n)
-        self._snapshots_in_ram = snapshots_in_ram
-        self._snapshots_on_disk = snapshots_on_disk
         self._exhausted = False
-
-        cvect = (snapshots_in_ram, snapshots_on_disk)
-        if schedule == 'hrevolve':
-            schedule = hrevolve(max_n - 1, cvect, wvect, rvect,
-                                uf=uf, ub=ub, **kwargs)
-        elif schedule == 'disk_revolve':
-            schedule = disk_revolve(l=max_n-1, cm=snapshots_on_disk, wd=0, rd=2, ub=0)
-        elif schedule == 'periodic_disk_revolve':
-            schedule = periodic_disk_revolve(l=max_n-1, cm=snapshots_in_ram, wd=snapshots_on_disk, rd=1, ub=0)
-
+        self._snapshots_on_disk = snaps_on_disk
+        schedule = RevolverMethod(schedule).sequence(max_n, snap_in_ram, snaps_on_disk, f_cost, b_cost, r_cost, w_cost)
         self._schedule = list(schedule)
+
 
     def iter(self):
         """Iterator object of the checkpoint schedules.
@@ -81,7 +73,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         while i < len(self._schedule):
             cp_action, (n_0, n_1, storage) = _convert_action(self._schedule[i])
             if i == 0:
-                assert cp_action == "Write" or cp_action == "Write_disk"
+                assert cp_action == "Write" or cp_action == "Write_disk" or cp_action == "Write_memory"
             if cp_action == "Forward":
                 assert i > 0
                 if n_0 != self._n:
@@ -185,8 +177,8 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             else:
                 raise RuntimeError(f"Unexpected action: {cp_action:s}")
             i += 1
-        # if len(snapshots) > self._snapshots_on_disk:
-        #     raise RuntimeError("Unexpected snapshot number.")
+        if len(snapshots) > 0:
+            raise RuntimeError("Unexpected snapshot number.")
         
         self._exhausted = True
         yield EndReverse(True)
@@ -261,3 +253,65 @@ def _convert_action(action_n):
         raise RuntimeError(f"Unexpected action: {cp_action:s}")
     return cp_action, (n_0, n_1, storage)
 
+
+class RevolverMethod(Enum):
+    """Set the revolver method.
+
+    """
+    HREVOLVE = 0
+    DISKREVOLVE = 1
+    PERIODICDISKREVOLVE = 2
+
+    def sequence(self, max_n, snap_in_ram, snap_disk, f_cost, b_cost, r_cost, w_cost):
+        """Determine the revolve sequence
+        Args:
+            method (_type_): _description_
+        """
+
+        if self.name == 'DISKREVOLVE':
+            assert snap_in_ram >= 0
+            params = {
+                        "uf": f_cost,            # Cost of a forward step.
+                        "ub": b_cost,            # Cost of a backward step.
+                        "up": 1,                 # Cost of the loss function.
+                        "wd": w_cost,            # Cost of writing to disk.
+                        "rd": r_cost,            # Cost of reading from disk.
+                        "mx": None,              # Size of the period (defaults to the optimal).
+                        "one_read_disk": False,  # Disk checkpoints are only read once.
+                        "fast": False,           # Use the clode formula for mx.
+                        "concat": 0,             # Level of sequence concatenation.
+                        }
+            return disk_revolve(max_n - 1, snap_in_ram, **params)
+        
+        elif self.name == 'HREVOLVE':
+            assert snap_in_ram > 0
+            wvec = [0, w_cost]           
+            rvec = [0, r_cost]
+            params = {
+                        "uf": f_cost,            # Cost of a forward step.
+                        "ub": b_cost,            # Cost of a backward step.
+                        "up": 1,                 # Cost of the loss function.
+                        "rd" : rvec,
+                        "wd" : wvec,
+                        "mx": None,              # Size of the period (defaults to the optimal).
+                        "one_read_disk": False,  # Disk checkpoints are only read once.
+                        "fast": False,           # Use the clode formula for mx.
+                        "concat": 0,             # Level of sequence concatenation.
+                        }
+            cvec = [snap_in_ram, snap_disk]
+            
+            return hrevolve(max_n - 1 , cvec, wvec, rvec, **params)
+        elif self.name == 'PERIODICDISKREVOLVE':
+            assert snap_in_ram > 0
+            params = {
+                        "uf": f_cost,            # Cost of a forward step.
+                        "ub": b_cost,            # Cost of a backward step.
+                        "wd": w_cost,            # Cost of writing to disk.
+                        "rd": r_cost,            # Cost of reading from disk.
+                        "up": 1,                 # Cost of the loss function.
+                        "mx": None,              # Size of the period (defaults to the optimal).
+                        "one_read_disk": False,  # Disk checkpoints are only read once.
+                        "fast": False,           # Use the clode formula for mx.
+                        "concat": 0,             # Level of sequence concatenation.
+                        }
+            return periodic_disk_revolve(max_n - 1, snap_in_ram, **params)

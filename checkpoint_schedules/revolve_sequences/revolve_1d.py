@@ -15,7 +15,7 @@ from .revolve import revolve, get_opt_0_table
 from functools import partial
 
 
-def get_opt_1d_table(lmax, cm, print_table, ub, uf, rd, one_read_disk,
+def get_opt_1d_table(lmax, cm, ub, uf, rd, one_read_disk, print_table=None,
                      opt_0=None, **params):
     """Compute the opt_1d table. 
     This computation uses a dynamic program.

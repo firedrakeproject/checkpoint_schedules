@@ -3,7 +3,7 @@
 
 from abc import ABC, abstractmethod
 import functools
-from enum import Enum
+
 __all__ = \
     [
         "CheckpointAction",
@@ -419,9 +419,3 @@ class CheckpointSchedule(ABC):
         elif self._n != n or self._max_n != n:
             raise RuntimeError("Invalid checkpointing state")
 
-class SnapshotSpace(Enum):
-    """Tranfer to .
-    """
-    NONE = None
-    CHK = 0
-    RAM = 1

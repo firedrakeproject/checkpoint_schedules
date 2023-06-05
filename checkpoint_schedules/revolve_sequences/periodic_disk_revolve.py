@@ -109,8 +109,8 @@ def periodic_disk_revolve(l, cm, opt_0=None, opt_1d=None, mmax=None, **params):
     """ l : number of forward step to execute in the AC graph
             cm : number of available memory slots
             Return the periodic sequence with optimal period"""
-    parameters = dict(defaults)
-    parameters.update(params)
+    parameters = dict(params)
+    # parameters.update(params)
     mx = parameters["mx"]
     one_read_disk = parameters["one_read_disk"]
     fast = parameters["fast"]

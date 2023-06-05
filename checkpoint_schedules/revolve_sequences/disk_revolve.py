@@ -9,14 +9,13 @@ Adjoint Computation on Synchronous Hierarchical
 Platforms", ACM Transactions on Mathematical
 Software  46(2), 2020.
 """
-from .parameters import defaults
 from .basic_functions import (Operation as Op, Table, Sequence, Function, argmin)
 from .revolve import get_opt_0_table, revolve
 from .revolve_1d import revolve_1d, get_opt_1d_table
 from functools import partial
 
 
-def get_opt_inf_table(lmax, cm, uf, ub, rd, wd, one_read_disk, print_table,
+def get_opt_inf_table(lmax, cm, uf, ub, rd, wd, one_read_disk, print_table=None,
                       opt_0=None, opt_1d=None, **params):
     """Compute the opt_inf table for architecture and l=0...lmax.
 
@@ -95,8 +94,8 @@ def disk_revolve(l, cm, opt_0=None, opt_1d=None,
 
         Return the optimal sequence of makespan Opt_inf(l, cm).
     """
-    parameters = dict(defaults)
-    parameters.update(params)
+
+    parameters = dict(params)
     uf = parameters["uf"]
     rd = parameters["rd"]
     wd = parameters["wd"]

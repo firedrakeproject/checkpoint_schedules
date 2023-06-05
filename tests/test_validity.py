@@ -178,7 +178,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
         assert model_n is not None and model_n == n
 
     @action.register(EndReverse)
-    def action_end_reverse(cp_action):n
+    def action_end_reverse(cp_action):
         nonlocal model_r
 
         # The correct number of adjoint steps has been taken
