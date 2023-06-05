@@ -34,22 +34,24 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
     b_cost : float, optional
         The cost of advancing the adjoint over that step.
     wvect : float, optional
-        The write cost associated with saving a forward restart checkpoint to disk (second element).
+        The write cost associated with saving a forward restart checkpoint to disk.
     rvect : float, optional
-        The read cost associated with loading a forward restart checkpoint from disk (second element).
+        The read cost associated with loading a forward restart checkpoint from disk.
     
     Notes
     -----
     The write and read cost with saving a forward restart checkpoint to RAM is 0.
     """
 
-    def __init__(self, max_n, snap_in_ram, snaps_on_disk=0, f_cost=1, b_cost=1, w_cost=2.0, r_cost=2.0, schedule=0):
+    def __init__(self, max_n, snap_in_ram, snaps_on_disk=0, f_cost=1, b_cost=1,
+                 w_cost=1.0, r_cost=1.0, schedule=0):
         super().__init__(max_n)
         self._exhausted = False
         self._snapshots_on_disk = snaps_on_disk
-        schedule = RevolverMethod(schedule).sequence(max_n, snap_in_ram, snaps_on_disk, f_cost, b_cost, r_cost, w_cost)
+        schedule = RevolverMethod(schedule).sequence(max_n, snap_in_ram,
+                                                     snaps_on_disk, f_cost,
+                                                     b_cost, r_cost, w_cost)
         self._schedule = list(schedule)
-
 
     def iter(self):
         """Iterator object of the checkpoint schedules.
@@ -72,17 +74,17 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         i = 0
         while i < len(self._schedule):
             cp_action, (n_0, n_1, storage) = _convert_action(self._schedule[i])
-            if i == 0:
-                assert cp_action == "Write" or cp_action == "Write_disk" or cp_action == "Write_memory"
             if cp_action == "Forward":
                 assert i > 0
                 if n_0 != self._n:
-                    raise RuntimeError("Invalid forward step.")
+                    raise InvalidForwardStep
                 self._n = n_1
                 w_cp_action, (w_n0, _, w_storage) = _convert_action(self._schedule[i - 1])
-                if w_cp_action == "Write" or w_cp_action == "Write_disk" or w_cp_action == "Write_memory":
+                if (w_cp_action == "Write"
+                    or w_cp_action == "Write_disk" 
+                    or w_cp_action == "Write_memory"):
                     if w_n0 != n_0:
-                        raise RuntimeError("Invalid index.")
+                        raise InvalidWriteindex
                     write_ics = True
                     write_data = False
                     snapshots.add(w_n0)
@@ -93,19 +95,20 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 yield Forward(n_0, n_1, write_ics, write_data, w_storage)
                 if self._n == self._max_n:
                     if self._r != 0:
-                        raise RuntimeError("Invalid checkpointing state")
+                        raise InvalidBackwardStep
                     yield EndForward()
             elif cp_action == "Backward":
                 if n_0 != self._n:
-                    raise RuntimeError("Invalid checkpointing state")
+                    raise InvalidForwardStep
                 if n_0 != self._max_n - self._r:
-                    raise RuntimeError("Invalid checkpointing state")   
+                    raise InvalidForwardStep 
                 self._r += 1
                 yield Reverse(n_0, n_1, clear_fwd_data=True)
-                r_cp_action, (r_n0, _, r_storage) = _convert_action(self._schedule[i - 3])
-                if r_cp_action == "Read" or r_cp_action == "Read_disk" or r_cp_action == "Read_memory":
-                    assert r_n0 == n_1
-                    snapshots.remove(n_1)
+                # r_cp_action, (r_n0, _, r_storage) = _convert_action(self._schedule[i - 3])
+                # if r_cp_action == "Read" or r_cp_action == "Read_disk" or r_cp_action == "Read_memory":
+                #     if r_n0 != n_1
+                #         raise InvalidReadindex
+                #     snapshots.remove(n_1)
             elif cp_action == "Read":
                 if deferred_cp is not None:
                     raise RuntimeError("Invalid checkpointing state")
@@ -141,44 +144,43 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                     assert n_0 == w_n0
                     yield Transfer(n_0, storage, "CHK")
                 else:
-                    raise RuntimeError("Invalid checkpointing state")
-
+                    raise InvalidRevolverSchedule
             elif (cp_action == "Write" or cp_action == "Write_disk" 
                   or cp_action == "Write_memory"):
                 if n_0 != self._n:
-                    raise RuntimeError("Invalid write action index")
+                    raise InvalidIndex
             elif cp_action == "Write_Forward":
                 if n_0 != self._n + 1:
-                    raise RuntimeError("Invalid checkpointing state")
+                    raise InvalidIndex
                 d_cp_action, (d_n0, _, w_storage) = _convert_action(self._schedule[i + 3])
                 if (d_cp_action != "Discard_Forward"
                     or d_n0 != n_0 or w_storage != storage):
                     if w_n0 != n_0:
-                        raise RuntimeError("Invalid checkpoint schedule.")
+                        raise InvalidIndex
                     write_ics = True
                     write_data = False
             elif cp_action == "Write_Forward_memory":
                 if n_0 != self._n + 1:
-                    raise RuntimeError("Invalid checkpointing state")
+                    raise InvalidIndex
                 d_cp_action, (d_n0, _, w_storage) = _convert_action(self._schedule[i + 3])
                 if (d_cp_action != "Discard_Forward_memory"
                     or d_n0 != n_0 or w_storage != storage):
                     if w_n0 != n_0:
-                        raise RuntimeError("Invalid checkpoint schedule.")
+                        raise InvalidIndex
                     write_ics = True
                     write_data = False
             elif cp_action == "Discard" or cp_action == "Discard_memory":
                 if i < 2:
-                    raise RuntimeError("Invalid schedule")
+                    raise InvalidRevolverSchedule
                 yield Transfer(n_0, storage, None, delete=True)
             elif cp_action == "Discard_Forward" or cp_action == "Discard_Forward_memory":
                 if n_0 != self._n:
-                    raise RuntimeError("Invalid checkpointing state")
+                    raise InvalidForwardStep
             else:
-                raise RuntimeError(f"Unexpected action: {cp_action:s}")
+                raise InvalidRevolverAction
             i += 1
-        if len(snapshots) > 0:
-            raise RuntimeError("Unexpected snapshot number.")
+        # if len(snapshots) > 0:
+        #     raise RuntimeError("Unexpected snapshot number.")
         
         self._exhausted = True
         yield EndReverse(True)
@@ -256,7 +258,6 @@ def _convert_action(action_n):
 
 class RevolverMethod(Enum):
     """Set the revolver method.
-
     """
     HREVOLVE = 0
     DISKREVOLVE = 1
@@ -264,10 +265,29 @@ class RevolverMethod(Enum):
 
     def sequence(self, max_n, snap_in_ram, snap_disk, f_cost, b_cost, r_cost, w_cost):
         """Determine the revolve sequence
-        Args:
-            method (_type_): _description_
-        """
 
+        Parameters
+        ----------
+        max_n : _type_
+            _description_
+        snap_in_ram : _type_
+            _description_
+        snap_disk : _type_
+            _description_
+        f_cost : _type_
+            _description_
+        b_cost : _type_
+            _description_
+        r_cost : _type_
+            _description_
+        w_cost : _type_
+            _description_
+
+        Returns
+        -------
+        object
+            Revolver sequence.
+        """
         if self.name == 'DISKREVOLVE':
             assert snap_in_ram >= 0
             params = {
@@ -315,3 +335,38 @@ class RevolverMethod(Enum):
                         "concat": 0,             # Level of sequence concatenation.
                         }
             return periodic_disk_revolve(max_n - 1, snap_in_ram, **params)
+
+
+class InvalidForwardStep(Exception):
+    "Raised when the forward step is invalid."
+    pass
+
+
+class InvalidBackwardStep(Exception):
+    "Raised when the forward step is invalid."
+    pass
+
+
+class InvalidWriteindex(Exception):
+    "Raised when the forward step is invalid."
+    pass
+
+
+class InvalidReadindex(Exception):
+    "Raised when the forward step is invalid."
+    pass
+
+
+class InvalidRevolverSchedule(Exception):
+    "Raised when the forward step is invalid."
+    pass
+
+
+class InvalidRevolverAction(Exception):
+    "Raised when the forward step is invalid."
+    pass
+
+
+class InvalidIndex(Exception):
+    "Raised when the forward step is invalid."
+    pass
