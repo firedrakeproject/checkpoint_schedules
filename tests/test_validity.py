@@ -91,6 +91,19 @@ def h_revolve(n, s):
                                   (250, tuple(range(25, 250, 25)))
                                   ])
 def test_validity(schedule, schedule_kwargs, n, S):
+    """Test the checkpoint revolvers.
+
+    Parameters
+    ----------
+    schedule : object
+        Revolver schedule.
+    schedule_kwargs : _type_
+        _description_
+    n : int
+        Total forward steps.
+    S : int
+        Snapshots.
+    """
     @functools.singledispatch
     def action(cp_action):
         raise TypeError("Unexpected action")
@@ -106,14 +119,13 @@ def test_validity(schedule, schedule_kwargs, n, S):
             assert cp_action.n1 <= n - model_r
         n1 = min(cp_action.n1, n)
         model_n = n1
-        # if cp_action.write_ics:
-        #     # No forward restart data for these steps is stored
-        #     assert len(ics.intersection(range(cp_action.n0, n1))) == 0
+        if cp_action.write_ics:
+            # No forward restart data for these steps is stored
+            assert len(ics.intersection(range(cp_action.n0, n1))) == 0
 
         # if cp_action.write_data:
         #     # No non-linear dependency data for these steps is stored
         #     assert len(data.intersection(range(cp_action.n0, n1))) == 0
-
         ics.clear()
         data.clear()
         if cp_action.write_ics:
@@ -220,7 +232,8 @@ def test_validity(schedule, schedule_kwargs, n, S):
             for storage_type, storage_limit in storage_limits.items():
                 if storage_type == "RAM":
                     assert len(snapshots[storage_type]) <= storage_limit
+
             # Data storage limit is not exceeded
-            # assert min(1, len(ics)) + len(data) <= data_limit
+            # assert len(data) <= 1
             if isinstance(cp_action, EndReverse):
                 break
