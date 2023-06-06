@@ -52,10 +52,25 @@ def h_revolve(n, s):
         return (None,
                 {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 0)
     else:
-        return (RevolveCheckpointSchedule(n, s, 0),
-                {StorageLocation(0).name: s, StorageLocation(1).name: 0}, 1)
+        return (RevolveCheckpointSchedule(n, s//2, s-s//2),
+                {StorageLocation(0).name: s//2, StorageLocation(1).name: s - s//2}, 1)
 
 
+def disk_revolve(n, s):
+    if s <= 1:
+        return (None,
+                {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 0)
+    else:
+        return (RevolveCheckpointSchedule(n, s, schedule="disk_revolve"),
+                {StorageLocation(0).name: s, StorageLocation(1).name: n - s}, 1)
+
+def periodic_disk_revolve(n, s):
+    if s <= 1:
+        return (None,
+                {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 0)
+    else:
+        return (RevolveCheckpointSchedule(n, s, schedule="periodic_disk_revolve"),
+                {StorageLocation(0).name: s, StorageLocation(1).name: n - s}, 1)
 # def mixed(n, s):
 #     return (MixedCheckpointSchedule(n, s),
 #             {StorageLocation(0).name: 0, StorageLocation(1).name: s}, 1)
@@ -74,8 +89,8 @@ def h_revolve(n, s):
     #  (two_level, {"period": 2}),
     #  (two_level, {"period": 7}),
     #  (two_level, {"period": 10}),
-     pytest.param(
-         h_revolve, {},
+    
+        (h_revolve, {},
         #  marks=pytest.mark.skipif(hrevolve is None,
         #                           reason="H-Revolve not available")),
     #  (mixed, {}
