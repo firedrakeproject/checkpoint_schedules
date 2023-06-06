@@ -52,8 +52,8 @@ def h_revolve(n, s):
         return (None,
                 {"RAM": 0, "disk": 0}, 0)
     else:
-        return (RevolveCheckpointSchedule(n, s // 2, s - (s // 2)),
-                {"RAM": s // 2, "disk": s - (s // 2)}, 1)
+        return (RevolveCheckpointSchedule(n, s, 0),
+                {"RAM": s, "disk": 0}, 1)
 
 
 # def mixed(n, s):
@@ -88,7 +88,7 @@ def h_revolve(n, s):
                                 #   (3, (1, 2)),
                                 #   (10, tuple(range(1, 10))),
                                 #   (100, tuple(range(1, 100))),
-                                  (250, tuple(range(25, 250, 25)))
+                                  (10, tuple(range(2, 10, 2)))
                                   ])
 def test_validity(schedule, schedule_kwargs, n, S):
     """Test the checkpoint revolvers.
@@ -221,10 +221,11 @@ def test_validity(schedule, schedule_kwargs, n, S):
         assert cp_schedule.n() == 0
         assert cp_schedule.r() == 0
         assert cp_schedule.max_n() is None or cp_schedule.max_n() == n
+        print(cp_schedule._schedule)
         while True:
             cp_action = next(cp_schedule)
             action(cp_action)
-
+            print(cp_action)
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
 

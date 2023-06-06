@@ -89,7 +89,6 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 else:
                     write_ics = False
                     write_data = True
-
                 yield Forward(n_0, n_1, write_ics, write_data, w_storage)
                 if self._n == self._max_n:
                     if self._r != 0:
