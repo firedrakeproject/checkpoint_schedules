@@ -119,6 +119,17 @@ class Forward(CheckpointAction):
         """
         return self.args[4]
     
+    def info(self):
+        """_summary_
+
+        Returns:
+            _type_: _description_
+        """
+        f_info = ("Forward(n0: " + str(self.n0) + ", n1: " + str(self.n1)
+                  + ", write_ics: " + str(self.write_ics) + ", write_data: " + str(self.write_data)
+                  + ", storage: " + str(self.storage) + ")")
+        return f_info
+    
 
 class Reverse(CheckpointAction):
     """Reverse action.
@@ -170,35 +181,16 @@ class Reverse(CheckpointAction):
 
     def clear_fwd_data(self):
         return self.args[2]
+    
+    def info(self):
+        """_summary_
 
-class Read(CheckpointAction):
-    """Action read a checkpoint.
-    """
-    def __init__(self, n, storage):
-        super().__init__(n, storage)
-
-    @property
-    def n(self):
-        """Curren read step.
-
-        Returns
-        -------
-        int
-            The step.
+        Returns:
+            _type_: _description_
         """
-        return self.args[0]
-
-    @property
-    def storage(self):
-        """Checkpoint storage level.
-
-        Returns
-        -------
-        str
-            Either "RAM" or "disk".
-        """
-        return self.args[1]
-
+        f_info = ("Reverse(n1: " + str(self.n1) + ", n0: " + str(self.n0)
+                  + ", clear_fwd_data: " + str(self.clear_fwd_data()) + ")")
+        return f_info
 
 class Transfer(CheckpointAction):
     """Transfer from the snapshot to a space.
@@ -249,12 +241,30 @@ class Transfer(CheckpointAction):
             Inform if the snapshot data will be deleted.
         """
         return self.args[3]
+    
+    def info(self):
+        """_summary_
+
+        Returns:
+            _type_: _description_
+        """
+        f_info = ("Transfer(n: " + str(self.n) + ", from_storage: " + str(self.from_storage) 
+                  + ", to_storage: " + str(self.to_storage) + ", delete: " + str(self.delete) + ")")
+        return f_info
 
 
 class EndForward(CheckpointAction):
     """Action used if the Forward solver is ended.
     """
-    pass
+    def info(self):
+        """_summary_
+
+        Returns:
+            _type_: _description_
+        """
+        f_info = "EndForward"
+        return f_info
+
 
 
 class EndReverse(CheckpointAction):
@@ -273,7 +283,15 @@ class EndReverse(CheckpointAction):
             _description_
         """
         return self.args[0]
+    
+    def info(self):
+        """_summary_
 
+        Returns:
+            _type_: _description_
+        """
+        f_info = "EndReverse"
+        return f_info
 
 class CheckpointSchedule(ABC):
     """A checkpointing schedule.

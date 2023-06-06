@@ -1,4 +1,4 @@
-from checkpoint_schedules import RevolveCheckpointSchedule
+from checkpoint_schedules import RevolveCheckpointSchedule, StorageLocation
     # (
     # MemoryCheckpointSchedule,
     #  PeriodicDiskCheckpointSchedule,
@@ -11,7 +11,7 @@ from checkpoint_schedules import \
      (Forward, EndForward, Reverse, Transfer, EndReverse)
 import functools
 # import time as tm
-# from tabulate import tabulate
+from tabulate import tabulate
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
@@ -34,7 +34,7 @@ class Manage():
         Total steps used to execute the solvers.
 
     """
-    def __init__(self, forward, backward, total_steps, schedule=0, save_ram=0,
+    def __init__(self, forward, backward, total_steps, schedule='hrevolve', save_ram=0,
                  save_disk=0, period=None):
         self.save_ram = save_ram
         self.save_disk = save_disk
@@ -95,7 +95,7 @@ class Manage():
             model_n = None
             if cp_action.delete:
                 del snapshots[cp_action.from_storage][cp_action.n]
-            elif cp_action.to_storage != "checkpoint":
+            elif cp_action.to_storage != StorageLocation(2).name:
                 assert cp_action.n in snapshots[cp_action.from_storage]
                 assert cp_action.n < self.tot_steps - model_r
                 # No data is currently stored for this step
@@ -125,9 +125,11 @@ class Manage():
         ics = set()
         data = set()
 
-        snapshots = {"RAM": {}, "disk": {}}
+        snapshots = {StorageLocation(0).name: {}, StorageLocation(1).name: {}}
         cp_schedule = RevolveCheckpointSchedule(self.tot_steps, self.save_ram,
-                                                snaps_on_disk=self.save_disk, schedule=self.schedule)
+                                                snap_on_disk=self.save_disk)
+        
+        snapshots = {StorageLocation(0).name: {}, StorageLocation(1).name: {}}
         
         if cp_schedule is None:
             print("Incompatible with schedule type")
@@ -138,12 +140,12 @@ class Manage():
                 cp_schedule.max_n() is None
                 or cp_schedule.max_n() == self.tot_steps
             )
+        
         c = 0
         while True:
             cp_action = next(cp_schedule)
-            self.action_list.append([c, cp_action])
+            self.action_list.append([c, cp_action.info()])
             action(cp_action)
-            # print(cp_action, snapshots)
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
             c += 1
@@ -151,7 +153,7 @@ class Manage():
                 # col_names = ["Index", "Actions"]
                 # #display table
                 # print(snapshots)
-                # print(tabulate(self.action_list))  
+                print(tabulate(self.action_list))  
                 break
 
 
@@ -217,12 +219,12 @@ class execute_bwd():
 
 
 # start = tm.time()
-steps = 100
-schk = 35
-sdisk = 0
+steps = 10
+schk = 2
+sdisk = 1
 fwd = execute_fwd()
 bwd = execute_bwd()
-manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule=0)
+manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk)
 manage.actions()
 
 

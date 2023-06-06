@@ -1,11 +1,9 @@
 import math
-from .parameters import defaults
+from functools import partial
 from .basic_functions import (Operation as Op, Sequence, Function, beta)
 from .revolve import revolve, get_opt_0_table
-from functools import partial
-
 from .revolve_1d import get_opt_1d_table, revolve_1d
-
+from .utils import revolver_parameters
 
 def compute_mmax(cm, wd, rd, uf, **params):
     """Compute m_max.
@@ -86,7 +84,7 @@ def mx_close_formula(cm, rd, wd, opt_0=None, opt_1d=None, **params):
         opt_0 = get_opt_0_table(mmax, cm, **params)
     if opt_1d is None or len(opt_1d) < mmax:
         opt_1d = get_opt_1d_table(mmax, cm, opt_0=opt_0, **params)
-    if (RelCostX(mx, opt_1d[mx-1]) < RelCostX(mxalt, opt_1d[mxalt-1])):
+    if (RelCostX(mx, opt_1d[mx-1],wd, rd) < RelCostX(mxalt, opt_1d[mxalt-1], wd, rd)):
         return int(mx)
     else:
         return int(mxalt)
@@ -105,10 +103,12 @@ def combin(k, n):
     return int(math.factorial(n)/(math.factorial(k)*math.factorial(n-k)))
 
 
-def periodic_disk_revolve(l, cm, opt_0=None, opt_1d=None, mmax=None, **params):
+def periodic_disk_revolve(l, cm, rd, wd, opt_0=None, opt_1d=None, mmax=None):
     """ l : number of forward step to execute in the AC graph
             cm : number of available memory slots
             Return the periodic sequence with optimal period"""
+    
+    params = revolver_parameters(wd, rd)
     parameters = dict(params)
     # parameters.update(params)
     mx = parameters["mx"]

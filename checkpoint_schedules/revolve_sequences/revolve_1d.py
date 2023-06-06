@@ -9,7 +9,6 @@ Adjoint Computation on Synchronous Hierarchical
 Platforms", ACM Transactions on Mathematical
 Software  46(2), 2020.
 """
-from .parameters import defaults
 from .basic_functions import (Operation as Op, Sequence, Function, Table, argmin)
 from .revolve import revolve, get_opt_0_table
 from functools import partial
@@ -93,8 +92,7 @@ def revolve_1d(l, cm, opt_0=None, opt_1d=None, **params):
     object
         1D revolve sequence.
     """
-    parameters = dict(defaults)
-    parameters.update(params)
+    parameters = dict(params)
     rd = parameters["rd"]
     uf = parameters["uf"]
     one_read_disk = parameters["one_read_disk"]
