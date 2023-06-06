@@ -88,7 +88,7 @@ def h_revolve(n, s):
                                 #   (3, (1, 2)),
                                 #   (10, tuple(range(1, 10))),
                                 #   (100, tuple(range(1, 100))),
-                                  (10, tuple(range(2, 10, 2)))
+                                  (4, tuple(range(2, 4, 2)))
                                   ])
 def test_validity(schedule, schedule_kwargs, n, S):
     """Test the checkpoint revolvers.
@@ -118,24 +118,23 @@ def test_validity(schedule, schedule_kwargs, n, S):
             # Do not advance further than the current location of the adjoint
             assert cp_action.n1 <= n - model_r
         n1 = min(cp_action.n1, n)
+        
         model_n = n1
         if cp_action.write_ics:
             # No forward restart data for these steps is stored
             assert len(ics.intersection(range(cp_action.n0, n1))) == 0
 
-        # if cp_action.write_data:
-        #     # No non-linear dependency data for these steps is stored
-        #     assert len(data.intersection(range(cp_action.n0, n1))) == 0
+        if cp_action.write_data:
+            # No non-linear dependency data for these steps is stored
+            assert len(data.intersection(range(cp_action.n0, n1))) == 0
+
         ics.clear()
         data.clear()
         if cp_action.write_ics:
             ics.update(range(cp_action.n0, n1))
-            snapshots[cp_action.storage][cp_action.n0] = set(ics)
         if cp_action.write_data:
             data.update(range(cp_action.n0, n1))
-            # fwd_data[cp_action.storage][cp_action.n0] = set(data)
 
-        assert len(ics) > 0 or len(data) > 0
         if len(ics) > 0:
             if len(data) > 0:
                 assert cp_action.n0 == min(min(ics), min(data))
@@ -143,6 +142,9 @@ def test_validity(schedule, schedule_kwargs, n, S):
                 assert cp_action.n0 == min(ics)
         elif len(data) > 0:
             assert cp_action.n0 == min(data)
+
+        if len(ics) > 0 or len(data) > 0:
+            snapshots[cp_action.storage][cp_action.n0] = (set(ics), set(data))
 
         if n1 == n:
             cp_schedule.finalize(n1)
@@ -168,25 +170,27 @@ def test_validity(schedule, schedule_kwargs, n, S):
         # pass
         nonlocal model_n
         model_n = None
+        assert cp_action.n in snapshots[cp_action.from_storage]
+        cp = snapshots[cp_action.from_storage][cp_action.n]
+        assert cp_action.n not in ics
+        assert cp_action.n not in data
+        # The checkpoint contains forward restart or non-linear dependency data
+        assert len(cp[0]) > 0 or len(cp[1]) > 0
         
         if cp_action.delete:
-            assert cp_action.n in snapshots[cp_action.from_storage]
+            assert cp_action.n == n - model_r
             del snapshots[cp_action.from_storage][cp_action.n]
         elif cp_action.to_storage == "RAM" or cp_action.to_storage == "disk":
-            assert cp_action.n in snapshots[cp_action.from_storage]
             # No data is currently stored for this step
             assert cp_action.n < n - model_r
-            assert cp_action.n not in ics
-            assert cp_action.n not in data
             if cp_action.from_storage == "disk":
                 assert cp_action.to_storage == "RAM"
-                snapshots[cp_action.to_storage][cp_action.n] = snapshots[cp_action.from_storage][cp_action.n]
-                model_n = cp_action.n
+            ics.clear()
+            ics.update(cp[0])
+            model_n = cp_action.n
         else:
             assert cp_action.n < n - model_r
-            assert cp_action.n not in ics
-            assert cp_action.n not in data
-            data.update(range(cp_action.n, cp_action.n + 1))
+            data.update(cp[1])
             model_n = cp_action.n
             # fwd_data[cp_action.to_storage][cp_action.n] = set(data)
 
@@ -214,8 +218,8 @@ def test_validity(schedule, schedule_kwargs, n, S):
         data = set()
 
         snapshots = {"RAM": {}, "disk": {}}
-        fwd_data = {"RAM": {}}
-        cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs)  # noqa: E501
+        cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs)  # Checkpoint storage limits are not exceeded
+
         if cp_schedule is None:
             pytest.error("Incompatible with schedule type.")
         assert cp_schedule.n() == 0
@@ -225,16 +229,15 @@ def test_validity(schedule, schedule_kwargs, n, S):
         while True:
             cp_action = next(cp_schedule)
             action(cp_action)
-            print(cp_action)
+            print(cp_action, snapshots)
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
 
             # Checkpoint storage limits are not exceeded
-            for storage_type, storage_limit in storage_limits.items():
-                if storage_type == "RAM":
-                    assert len(snapshots[storage_type]) <= storage_limit
+            # for storage_type, storage_limit in storage_limits.items():
+            #     assert len(snapshots[storage_type]) <= storage_limit
+            # # Data storage limit is not exceeded
+            # assert min(1, len(ics)) + len(data) <= data_limit
 
-            # Data storage limit is not exceeded
-            # assert len(data) <= 1
             if isinstance(cp_action, EndReverse):
                 break

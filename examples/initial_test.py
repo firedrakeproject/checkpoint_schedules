@@ -11,7 +11,7 @@ from checkpoint_schedules import \
      (Forward, EndForward, Reverse, Transfer, EndReverse)
 import functools
 # import time as tm
-# from tabulate import tabulate
+from tabulate import tabulate
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
@@ -128,6 +128,7 @@ class Manage():
         snapshots = {"RAM": {}, "disk": {}}
         cp_schedule = RevolveCheckpointSchedule(self.tot_steps, self.save_ram,
                                                 snaps_on_disk=self.save_disk, schedule=self.schedule)
+        print(cp_schedule._schedule)
         if cp_schedule is None:
             print("Incompatible with schedule type")
 
@@ -150,7 +151,7 @@ class Manage():
                 # col_names = ["Index", "Actions"]
                 # #display table
                 # print(snapshots)
-                # print(tabulate(self.action_list))  
+                print(tabulate(self.action_list))  
                 break
 
 
@@ -216,12 +217,12 @@ class execute_bwd():
 
 
 # start = tm.time()
-steps = 250
-schk = 10
-sdisk = 5
+steps = 100
+schk = 35
+sdisk = 0
 fwd = execute_fwd()
 bwd = execute_bwd()
-manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule=1)
+manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk, schedule=0)
 manage.actions()
 
 

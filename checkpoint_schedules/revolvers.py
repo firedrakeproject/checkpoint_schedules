@@ -86,9 +86,16 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                     write_ics = True
                     write_data = False
                     snapshots.add(w_n0)
-                else:
+                elif (w_cp_action == "Write_Forward"
+                    or w_cp_action == "Write_Forward_memory"):
+                    if w_n0 != n_1:
+                        raise InvalidActionIndex
                     write_ics = False
                     write_data = True
+                else:
+                    write_ics = False
+                    write_data = False
+                    w_storage = None
                 yield Forward(n_0, n_1, write_ics, write_data, w_storage)
                 if self._n == self._max_n:
                     if self._r != 0:
@@ -183,9 +190,8 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             else:
                 raise InvalidRevolverAction
             i += 1
-       
-        # if len(snapshots) > 0:
-        #     raise RuntimeError("Unexpected snapshot number.")
+        if len(snapshots) > 0:
+            raise RuntimeError("Unexpected snapshot number.")
         
         self._exhausted = True
         yield EndReverse(True)
