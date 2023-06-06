@@ -88,7 +88,7 @@ def h_revolve(n, s):
                                 #   (3, (1, 2)),
                                 #   (10, tuple(range(1, 10))),
                                 #   (100, tuple(range(1, 100))),
-                                  (4, tuple(range(2, 4, 2)))
+                                  (250, tuple(range(25, 250, 25)))
                                   ])
 def test_validity(schedule, schedule_kwargs, n, S):
     """Test the checkpoint revolvers.
@@ -132,6 +132,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
         data.clear()
         if cp_action.write_ics:
             ics.update(range(cp_action.n0, n1))
+            snapshots[cp_action.storage][cp_action.n0] = (set(ics), set(data))
         if cp_action.write_data:
             data.update(range(cp_action.n0, n1))
 
@@ -142,9 +143,6 @@ def test_validity(schedule, schedule_kwargs, n, S):
                 assert cp_action.n0 == min(ics)
         elif len(data) > 0:
             assert cp_action.n0 == min(data)
-
-        if len(ics) > 0 or len(data) > 0:
-            snapshots[cp_action.storage][cp_action.n0] = (set(ics), set(data))
 
         if n1 == n:
             cp_schedule.finalize(n1)
@@ -218,26 +216,23 @@ def test_validity(schedule, schedule_kwargs, n, S):
         data = set()
 
         snapshots = {"RAM": {}, "disk": {}}
-        cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs)  # Checkpoint storage limits are not exceeded
-
+        cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs) 
         if cp_schedule is None:
-            pytest.error("Incompatible with schedule type.")
+            raise TypeError("Incompatible with schedule type.")
         assert cp_schedule.n() == 0
         assert cp_schedule.r() == 0
         assert cp_schedule.max_n() is None or cp_schedule.max_n() == n
-        print(cp_schedule._schedule)
         while True:
             cp_action = next(cp_schedule)
             action(cp_action)
-            print(cp_action, snapshots)
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
 
             # Checkpoint storage limits are not exceeded
-            # for storage_type, storage_limit in storage_limits.items():
-            #     assert len(snapshots[storage_type]) <= storage_limit
-            # # Data storage limit is not exceeded
-            # assert min(1, len(ics)) + len(data) <= data_limit
+            for storage_type, storage_limit in storage_limits.items():
+                assert len(snapshots[storage_type]) <= storage_limit
+            # Data storage limit is not exceeded
+            assert min(1, len(ics)) + len(data) <= data_limit
 
             if isinstance(cp_action, EndReverse):
                 break
