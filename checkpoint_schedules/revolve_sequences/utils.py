@@ -85,7 +85,7 @@ def revolver_parameters(wd, rd):
         dict: Revolver parameters.
     """
 
-    defaults = {
+    params = {
         "uf": 1,  # Cost of a forward step.
         "ub": 1,  # Cost of a backward step.
         "up": 1,  # Cost of the loss function.
@@ -97,4 +97,4 @@ def revolver_parameters(wd, rd):
         "concat": 0,  # Level of sequence concatenation.
         "print_table": "None",  # File to which to print the results table.
     }
-    return defaults
+    return params

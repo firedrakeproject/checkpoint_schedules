@@ -52,8 +52,8 @@ def h_revolve(n, s):
         return (None,
                 {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 0)
     else:
-        return (RevolveCheckpointSchedule(n, s//2, s-s//2),
-                {StorageLocation(0).name: s//2, StorageLocation(1).name: s - s//2}, 1)
+        return (RevolveCheckpointSchedule(n, s, 0),
+                {StorageLocation(0).name: s, StorageLocation(1).name: 0}, 1)
 
 
 def disk_revolve(n, s):
@@ -176,11 +176,9 @@ def test_validity(schedule, schedule_kwargs, n, S):
         model_r += cp_action.n1 - cp_action.n0
         if cp_action.clear_fwd_data:
             data.clear()
-            # del fwd_data[StorageLocation(0).name][cp_action.n0]
     
     @action.register(Transfer)
     def action_transfer(cp_action):
-        # pass
         nonlocal model_n
         model_n = None
         assert cp_action.n in snapshots[cp_action.from_storage]
@@ -232,6 +230,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
 
         snapshots = {StorageLocation(0).name: {}, StorageLocation(1).name: {}}
         cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs) 
+
         if cp_schedule is None:
             raise TypeError("Incompatible with schedule type.")
         assert cp_schedule.n() == 0

@@ -99,6 +99,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                     raise InvalidForwardStep
                 self._n = n_1
                 w_cp_action, (w_n0, _, w_storage) = _convert_action(self._schedule[i - 1])
+                r_cp_action, (r_n0, _, r_storage) = _convert_action(self._schedule[i - 2])
                 if (w_cp_action == "Write"
                     or w_cp_action == "Write_disk" 
                     or w_cp_action == "Write_memory"):
@@ -116,7 +117,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 else:
                     write_ics = False
                     write_data = False
-                    w_storage = None
+                    w_storage = StorageLocation(None).name
                 yield Forward(n_0, n_1, write_ics, write_data, w_storage)
                 if self._n == self._max_n:
                     if self._r != 0:

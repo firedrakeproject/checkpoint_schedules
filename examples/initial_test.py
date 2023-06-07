@@ -128,6 +128,7 @@ class Manage():
         snapshots = {StorageLocation(0).name: {}, StorageLocation(1).name: {}}
         cp_schedule = RevolveCheckpointSchedule(self.tot_steps, self.save_ram,
                                                 snap_on_disk=self.save_disk)
+        print(cp_schedule._schedule)
         
         snapshots = {StorageLocation(0).name: {}, StorageLocation(1).name: {}}
         
@@ -219,7 +220,7 @@ class execute_bwd():
 
 
 # start = tm.time()
-steps = 10
+steps = 7
 schk = 2
 sdisk = 1
 fwd = execute_fwd()
