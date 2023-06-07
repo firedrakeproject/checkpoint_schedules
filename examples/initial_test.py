@@ -72,7 +72,7 @@ class Manage():
             if cp_action.write_ics:
                 ics.update(range(cp_action.n0, n1))
                 snapshots[cp_action.storage][cp_action.n0] = set(ics)
-            if cp_action.write_data:
+            if cp_action.adj_deps:
                 data.update(range(cp_action.n0, n1))
             
             if n1 == self.tot_steps:
@@ -85,7 +85,7 @@ class Manage():
             nonlocal model_r
             self.backward.advance(cp_action.n1, cp_action.n0)
             model_r += cp_action.n1 - cp_action.n0
-            if cp_action.clear_fwd_data:
+            if cp_action.clear_adj_deps:
                 data.clear()
 
         @action.register(Transfer)
@@ -95,7 +95,7 @@ class Manage():
             model_n = None
             if cp_action.delete:
                 del snapshots[cp_action.from_storage][cp_action.n]
-            elif cp_action.to_storage != StorageLocation(2).name:
+            elif cp_action.to_storage != StorageLocation(-1).name:
                 assert cp_action.n in snapshots[cp_action.from_storage]
                 assert cp_action.n < self.tot_steps - model_r
                 # No data is currently stored for this step
@@ -146,6 +146,7 @@ class Manage():
         while True:
             cp_action = next(cp_schedule)
             self.action_list.append([c, cp_action.info()])
+            print(cp_action)
             action(cp_action)
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()

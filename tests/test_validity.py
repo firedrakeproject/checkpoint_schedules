@@ -139,7 +139,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
             # No forward restart data for these steps is stored
             assert len(ics.intersection(range(cp_action.n0, n1))) == 0
 
-        if cp_action.write_data:
+        if cp_action.adj_deps:
             # No non-linear dependency data for these steps is stored
             assert len(data.intersection(range(cp_action.n0, n1))) == 0
 
@@ -148,7 +148,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
         if cp_action.write_ics:
             ics.update(range(cp_action.n0, n1))
             snapshots[cp_action.storage][cp_action.n0] = (set(ics), set(data))
-        if cp_action.write_data:
+        if cp_action.adj_deps:
             data.update(range(cp_action.n0, n1))
 
         if len(ics) > 0:
@@ -174,7 +174,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
         assert data.issuperset(range(cp_action.n0, cp_action.n1))
 
         model_r += cp_action.n1 - cp_action.n0
-        if cp_action.clear_fwd_data:
+        if cp_action.clear_adj_deps:
             data.clear()
     
     @action.register(Transfer)

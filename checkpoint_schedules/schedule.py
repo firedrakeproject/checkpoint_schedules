@@ -3,7 +3,7 @@
 
 from abc import ABC, abstractmethod
 import functools
-
+from enum import Enum
 __all__ = \
     [
         "CheckpointAction",
@@ -43,15 +43,15 @@ class Forward(CheckpointAction):
         This variable determine if the checkpont used to restart the forward
         solver will be written. If "True", the checkpoint at the time 'n0' is
         written.
-    write_data : bool
+    adj_deps : bool
         This variable determine if the checkpont used in the reverse 
         computation will be written. If "True", the checkpoint at the time 'n1' is
         written.
     storage : str
         Level of the checkpoint storage, either "RAM" or "disk".
     """
-    def __init__(self, n0, n1, write_ics, write_data, storage):
-        super().__init__(n0, n1, write_ics, write_data, storage)
+    def __init__(self, n0, n1, write_ics, adj_deps, storage):
+        super().__init__(n0, n1, write_ics, adj_deps, storage)
 
     def __iter__(self):
         yield from range(self.n0, self.n1)
@@ -97,7 +97,7 @@ class Forward(CheckpointAction):
         return self.args[2]
     
     @property
-    def write_data(self):
+    def adj_deps(self):
         """Inform if the forward data at the step 'self.args[1]' is going
         to be saved.
 
@@ -126,7 +126,7 @@ class Forward(CheckpointAction):
             _type_: _description_
         """
         f_info = ("Forward(n0: " + str(self.n0) + ", n1: " + str(self.n1)
-                  + ", write_ics: " + str(self.write_ics) + ", write_data: " + str(self.write_data)
+                  + ", write_ics: " + str(self.write_ics) + ", adj_deps: " + str(self.adj_deps)
                   + ", storage: " + str(self.storage) + ")")
         return f_info
     
@@ -140,13 +140,13 @@ class Reverse(CheckpointAction):
         Initial step of reverse solver.
     n0 : int
         Final step of reverse solver.  
-    clear_fwd_data : bool
+    clear_adj_deps : bool
         Determine if the forward data used in the reverse computation will be 
         cleaned. If "True", the intermediate forward data is cleaned.
     """
-    def __init__(self, n1, n0, clear_fwd_data):
+    def __init__(self, n1, n0, clear_adj_deps):
 
-        super().__init__(n1, n0, clear_fwd_data)
+        super().__init__(n1, n0, clear_adj_deps)
 
     def __iter__(self):
         yield from range(self.n1 - 1, self.n0 - 1, -1)
@@ -179,7 +179,7 @@ class Reverse(CheckpointAction):
         """
         return self.args[0]
 
-    def clear_fwd_data(self):
+    def clear_adj_deps(self):
         return self.args[2]
     
     def info(self):
@@ -189,7 +189,7 @@ class Reverse(CheckpointAction):
             _type_: _description_
         """
         f_info = ("Reverse(n1: " + str(self.n1) + ", n0: " + str(self.n0)
-                  + ", clear_fwd_data: " + str(self.clear_fwd_data()) + ")")
+                  + ", clear_adj_deps: " + str(self.clear_adj_deps()) + ")")
         return f_info
 
 class Transfer(CheckpointAction):
@@ -437,3 +437,11 @@ class CheckpointSchedule(ABC):
         elif self._n != n or self._max_n != n:
             raise RuntimeError("Invalid checkpointing state")
 
+
+class StorageLocation(Enum):
+    """List of storage level.
+    """
+    RAM = 0
+    DISK = 1
+    TAPE = -1
+    NONE = None
