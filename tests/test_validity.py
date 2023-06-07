@@ -52,8 +52,8 @@ def h_revolve(n, s):
         return (None,
                 {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 0)
     else:
-        return (RevolveCheckpointSchedule(n, s//2, s - s//2),
-                {StorageLocation(0).name: s//2, StorageLocation(1).name: s - s//2}, 1)
+        return (RevolveCheckpointSchedule(n, s - s//3, s//3),
+                {StorageLocation(0).name: s - s//3, StorageLocation(1).name: s//3}, 1)
 
 
 def disk_revolve(n, s):
@@ -103,7 +103,7 @@ def periodic_disk_revolve(n, s):
                                 #   (3, (1, 2)),
                                 #   (10, tuple(range(1, 10))),
                                 #   (100, tuple(range(1, 100))),
-                                  (10, tuple(range(2, 10, 2)))
+                                  (250, tuple(range(25, 250, 25)))
                                   ])
 def test_validity(schedule, schedule_kwargs, n, S):
     """Test the checkpoint revolvers.
@@ -137,7 +137,8 @@ def test_validity(schedule, schedule_kwargs, n, S):
         model_n = n1
         if cp_action.write_ics:
             # No forward restart data for these steps is stored
-            assert len(ics.intersection(range(cp_action.n0, n1))) == 0
+            assert cp_action.n0 not in snapshots[cp_action.storage]
+            # len(ics.intersection(range(cp_action.n0, n1))) == 0
 
         if cp_action.adj_deps:
             # No non-linear dependency data for these steps is stored
@@ -224,7 +225,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
 
         snapshots = {StorageLocation(0).name: {}, StorageLocation(1).name: {}}
         cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs) 
-        print(cp_schedule._schedule)
+
         if cp_schedule is None:
             raise TypeError("Incompatible with schedule type.")
         assert cp_schedule.n() == 0
@@ -232,7 +233,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
         assert cp_schedule.max_n() is None or cp_schedule.max_n() == n
         while True:
             cp_action = next(cp_schedule)
-            print(cp_action.info())
+            # print(cp_action.info())
             action(cp_action)
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()

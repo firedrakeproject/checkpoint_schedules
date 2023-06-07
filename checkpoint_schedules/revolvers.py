@@ -42,7 +42,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
     The write and read cost with saving a forward restart checkpoint to RAM is 0.
     """
 
-    def __init__(self, max_n, snap_in_ram, snap_on_disk, wvec=(0, 0.1), rvec=(0, 0.1), uf=1.0, ub=1.0):
+    def __init__(self, max_n, snap_in_ram, snap_on_disk, wvec=(0, 0.5), rvec=(0, 0.5), uf=1.0, ub=1.0):
         super().__init__(max_n)
         self._exhausted = False
         self._snapshots_on_disk = snap_on_disk
@@ -187,8 +187,8 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             else:
                 raise InvalidRevolverAction
             i += 1
-        # if len(snapshots) > 0:
-        #     raise RuntimeError("Unexpected snapshot number.")
+        if len(snapshots) > self._snapshots_on_disk:
+            raise RuntimeError("Unexpected snapshot number.")
         
         self._exhausted = True
         yield EndReverse(True)
