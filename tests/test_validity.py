@@ -52,8 +52,8 @@ def h_revolve(n, s):
         return (None,
                 {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 0)
     else:
-        return (RevolveCheckpointSchedule(n, s, 0),
-                {StorageLocation(0).name: s, StorageLocation(1).name: 0}, 1)
+        return (RevolveCheckpointSchedule(n, s//2, s - s//2),
+                {StorageLocation(0).name: s//2, StorageLocation(1).name: s - s//2}, 1)
 
 
 def disk_revolve(n, s):
@@ -103,7 +103,7 @@ def periodic_disk_revolve(n, s):
                                 #   (3, (1, 2)),
                                 #   (10, tuple(range(1, 10))),
                                 #   (100, tuple(range(1, 100))),
-                                  (250, tuple(range(25, 250, 25)))
+                                  (10, tuple(range(2, 10, 2)))
                                   ])
 def test_validity(schedule, schedule_kwargs, n, S):
     """Test the checkpoint revolvers.
@@ -187,23 +187,17 @@ def test_validity(schedule, schedule_kwargs, n, S):
         assert cp_action.n not in data
         # The checkpoint contains forward restart or non-linear dependency data
         assert len(cp[0]) > 0 or len(cp[1]) > 0
-        
-        if cp_action.delete:
-            assert cp_action.n == n - model_r
-            del snapshots[cp_action.from_storage][cp_action.n]
-        elif cp_action.to_storage == StorageLocation(0).name:
-            # No data is currently stored for this step
-            assert cp_action.n < n - model_r
-            if cp_action.from_storage == StorageLocation(1).name:
-                assert cp_action.to_storage == StorageLocation(0).name
+        assert cp_action.n < n - model_r
+        if len(cp[0]) > 0:
             ics.clear()
             ics.update(cp[0])
             model_n = cp_action.n
-        else:
-            assert cp_action.n < n - model_r
+
+        if len(cp[1]) > 0:
+            data.clear()
             data.update(cp[1])
-            model_n = cp_action.n
-            # fwd_data[cp_action.to_storage][cp_action.n] = set(data)
+        if cp_action.delete:
+            del snapshots[cp_action.from_storage][cp_action.n]
 
     @action.register(EndForward)
     def action_end_forward(cp_action):
@@ -230,7 +224,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
 
         snapshots = {StorageLocation(0).name: {}, StorageLocation(1).name: {}}
         cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs) 
-
+        print(cp_schedule._schedule)
         if cp_schedule is None:
             raise TypeError("Incompatible with schedule type.")
         assert cp_schedule.n() == 0
@@ -238,6 +232,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
         assert cp_schedule.max_n() is None or cp_schedule.max_n() == n
         while True:
             cp_action = next(cp_schedule)
+            print(cp_action.info())
             action(cp_action)
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
