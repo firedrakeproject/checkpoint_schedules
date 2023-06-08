@@ -1,5 +1,4 @@
 #!/usr/bin/python
-from .parameters import defaults
 from .basic_functions import (Operation as Op, Sequence, Function, Table, beta, argmin)
 from functools import partial
 
@@ -116,8 +115,7 @@ def revolve(l, cm, opt_0=None, **params):
     ValueError
         _description_
     """
-    parameters = dict(defaults)
-    parameters.update(params)
+    parameters = dict(params)
     if opt_0 is None:
         opt_0 = get_opt_0_table(l, cm, **params)
     sequence = Sequence(Function("Revolve", l, cm), concat=parameters["concat"])

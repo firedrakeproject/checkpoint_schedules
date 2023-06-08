@@ -19,8 +19,8 @@
 # along with tlm_adjoint.  If not, see <https://www.gnu.org/licenses/>.
 
 from checkpoint_schedules.schedule import \
-    Forward, Reverse, Transfer, EndForward, EndReverse
-from checkpoint_schedules import RevolveCheckpointSchedule
+    Forward, Reverse, Copy, EndForward, EndReverse
+from checkpoint_schedules import RevolveCheckpointSchedule, StorageLocation
 
 import functools
 import pytest
@@ -28,37 +28,52 @@ import pytest
 
 # def memory(n, s):
 #     return (MemoryCheckpointSchedule(),
-#             {"RAM": 0, "disk": 0}, 1 + n)
+#             {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 1 + n)
 
 
 # def periodic_disk(n, s, *, period):
 #     return (PeriodicDiskCheckpointSchedule(period),
-#             {"RAM": 0, "disk": 1 + (n - 1) // period}, period)
+#             {StorageLocation(0).name: 0, StorageLocation(1).name: 1 + (n - 1) // period}, period)
 
 
 # def multistage(n, s):
 #     return (MultistageCheckpointSchedule(n, 0, s),
-#             {"RAM": 0, "disk": s}, 1)
+#             {StorageLocation(0).name: 0, StorageLocation(1).name: s}, 1)
 
 
 # def two_level(n, s, *, period):
-#     return (TwoLevelCheckpointSchedule(period, s, binomial_storage="RAM"),
-#             {"RAM": s, "disk": 1 + (n - 1) // period}, 1)
+#     return (TwoLevelCheckpointSchedule(period, s, binomial_storage=StorageLocation(0).name),
+#             {StorageLocation(0).name: s, StorageLocation(1).name: 1 + (n - 1) // period}, 1)
 
 
 def h_revolve(n, s):
    
     if s <= 1:
         return (None,
-                {"RAM": 0, "disk": 0}, 0)
+                {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 0)
     else:
-        return (RevolveCheckpointSchedule(n, s, 0),
-                {"RAM": s, "disk": 0}, 1)
+        return (RevolveCheckpointSchedule(n, s - s//3, s//3),
+                {StorageLocation(0).name: s - s//3, StorageLocation(1).name: s//3}, 1)
 
 
+def disk_revolve(n, s):
+    if s <= 1:
+        return (None,
+                {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 0)
+    else:
+        return (RevolveCheckpointSchedule(n, s, schedule="disk_revolve"),
+                {StorageLocation(0).name: s, StorageLocation(1).name: n - s}, 1)
+
+def periodic_disk_revolve(n, s):
+    if s <= 1:
+        return (None,
+                {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 0)
+    else:
+        return (RevolveCheckpointSchedule(n, s, schedule="periodic_disk_revolve"),
+                {StorageLocation(0).name: s, StorageLocation(1).name: n - s}, 1)
 # def mixed(n, s):
 #     return (MixedCheckpointSchedule(n, s),
-#             {"RAM": 0, "disk": s}, 1)
+#             {StorageLocation(0).name: 0, StorageLocation(1).name: s}, 1)
 
 
 @pytest.mark.parametrize(
@@ -74,8 +89,8 @@ def h_revolve(n, s):
     #  (two_level, {"period": 2}),
     #  (two_level, {"period": 7}),
     #  (two_level, {"period": 10}),
-     pytest.param(
-         h_revolve, {},
+    
+        (h_revolve, {},
         #  marks=pytest.mark.skipif(hrevolve is None,
         #                           reason="H-Revolve not available")),
     #  (mixed, {}
@@ -122,9 +137,10 @@ def test_validity(schedule, schedule_kwargs, n, S):
         model_n = n1
         if cp_action.write_ics:
             # No forward restart data for these steps is stored
-            assert len(ics.intersection(range(cp_action.n0, n1))) == 0
+            assert cp_action.n0 not in snapshots[cp_action.storage]
+            # len(ics.intersection(range(cp_action.n0, n1))) == 0
 
-        if cp_action.write_data:
+        if cp_action.adj_deps:
             # No non-linear dependency data for these steps is stored
             assert len(data.intersection(range(cp_action.n0, n1))) == 0
 
@@ -133,7 +149,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
         if cp_action.write_ics:
             ics.update(range(cp_action.n0, n1))
             snapshots[cp_action.storage][cp_action.n0] = (set(ics), set(data))
-        if cp_action.write_data:
+        if cp_action.adj_deps:
             data.update(range(cp_action.n0, n1))
 
         if len(ics) > 0:
@@ -159,13 +175,11 @@ def test_validity(schedule, schedule_kwargs, n, S):
         assert data.issuperset(range(cp_action.n0, cp_action.n1))
 
         model_r += cp_action.n1 - cp_action.n0
-        if cp_action.clear_fwd_data:
+        if cp_action.clear_adj_deps:
             data.clear()
-            # del fwd_data["RAM"][cp_action.n0]
     
-    @action.register(Transfer)
-    def action_transfer(cp_action):
-        # pass
+    @action.register(Copy)
+    def action_copy(cp_action):
         nonlocal model_n
         model_n = None
         assert cp_action.n in snapshots[cp_action.from_storage]
@@ -174,23 +188,17 @@ def test_validity(schedule, schedule_kwargs, n, S):
         assert cp_action.n not in data
         # The checkpoint contains forward restart or non-linear dependency data
         assert len(cp[0]) > 0 or len(cp[1]) > 0
-        
-        if cp_action.delete:
-            assert cp_action.n == n - model_r
-            del snapshots[cp_action.from_storage][cp_action.n]
-        elif cp_action.to_storage == "RAM" or cp_action.to_storage == "disk":
-            # No data is currently stored for this step
-            assert cp_action.n < n - model_r
-            if cp_action.from_storage == "disk":
-                assert cp_action.to_storage == "RAM"
+        assert cp_action.n < n - model_r
+        if len(cp[0]) > 0:
             ics.clear()
             ics.update(cp[0])
             model_n = cp_action.n
-        else:
-            assert cp_action.n < n - model_r
+
+        if len(cp[1]) > 0:
+            data.clear()
             data.update(cp[1])
-            model_n = cp_action.n
-            # fwd_data[cp_action.to_storage][cp_action.n] = set(data)
+        if cp_action.delete:
+            del snapshots[cp_action.from_storage][cp_action.n]
 
     @action.register(EndForward)
     def action_end_forward(cp_action):
@@ -215,8 +223,9 @@ def test_validity(schedule, schedule_kwargs, n, S):
         ics = set()
         data = set()
 
-        snapshots = {"RAM": {}, "disk": {}}
+        snapshots = {StorageLocation(0).name: {}, StorageLocation(1).name: {}}
         cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs) 
+
         if cp_schedule is None:
             raise TypeError("Incompatible with schedule type.")
         assert cp_schedule.n() == 0
@@ -224,6 +233,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
         assert cp_schedule.max_n() is None or cp_schedule.max_n() == n
         while True:
             cp_action = next(cp_schedule)
+            # print(cp_action.info())
             action(cp_action)
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()

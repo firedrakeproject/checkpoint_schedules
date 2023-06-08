@@ -8,10 +8,9 @@ Adjoint Computation on Synchronous Hierarchical
 Platforms", ACM Transactions on Mathematical
 Software  46(2), 2020.
 """
-
-from .parameters import defaults
-from .basic_functions import (Operation as Op, Sequence, Function, argmin)
 from functools import partial
+from .basic_functions import (Operation as Op, Sequence, Function, argmin)
+from .utils import revolver_parameters
 
 
 def get_hopt_table(lmax, cvect, wvect, rvect, ub, uf, **params):
@@ -185,7 +184,7 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
         return sequence
 
 
-def hrevolve(l, cvect, wvect, rvect, **params):
+def hrevolve(l, cvect, wvect, rvect):
     """H-Revolve scheduler.
     
     Parameters
@@ -206,8 +205,8 @@ def hrevolve(l, cvect, wvect, rvect, **params):
     object
         The optimal sequence of makespan HOpt(l, architecture).
     """
-    # params["wd"] = wvect
-    # params["rd"] = rvect
+    params = revolver_parameters(wvect, rvect)
+
     return hrevolve_recurse(l, len(cvect)-1, cvect[-1], cvect, wvect, rvect,
                             hoptp=None, hopt=None, **params)
 
