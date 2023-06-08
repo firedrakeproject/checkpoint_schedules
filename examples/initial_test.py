@@ -11,7 +11,7 @@ from checkpoint_schedules import \
      (Forward, EndForward, Reverse, Copy, EndReverse)
 import functools
 # import time as tm
-from tabulate import tabulate
+# from tabulate import tabulate
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
@@ -155,7 +155,7 @@ class Manage():
                 # col_names = ["Index", "Actions"]
                 # #display table
                 # print(snapshots)
-                print(tabulate(self.action_list))  
+                # print(tabulate(self.action_list))  
                 break
 
 
