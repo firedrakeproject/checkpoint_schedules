@@ -8,7 +8,7 @@ from checkpoint_schedules import RevolveCheckpointSchedule, StorageLocation
     #  MixedCheckpointSchedule
     # )
 from checkpoint_schedules import \
-     (Forward, EndForward, Reverse, Transfer, EndReverse)
+     (Forward, EndForward, Reverse, Copy, EndReverse)
 import functools
 # import time as tm
 from tabulate import tabulate
@@ -88,8 +88,8 @@ class Manage():
             if cp_action.clear_adj_deps:
                 data.clear()
 
-        @action.register(Transfer)
-        def action_transfer(cp_action):
+        @action.register(Copy)
+        def action_copy(cp_action):
             # pass
             nonlocal model_n
             model_n = None

@@ -9,7 +9,7 @@ __all__ = \
         "CheckpointAction",
         "Forward",
         "Reverse",
-        "Transfer",
+        "Copy",
         "EndForward",
         "EndReverse",
         "CheckpointSchedule",
@@ -192,8 +192,8 @@ class Reverse(CheckpointAction):
                   + ", clear_adj_deps: " + str(self.clear_adj_deps()) + ")")
         return f_info
 
-class Transfer(CheckpointAction):
-    """Transfer from the snapshot to a space.
+class Copy(CheckpointAction):
+    """Copy from the snapshot to a space.
     """
     def __init__(self, n, from_storage, to_storage, delete=False):
         super().__init__(n, from_storage, to_storage, delete)
@@ -248,7 +248,7 @@ class Transfer(CheckpointAction):
         Returns:
             _type_: _description_
         """
-        f_info = ("Transfer(n: " + str(self.n) + ", from_storage: " + str(self.from_storage) 
+        f_info = ("Copy(n: " + str(self.n) + ", from_storage: " + str(self.from_storage) 
                   + ", to_storage: " + str(self.to_storage) + ", delete: " + str(self.delete) + ")")
         return f_info
 

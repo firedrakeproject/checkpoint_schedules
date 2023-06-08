@@ -5,7 +5,7 @@
 # root directory
 
 # This file is part of tlm_adjoint.
-from .schedule import CheckpointSchedule, Forward, Reverse, Transfer,\
+from .schedule import CheckpointSchedule, Forward, Reverse, Copy,\
     EndForward, EndReverse, StorageLocation
 from .revolve_sequences import hrevolve
 import logging
@@ -121,22 +121,22 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                     delete = True
                 else:
                     delete = False
-                yield Transfer(n_0, storage, StorageLocation(-1).name, delete=delete)
+                yield Copy(n_0, storage, StorageLocation(-1).name, delete=delete)
             elif cp_action == "Read_disk":
                 self._n = n_0
                 n_cp_action, (w_n0, _, w_storage) = _convert_action(self._schedule[i + 1])
                 f_cp_action, (f_n0, _, _) = _convert_action(self._schedule[i + 2])
                 if n_cp_action == "Write_memory":
                     assert n_0 == w_n0
-                    yield Transfer(n_0, storage, w_storage)
+                    yield Copy(n_0, storage, w_storage)
                 elif n_cp_action == "Write_Forward_memory":
                     if f_cp_action != "Forward":
                         raise InvalidRevolverAction
                     assert n_0 == f_n0
-                    yield Transfer(n_0, storage, StorageLocation(-1).name)
+                    yield Copy(n_0, storage, StorageLocation(-1).name)
                 elif n_cp_action == "Forward":
                     assert n_0 == w_n0
-                    yield Transfer(n_0, storage, StorageLocation(-1).name)
+                    yield Copy(n_0, storage, StorageLocation(-1).name)
                 else:
                     raise InvalidRevolverAction
             elif cp_action == "Read_memory":
@@ -148,10 +148,10 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                     if f_cp_action != "Forward":
                         raise InvalidRevolverAction
                     assert n_0 == f_n0
-                    yield Transfer(n_0, storage, StorageLocation(-1).name)
+                    yield Copy(n_0, storage, StorageLocation(-1).name)
                 elif n_cp_action == "Forward":
                     assert n_0 == w_n0
-                    yield Transfer(n_0, storage, StorageLocation(-1).name)
+                    yield Copy(n_0, storage, StorageLocation(-1).name)
                 else:
                     raise InvalidRevolverAction
             elif (cp_action == "Write" or cp_action == "Write_disk"
@@ -180,7 +180,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 if i < 2:
                     raise InvalidRevolverAction
                 snapshots.remove(n_0)
-                # yield Transfer(n_0, storage, StorageLocation(None).name, delete=True)
+                # yield Copy(n_0, storage, StorageLocation(None).name, delete=True)
             elif cp_action == "Discard_Forward" or cp_action == "Discard_Forward_memory":
                 if n_0 != self._n:
                     raise InvalidActionIndex

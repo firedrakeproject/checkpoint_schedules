@@ -19,7 +19,7 @@
 # along with tlm_adjoint.  If not, see <https://www.gnu.org/licenses/>.
 
 from checkpoint_schedules.schedule import \
-    Forward, Reverse, Transfer, EndForward, EndReverse
+    Forward, Reverse, Copy, EndForward, EndReverse
 from checkpoint_schedules import RevolveCheckpointSchedule, StorageLocation
 
 import functools
@@ -178,8 +178,8 @@ def test_validity(schedule, schedule_kwargs, n, S):
         if cp_action.clear_adj_deps:
             data.clear()
     
-    @action.register(Transfer)
-    def action_transfer(cp_action):
+    @action.register(Copy)
+    def action_copy(cp_action):
         nonlocal model_n
         model_n = None
         assert cp_action.n in snapshots[cp_action.from_storage]
