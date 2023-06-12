@@ -54,25 +54,26 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub, uf, **params):
 
 
 def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **params):
-    """Auxiliary function of the hrevolve schedule.
+    """Auxiliary function used to built the H-Revolve sequence.
 
     Parameters
     ----------
     l : int
-        Total number of the forward step.
+        The number of forward steps to execute in the AC graph.
     K : int
-        The level of memory.
+        Memory level. 
     cmem : int
         Number of available slots in the K-th level of memory.
-        E.g., in two level of memory (RAM and Disk), cmem collects 
-        the number of checkpoints saved in Disk.
+        For instance, in two level of memory (RAM and DISK), `cmem` collects 
+        the number of checkpoints stored in DISK.
     cvect : tuple
-        The number of slots in each level of memory.
+        The maximal number of slots that needs to be stored in the levels.
     wvect : tuple
-        The cost of writing to each level of memory.
+        Number os elements defining the write cost associated with saving a forward 
+        restart checkpoint.
     rvect : tuple
-        The cost of reading from each level of memory.
-    hoptp : _type_, optional
+        Number os elements defining the read cost associated with copy a forward 
+        restart checkpoint from the storage levels.
         _description_, by default None
     hopt : _type_, optional
         _description_, by default None
@@ -193,23 +194,26 @@ def hrevolve(l, cvect, wvect, rvect):
     l : int
         The number of forward steps in the initial forward calculation.
     cvect : tuple
-        The number of slots in each level of memory.
+        The maximal number of slots that needs to be stored in the levels.
     wvect : tuple
-        A two element defining the write cost associated with saving a forward 
-        restart checkpoint to RAM (first element) and disk (second element).
+        Number os elements defining the write cost associated with saving a forward 
+        restart checkpoint.
     rvect : tuple
-        A two element defining the read cost associated with loading a forward 
-        restart checkpoint from RAM (first element) and disk (second element).
+        Number os elements defining the read cost associated with copy a forward 
+        restart checkpoint from the storage levels.
+        _description_, by default None
 
     Returns
     -------
-    object
-        The optimal sequence of makespan HOpt(l, architecture).
+    Sequence
+        The H-Revolve schedules.
     """
     params = revolver_parameters(wvect, rvect)
-
-    return hrevolve_recurse(l, len(cvect)-1, cvect[-1], cvect, wvect, rvect,
+    
+    h_rev = hrevolve_recurse(l, len(cvect)-1, cvect[-1], cvect, wvect, rvect,
                             hoptp=None, hopt=None, **params)
+
+    return h_rev
 
 
 def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **params):

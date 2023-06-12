@@ -66,21 +66,23 @@ def get_opt_inf_table(lmax, cm, uf, ub, rd, wd, one_read_disk, print_table=None,
     # Opt_inf[2...lmax] for cm
     for l in range(2, lmax + 1):
         if one_read_disk:
-            opt_inf.append(min(opt_0[cm][l], min([wd + j * uf + opt_inf[l - j] + rd + opt_0[cm][j-1] for j in range(1, l)])))
+            min_aux = min([wd + j * uf + opt_inf[l - j] + rd + opt_0[cm][j-1] for j in range(1, l)])
+            opt_inf.append(min(opt_0[cm][l], min_aux))
         else:
-            opt_inf.append(min(opt_0[cm][l], min([wd + j * uf + opt_inf[l - j] + rd + opt_1d[j-1] for j in range(1, l)])))
+            min_aux = min([wd + j * uf + opt_inf[l - j] + rd + opt_1d[j-1] for j in range(1, l)])
+            opt_inf.append(min(opt_0[cm][l], min_aux))
     return opt_inf
 
     
 def disk_revolve(l, cm, rd, wd, opt_0=None, opt_1d=None, opt_inf=None):
-    """Return a disk revolve sequence.
+    """Return the Disk-Revolve sequence.
 
     Parameters
     ----------
     l : int
-        Number of forward step to execute in the AC graph.
+        The number of forward steps to execute in the AC graph.
     cm : int
-        Number of available memory slots.
+        The maximum number of forward restart checkpoints to store in memory.
     opt_0 : _type_, optional
         _description_, by default None
     opt_1d : _type_, optional

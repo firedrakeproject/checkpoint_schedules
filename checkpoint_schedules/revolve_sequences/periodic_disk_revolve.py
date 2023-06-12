@@ -43,7 +43,7 @@ def RelCostX(m, opt_1d_m_moins_1, wd, rd, **params):
 
 
 def compute_mx(cm, opt_0=None, opt_1d=None, mmax=None, **params):
-    """ompute the optimal period mX, as defined in the paper.
+    """Compute the optimal period mX, as defined in the paper.
 
     Parameters
     ----------
@@ -71,7 +71,6 @@ def compute_mx(cm, opt_0=None, opt_1d=None, mmax=None, **params):
     objbest = RelCostX(1, opt_1d[0], **params)
     for mxi in range(2, mmax+1):
         obj = RelCostX(mxi, opt_1d[mxi-1], **params)
-        # print("mxi", mxi, "opt", opt_1d[mxi-1], "wd", wd, "rd", rd, "obj", obj)
         if obj <= objbest:
             objbest = obj
             mx = mxi
@@ -147,39 +146,38 @@ def mxrr_close_formula(cm, uf, rd, wd, **params):
     return int(beta(cm, t))
 
 
-def combin(k, n):
-    """_summary_
+# def combin(k, n):
+#     """_summary_
 
-    Parameters
-    ----------
-    k : _type_
-        _description_
-    n : _type_
-        _description_
+#     Parameters
+#     ----------
+#     k : _type_
+#         _description_
+#     n : _type_
+#         _description_
 
-    Returns
-    -------
-    _type_
-        _description_
-    """
-    return int(math.factorial(n)/(math.factorial(k)*math.factorial(n-k)))
+#     Returns
+#     -------
+#     _type_
+#         _description_
+#     """
+#     return int(math.factorial(n)/(math.factorial(k)*math.factorial(n-k)))
 
 
 def periodic_disk_revolve(l, cm, rd, wd, opt_0=None, opt_1d=None, mmax=None):
-    """l : number of forward step to execute in the AC graph
-            cm : number of available memory slots
-            Return the periodic sequence with optimal period
+    """Compute the periodic disk revolve sequence.
+            
 
     Parameters
     ----------
-    l : _type_
-        _description_
-    cm : _type_
-        _description_
-    rd : _type_
-        _description_
+    l : int
+        The number of forward step to execute in the AC graph.
+    cm : int
+        The number of slots available in memory.
+    rd : float
+        Cost of read the checkpoint data in disk.
     wd : _type_
-        _description_
+        Cost of write the checkpoint data in disk.
     opt_0 : _type_, optional
         _description_, by default None
     opt_1d : _type_, optional
@@ -190,7 +188,7 @@ def periodic_disk_revolve(l, cm, rd, wd, opt_0=None, opt_1d=None, mmax=None):
     Returns
     -------
     _type_
-        _description_
+        Return the periodic sequence with optimal period.
     """
     
     params = revolver_parameters(wd, rd)

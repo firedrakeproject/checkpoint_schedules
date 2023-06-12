@@ -128,7 +128,6 @@ class Manage():
         snapshots = {StorageLocation(0).name: {}, StorageLocation(1).name: {}}
         cp_schedule = RevolveCheckpointSchedule(self.tot_steps, self.save_ram,
                                                 snap_on_disk=self.save_disk)
-        print(cp_schedule._schedule)
         
         snapshots = {StorageLocation(0).name: {}, StorageLocation(1).name: {}}
         
@@ -145,7 +144,6 @@ class Manage():
         c = 0
         while True:
             cp_action = next(cp_schedule)
-            self.action_list.append([c, cp_action.info()])
             print(cp_action)
             action(cp_action)
             assert model_n is None or model_n == cp_schedule.n()
@@ -221,9 +219,9 @@ class execute_bwd():
 
 
 # start = tm.time()
-steps = 7
-schk = 2
-sdisk = 1
+steps = 700
+schk = 20
+sdisk = 2
 fwd = execute_fwd()
 bwd = execute_bwd()
 manage = Manage(fwd, bwd, steps, save_ram=schk, save_disk=sdisk)
