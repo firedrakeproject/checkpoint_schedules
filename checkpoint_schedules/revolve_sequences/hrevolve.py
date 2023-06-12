@@ -14,9 +14,37 @@ from .basic_functions import (Operation as Op, Sequence, Function, argmin)
 from .utils import revolver_parameters
 
 
-def get_hopt_table(lmax, cvect, wvect, rvect, ub, uf, **params):
-    """ Compute the HOpt table for architecture and l=0...lmax
-        This computation uses a dynamic program"""
+def get_hopt_table(lmax, cvect, wvect, rvect, ub, uf):
+    """Compute the hierarchical AC problem which gives the 
+    minimal makespan according the input parameters.
+
+    Parameters
+    ----------
+    lmax : int
+        The number of forward steps to execute in the AC graph.
+    cvect : tuple
+        The maximal number of slots that needs to be stored in the levels.
+    wvect : tuple
+        Number of elements defining the write cost associated with storing
+        the checkpoint data used to restart the forward solver.
+    rvect : tuple
+        Number of elements defining the read cost associated with storing
+        the checkpoint data used to restart the forward solver.
+    ub : float, optional
+        The cost of advancing the adjoint over that step.
+    uf : float
+        The cost of advancing the forward one step.
+
+    Notes
+    -----
+    The term makespan is used for the total execution time.
+    So, minimize makespan means minimize the execution time.
+
+    Returns
+    -------
+    tuple : (list, list)
+        _description_
+    """
     K = len(cvect)
     assert len(wvect) == len(rvect) == len(cvect)
     opt = [[[float("inf")] * (cvect[i] + 1) for _ in range(lmax + 1)] for i in range(K)]
@@ -61,22 +89,23 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
     l : int
         The number of forward steps to execute in the AC graph.
     K : int
-        Memory level. 
+        Memory level.
     cmem : int
         Number of available slots in the K-th level of memory.
-        For instance, in two level of memory (RAM and DISK), `cmem` collects 
+        For instance, in two level of memory (RAM and DISK), `cmem` collects
         the number of checkpoints stored in DISK.
     cvect : tuple
         The maximal number of slots that needs to be stored in the levels.
     wvect : tuple
-        Number os elements defining the write cost associated with saving a forward 
-        restart checkpoint.
+        Number of elements defining the write cost associated with storing
+        the checkpoint data used to restart the forward solver.
     rvect : tuple
-        Number os elements defining the read cost associated with copy a forward 
-        restart checkpoint from the storage levels.
-        _description_, by default None
+        Number of elements defining the read cost associated with storing
+        the checkpoint data used to restart the forward solver.
+    hoptp
+        _description_ 
     hopt : _type_, optional
-        _description_, by default None
+        _description_
     
     Returns
     -------
@@ -89,8 +118,9 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
         If `cmem = 0`, `hrevolve_aux` should not be call.
     """
     uf = params["uf"]
+    ub = params["ub"]
     if (hoptp is None) or (hopt is None):
-        (hoptp, hopt) = get_hopt_table(l, cvect, wvect, rvect, **params)
+        (hoptp, hopt) = get_hopt_table(l, cvect, wvect, rvect, uf, ub)
     sequence = Sequence(Function("hrevolve_aux", l, [K, cmem]),
                         levels=len(cvect), concat=params["concat"])
     Operation = partial(Op, params=params)
@@ -252,8 +282,10 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **p
         If `K = 0` and `cmem = 0`.
     """
     parameters = dict(params)
+    uf = params["uf"]
+    ub = params["ub"]
     if (hoptp is None) or (hopt is None):
-        (hoptp, hopt) = get_hopt_table(l, cvect, wvect, rvect, **parameters)
+        (hoptp, hopt) = get_hopt_table(l, cvect, wvect, rvect, uf, ub)
     sequence = Sequence(Function("HRevolve", l, [K, cmem]),
                         levels=len(cvect), concat=parameters["concat"])
     Operation = partial(Op, params=parameters)
