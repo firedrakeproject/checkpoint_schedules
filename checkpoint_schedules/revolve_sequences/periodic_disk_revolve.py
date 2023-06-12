@@ -43,7 +43,24 @@ def RelCostX(m, opt_1d_m_moins_1, wd, rd, **params):
 
 
 def compute_mx(cm, opt_0=None, opt_1d=None, mmax=None, **params):
-    """Compute the optimal period mX, as defined in the paper. """
+    """ompute the optimal period mX, as defined in the paper.
+
+    Parameters
+    ----------
+    cm : _type_
+        _description_
+    opt_0 : _type_, optional
+        _description_, by default None
+    opt_1d : _type_, optional
+        _description_, by default None
+    mmax : _type_, optional
+        _description_, by default None
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     if mmax is None:
         mmax = compute_mmax(cm, **params)
     if opt_0 is None or len(opt_0) < mmax:
@@ -62,8 +79,22 @@ def compute_mx(cm, opt_0=None, opt_1d=None, mmax=None, **params):
 
 
 def mx_close_formula(cm, rd, wd, opt_0=None, opt_1d=None, **params):
-    """ Compute mX using the close formula in the paper
-        It's not proven yet, but it's been verified and it's faster """
+    """Compute mX using the close formula in the paper
+        It's not proven yet, but it's been verified and it's faster
+
+    Parameters
+    ----------
+    cm : _type_
+        _description_
+    rd : _type_
+        _description_
+    wd : _type_
+        _description_
+    opt_0 : _type_, optional
+        _description_, by default None
+    opt_1d : _type_, optional
+        _description_, by default None
+    """
     def f(x, y, c):
         return int(beta(c + 1, x + y - 1) - sum([beta(c, k) for k in range(0, y)]))
 
@@ -91,7 +122,24 @@ def mx_close_formula(cm, rd, wd, opt_0=None, opt_1d=None, **params):
 
 
 def mxrr_close_formula(cm, uf, rd, wd, **params):
-    """ Compute mXrr using the close formula in the paper"""
+    """Compute mXrr using the close formula in the paper.
+
+    Parameters
+    ----------
+    cm : _type_
+        _description_
+    uf : _type_
+        _description_
+    rd : _type_
+        _description_
+    wd : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     t = 0
     while beta(cm+1, t) <= (wd + rd) / uf:
         t += 1
@@ -100,13 +148,50 @@ def mxrr_close_formula(cm, uf, rd, wd, **params):
 
 
 def combin(k, n):
+    """_summary_
+
+    Parameters
+    ----------
+    k : _type_
+        _description_
+    n : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     return int(math.factorial(n)/(math.factorial(k)*math.factorial(n-k)))
 
 
 def periodic_disk_revolve(l, cm, rd, wd, opt_0=None, opt_1d=None, mmax=None):
-    """ l : number of forward step to execute in the AC graph
+    """l : number of forward step to execute in the AC graph
             cm : number of available memory slots
-            Return the periodic sequence with optimal period"""
+            Return the periodic sequence with optimal period
+
+    Parameters
+    ----------
+    l : _type_
+        _description_
+    cm : _type_
+        _description_
+    rd : _type_
+        _description_
+    wd : _type_
+        _description_
+    opt_0 : _type_, optional
+        _description_, by default None
+    opt_1d : _type_, optional
+        _description_, by default None
+    mmax : _type_, optional
+        _description_, by default None
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     
     params = revolver_parameters(wd, rd)
     parameters = dict(params)

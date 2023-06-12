@@ -1,6 +1,7 @@
 """This function is a copy of the original hrevolve
 module that composes the python H-Revolve implementation
-published by Herrmann and Pallez [1].
+published by Herrmann and Pallez [1]. Minor corrections 
+we carried to adapt to checkpoint_schedules API.
 
 Refs:
 [1] Herrmann, Pallez, "H-Revolve: A Framework for

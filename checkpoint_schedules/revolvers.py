@@ -265,7 +265,13 @@ def _convert_action(action_n):
 
 
 class HRevolve(RevolveCheckpointSchedule):
+    """_summary_
 
+    Parameters
+    ----------
+    RevolveCheckpointSchedule : _type_
+        _description_
+    """
     def _sequence(self, max_n, snap_in_ram, snap_on_disk, wvec, rvec):
 
         cvec = [snap_in_ram, snap_on_disk]

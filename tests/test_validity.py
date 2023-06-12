@@ -47,6 +47,20 @@ import pytest
 
 
 def h_revolve(n, s):
+    """_summary_
+
+    Parameters
+    ----------
+    n : _type_
+        _description_
+    s : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
    
     if s <= 1:
         return (None,
@@ -57,6 +71,20 @@ def h_revolve(n, s):
 
 
 def disk_revolve(n, s):
+    """_summary_
+
+    Parameters
+    ----------
+    n : _type_
+        _description_
+    s : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     if s <= 1:
         return (None,
                 {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 0)
@@ -65,6 +93,20 @@ def disk_revolve(n, s):
                 {StorageLocation(0).name: s, StorageLocation(1).name: n - s}, 1)
 
 def periodic_disk_revolve(n, s):
+    """_summary_
+
+    Parameters
+    ----------
+    n : _type_
+        _description_
+    s : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     if s <= 1:
         return (None,
                 {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 0)
@@ -125,6 +167,13 @@ def test_validity(schedule, schedule_kwargs, n, S):
 
     @action.register(Forward)
     def action_forward(cp_action):
+        """_summary_
+
+        Parameters
+        ----------
+        cp_action : _type_
+            _description_
+        """
         nonlocal model_n
         # Start at the current location of the forward
         assert model_n is not None and model_n == cp_action.n0
@@ -165,6 +214,13 @@ def test_validity(schedule, schedule_kwargs, n, S):
 
     @action.register(Reverse)
     def action_reverse(cp_action):
+        """_summary_
+
+        Parameters
+        ----------
+        cp_action : _type_
+            _description_
+        """
         nonlocal model_r
 
         # Start at the current location of the adjoint
@@ -180,6 +236,13 @@ def test_validity(schedule, schedule_kwargs, n, S):
     
     @action.register(Copy)
     def action_copy(cp_action):
+        """_summary_
+
+        Parameters
+        ----------
+        cp_action : _type_
+            _description_
+        """
         nonlocal model_n
         model_n = None
         assert cp_action.n in snapshots[cp_action.from_storage]
@@ -202,11 +265,25 @@ def test_validity(schedule, schedule_kwargs, n, S):
 
     @action.register(EndForward)
     def action_end_forward(cp_action):
+        """_summary_
+
+        Parameters
+        ----------
+        cp_action : _type_
+            _description_
+        """
         # The correct number of forward steps has been taken
         assert model_n is not None and model_n == n
 
     @action.register(EndReverse)
     def action_end_reverse(cp_action):
+        """_summary_
+
+        Parameters
+        ----------
+        cp_action : _type_
+            _description_
+        """
         nonlocal model_r
 
         # The correct number of adjoint steps has been taken

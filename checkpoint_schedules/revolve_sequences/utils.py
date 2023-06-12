@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
 class Architecture:
+    """_summary_
+    """
     def __init__(self, file_name):
         self.file_name = file_name
         try:
@@ -32,6 +34,23 @@ class Architecture:
         return l.__repr__()
 
     def read_file(self):
+        """_summary_
+
+        Raises
+        ------
+        SyntaxError
+            _description_
+        SyntaxError
+            _description_
+        SyntaxError
+            _description_
+        SyntaxError
+            _description_
+        SyntaxError
+            _description_
+        SyntaxError
+            _description_
+        """
         for line in self.file:
             if line[0] == "#":
                 continue
