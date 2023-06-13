@@ -1,20 +1,14 @@
-.. checkpoint_schedules documentation master file, created by
-   sphinx-quickstart on Thu Apr 13 16:52:31 2023.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+checkpoint_schedule
+==============
 
-Welcome to checkpoint_schedules's documentation!
-================================================
+:Author:       Daiane Dolci
+:Contact:      d.dolci@imperial.ac.uk
+:Web Site:     https://github.com/firedrakeproject/checkpoint_schedules
+:Date:         |today|
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+.. include:: abstract.txt
 
+Contents
+========
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. include:: toctree.txt
