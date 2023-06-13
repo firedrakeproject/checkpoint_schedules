@@ -4,7 +4,8 @@
    intro
    install
    tutorial
-   modules
+   checkpoint_schedules
+   checkpoint_schedules.revolve_sequences
 
 .. Local Variables:
 .. mode: rst

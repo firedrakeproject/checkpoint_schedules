@@ -1,5 +1,5 @@
-checkpoint_schedule
-==============
+checkpoint_schedule 
+===================
 
 :Author:       Daiane Dolci
 :Contact:      d.dolci@imperial.ac.uk
