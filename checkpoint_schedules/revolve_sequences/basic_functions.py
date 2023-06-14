@@ -30,18 +30,18 @@ official_names = {
 
 
 def beta(x, y):
-    """_summary_
+    """A function used in the optimal makespan computation.
 
     Parameters
     ----------
-    x : _type_
-        _description_
-    y : _type_
+    x : float
+        The number of slots available in memory.
+    y : int
         _description_
 
     Returns
     -------
-    _type_
+    int
         _description_
     """
     if y < 0:

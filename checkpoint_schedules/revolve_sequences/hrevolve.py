@@ -1,13 +1,4 @@
-"""This function is a copy of the original hrevolve
-module that composes the python H-Revolve implementation
-published by Herrmann and Pallez [1]. Minor corrections 
-we carried to adapt to checkpoint_schedules API.
-
-Refs:
-[1] Herrmann, Pallez, "H-Revolve: A Framework for
-Adjoint Computation on Synchronous Hierarchical
-Platforms", ACM Transactions on Mathematical
-Software  46(2), 2020.
+"""Rotine of the H-Revolve schedules.
 """
 from functools import partial
 from .basic_functions import (Operation as Op, Sequence, Function, argmin)

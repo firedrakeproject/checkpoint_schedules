@@ -1,13 +1,5 @@
 #!/usr/bin/python
-"""This function is a copy of the original revolve_1d
-module that composes the python H-Revolve implementation
-published by Herrmann and Pallez [1].
-
-Refs:
-[1] Herrmann, Pallez, "H-Revolve: A Framework for
-Adjoint Computation on Synchronous Hierarchical
-Platforms", ACM Transactions on Mathematical
-Software  46(2), 2020.
+"""Rotine of the Revolve-1D schedules.
 """
 from .basic_functions import (Operation as Op, Sequence, Function, Table, argmin)
 from .revolve import revolve, get_opt_0_table

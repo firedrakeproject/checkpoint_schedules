@@ -1,6 +1,15 @@
 checkpoint\_schedules.revolve\_sequences
 ========================================
+This function is a copy of the original hrevolve
+module that composes the python H-Revolve implementation
+published by Herrmann and Pallez [1]. Minor corrections 
+we carried to adapt to checkpoint_schedules API.
 
+Refs:
+[1] Herrmann, Pallez, "H-Revolve: A Framework for
+Adjoint Computation on Synchronous Hierarchical
+Platforms", ACM Transactions on Mathematical
+Software  46(2), 2020.
 
 *checkpoint\_schedules.revolve\_sequences.basic\_functions*
 -----------------------------------------------------------

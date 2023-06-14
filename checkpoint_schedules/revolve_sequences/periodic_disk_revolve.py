@@ -43,7 +43,7 @@ def RelCostX(m, opt_1d_m_moins_1, wd, rd, **params):
 
 
 def compute_mx(cm, opt_0=None, opt_1d=None, mmax=None, **params):
-    """Compute the optimal period mX, as defined in the paper.
+    """Compute the optimal period.
 
     Parameters
     ----------

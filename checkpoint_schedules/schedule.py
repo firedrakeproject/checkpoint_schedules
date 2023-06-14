@@ -40,7 +40,7 @@ class CheckpointAction:
     Attributes
     ----------
     *args : Any
-        The *args correspond to the checkpoint schedules actions: 
+        The *args correspond to the arguments of the checkpoint scheduled actions: 
         `Forward`, `Reverse`, `Copy`, `EndForward`, `EndReverse`.
     
     See Also
@@ -69,14 +69,13 @@ class Forward(CheckpointAction):
     n1 : int
         Final step of the forward computation.
     write_ics : bool
-        This variable indicare whether to store the checkpoint data 
-        used to restart the forward solver.
+        This variable indicates whether to store the checkpoint data used 
+        to restart the forward solver.
     adj_deps : bool
-        This variable indicate whether to store the checkpont used in the 
+        This variable indicates whether to store the checkpont used in the 
         reverse computation.
     storage : str
-        Level of the checkpoint data storage, either 
-        :class:`StorageLocation.RAM` or :class:`StorageLocation.DISK`.
+        Level of the checkpoint data storage, either `RAM` or `DISK`.
 
     """
     def __init__(self, n0, n1, write_ics, adj_deps, storage):
@@ -132,7 +131,7 @@ class Forward(CheckpointAction):
         Returns
         -------
         bool
-            If ``True``, the forward data at the step `n1` is going to be saved.
+            The forward data at the step `n1` is going to be saved if ``True``.
         """
         return self.args[3]
     
@@ -165,7 +164,8 @@ class Reverse(CheckpointAction):
     n0 : int
         Final step of adjoint solver.  
     clear_adj_deps : bool
-        Indicate whether to clear the forward data used in the adjoint computation. 
+        Indicate whether to clear the forward data used in the adjoint
+        computation. 
     
     """
     def __init__(self, n1, n0, clear_adj_deps):
@@ -204,14 +204,16 @@ class Reverse(CheckpointAction):
         return self.args[0]
 
     def clear_adj_deps(self):
-        """Indicate whether to clear the forward data used in the reverse solver.
+        """Indicate whether to clear the forward data used in the reverse
+        solver.
 
         Returns
         -------
         bool
-            If ``True``, the forward data is cleaned.
+            Clear the forward data used in the reverse computation if ``True``.
         """
         return self.args[2]
+
 
 class Copy(CheckpointAction):
     """Indicate the action of copying from a storage level to a `TAPE`. 
@@ -220,7 +222,7 @@ class Copy(CheckpointAction):
     Attributes
     ----------
     n : int
-        The step with which the copied data is associated. 
+        The step with which the copied data is associated.
     from_storage : str
         The storage from which the data should be copied. Either
         `StorageLocation.RAM.name` or `StorageLocation.DISK.name`. 
@@ -290,7 +292,7 @@ class Copy(CheckpointAction):
     
     @property
     def delete(self):
-        """Delete the checkpoint sotred in a storage level. 
+        """Delete the checkpoint stored in a storage level. 
         
 
         Notes
@@ -380,8 +382,8 @@ class CheckpointSchedule(ABC):
             Returns
             -------
             self._iter : generator
-                Return an iterator object used to iterate the action that is given 
-                by the revolve schedule.
+                Return an iterator object used to iterate the action that is 
+                given by the revolve schedule.
             """
             if not hasattr(self, "_iter"):
                 self._iter = cls_iter(self)
@@ -435,7 +437,11 @@ class CheckpointSchedule(ABC):
         return self._n
 
     def r(self):
-        """Return the reverse step that is the number of adjoint steps advanced.
+        """Return the reverse step.
+
+        Notes
+        -----
+        The reverse step means the number of adjoint steps advancement.
 
         Returns
         -------
@@ -460,8 +466,8 @@ class CheckpointSchedule(ABC):
         Returns
         -------
         bool
-            Indicate wheter the :class:`CheckpointSchedule` schedule has an iterator object. 
-            Do not finalise the checkpoint schdeule if ``True``.
+            Indicate whether the :class:`CheckpointSchedule` schedule has an 
+            iterator object. Do not finalise the checkpoint schedule if ``True``.
         """
         return hasattr(self, "_iter")
 

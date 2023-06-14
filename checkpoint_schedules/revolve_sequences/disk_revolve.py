@@ -1,13 +1,5 @@
 #!/usr/bin/python
-"""This function is a copy of the original disk_revolve
-module that composes the python H-Revolve implementation
-published by Herrmann and Pallez [1].
-
-Refs:
-[1] Herrmann, Pallez, "H-Revolve: A Framework for
-Adjoint Computation on Synchronous Hierarchical
-Platforms", ACM Transactions on Mathematical
-Software  46(2), 2020.
+"""Rotine of the Disk-Revolve schedules.
 """
 from functools import partial
 from .basic_functions import (Operation as Op, Table, Sequence, Function, argmin)
