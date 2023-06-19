@@ -1,90 +1,47 @@
-#Importação de bibiotecas necessárias
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy.special as sp
+from scipy.sparse import lil_matrix
+from scipy.sparse.linalg import spsolve
 
-#Configuração de janela
-np.set_printoptions(linewidth=999999)
+# Parameters
+L = 1.0  # Length of the domain
+nx = 100  # Number of grid points
+T = 1.0  # Final time
+nt = 100  # Number of time steps
+nu = 0.001  # Viscosity coefficient
+degree = 2  # Degree of the Lagrange element
 
-#Grau desejado
-P = 5
+# Discretization
+dx = L / (nx - 1)
+dt = T / nt
 
-#Domínio Csi
-csi0 = -1.                              #Início do domínio
-csiP = 1.                               #Fim do domínio
-csi = np.linspace(csi0,csiP,num=1000)    #Domínio
-csip = np.arange(csi0,csiP+(csiP-csi0)/P,(csiP-csi0)/P) #Pontos do domínio
+# Initialize grid
+x = np.linspace(0, L, nx)
+u = np.sin(np.pi*x)
 
-#Alfa e Beta
-a = b = 0.       ##POLINÔMIOS DE LEGENDRE
+# Initialize solution
+u_new = np.zeros(nx)
 
-#Polinômios de Lagrange
-def Lagrange(P, csi):
-    #Equiespaçado
+# Assemble the stiffness matrix
+K = lil_matrix((nx, nx))
+for i in range(1, nx - 1):
+    K[i, i-1] = -nu / dx**2
+    K[i, i] = 2 * nu / dx**2
+    K[i, i+1] = -nu / dx**2
 
-    #Professor, não consegui achar o motivo pelo qual a
-    #base mostra valores maiores que 1. A referência:
-    #https://people.sc.fsu.edu/~jburkardt/m_src/lagrange_basis_display/lagrange_basis_display.html
-    #Também mostra que a base de Lagrange (equiespaçada) tem valores acima de 1.
+# Time-stepping
+for n in range(nt):
+    # Compute the new solution at each grid point
+    for i in range(1, nx - 1):
+        u_new[i] = u[i] - dt / (2 * dx) * (u[i+1]**2 - u[i-1]**2) \
+                   - dt * K[i, i] * u[i]
+    
+    # Update the solution
+    u = u_new.copy()
 
-    hpeq = []    ##Lista de polinômios
-    for p in range(0,P+1):
-        hpnum = []        #Polinômios do numerador
-        hpden = []        #Termos do denominador
-        for q in range(0,P+1):
-            if p!=q:
-                hpnum.append(csip[q])
-                hpden.append(csip[p]-csip[q])
-        hpnum = np.poly1d(hpnum,True)
-        hpden = np.prod(hpden)
-        hpeq.append(hpnum/hpden)
-
-    #Gráfico
-    for n in range (0,P+1):
-        plt.subplot(2,P+1,n+1)
-        hpeqgraf = hpeq[n]
-        hpeqgraf = hpeqgraf(csi)
-        plt.plot(csi,hpeqgraf)
-        plt.axis('tight')
-        plt.axis([-1.5, 1.5, hpeqgraf[n].min()-0.5, hpeqgraf[n].max()+0.5])
-        plt.xticks([-1, 1])
-        plt.yticks([hpeqgraf[n].min(), -1, 1, hpeqgraf[n].max()])
-        grau = n
-        plt.title('Lagrange h%s (equiespacado)'%grau)
-    plt.suptitle('Polinomios de Lagrange (ate grau %s)'%P)
-
-    #Usando Zeros de Gauss-Legendre-Lobato
-
-    hpgll = []
-    csiprod = np.poly1d([-1,1],True)       #Polinômio (csi-1)*(csi+1)
-    g = csiprod*sp.jacobi(P-1,1,1)
-    groots = sorted(np.roots(g))
-
-    for p in range(0,P+1):
-        hpnum = []        #Polinômios do numerador
-        hpden = []        #Termos do denominador
-        for q in range(0,P+1):
-            if p!=q:
-                hpnum.append(groots[q])
-                hpden.append(groots[p]-groots[q])
-        hpnum = np.poly1d(hpnum,True)
-        hpden = np.prod(hpden)
-        hpgll.append(hpnum/hpden)
-
-    for n in range (0,P+1):
-        plt.subplot(2,P+1,P+n+1+1)
-        hpgllgraf = hpgll[n]
-        hpgllgraf = hpgllgraf(csi)
-        plt.plot(csi,hpgllgraf)
-        plt.axis('tight')
-        plt.xticks([-1, 1],fontsize=8)
-        plt.axis([-1.5, 1.5, hpgllgraf[n].min()-0.5, hpgllgraf[n].max()+0.5])
-        plt.xticks([-1, 1],fontsize=8)
-        plt.yticks([-1, 1],fontsize=8)
-        grau = n
-        plt.title('Lagrange h%s (Gauss-Legendre-Lobato)'%grau, fontsize=8)
-    plt.show()
-    return
-
-# Jacobi(a,b,P,csi)
-Lagrange(P,csi)
+# Plot the final solution
+plt.plot(x, u)
+plt.xlabel('x')
+plt.ylabel('u')
+plt.title('Burger Equation: Lagrange Finite Element')
+plt.show()
