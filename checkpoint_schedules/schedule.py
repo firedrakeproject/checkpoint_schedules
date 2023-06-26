@@ -60,7 +60,8 @@ class CheckpointAction:
 
 
 class Forward(CheckpointAction):
-    """This checkpoint action indicates the forward advancement.
+    """This checkpoint action indicates the forward advancement
+    and configure the intermediate storage.
 
     Attributes
     ----------
