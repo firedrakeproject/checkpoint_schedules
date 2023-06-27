@@ -36,7 +36,7 @@ class StorageLocation(Enum):
 
 
 class CheckpointAction:
-    """Checkpoint action object.
+    """A checkpoint action.
     
     Attributes
     ----------
@@ -61,8 +61,8 @@ class CheckpointAction:
 
 
 class Forward(CheckpointAction):
-    """This action is responsible for advancing the forward solver, and
-    to configure the intermediate storage.
+    """This action indicates the advancement of the forward solver 
+    and configures the intermediate storage.
 
     Attributes
     ----------
@@ -77,7 +77,20 @@ class Forward(CheckpointAction):
         Indicate whether to store the checkpont data used in 
         the reverse computation.
     storage : str
-        Indicate the storage level for the forward data, either `RAM` or `DISK`.
+        Indicate the level to store the checkpoint data, which can be either `RAM` or `DISK`.
+
+    
+    Notes
+    -----
+    The Forward action also indicates wheter to store the forward checkpoint data 
+    used either to restart the forward solver or used in the adjoint computator.
+    To exemplify, let us consider a particular case:
+    Forward(0, 3, True, False, 'RAM'):
+    This action is read as:
+    - Execute the forward solver from step 0 to step 3.
+    - Write the forward data (*write_ics*) of step 0 to RAM (storage).
+    - It is not required to store the forward data for the adjoint 
+    computation since *write_adj_deps* is False.
 
     """
     def __init__(self, n0, n1, write_ics, write_adj_deps, storage):
@@ -218,7 +231,7 @@ class Reverse(CheckpointAction):
 
 
 class Copy(CheckpointAction):
-    """Indicate the action of copying from a storage level to a `TAPE`. 
+    """Indicate the action of copying from a storage level. 
 
     
     Attributes
@@ -226,19 +239,21 @@ class Copy(CheckpointAction):
     n : int
         The step with which the copied data is associated.
     from_storage : str
-        The storage from which the data should be copied. Either
+        The storage level from which the data should be copied. Either
         `StorageLocation.RAM.name` or `StorageLocation.DISK.name`. 
     to_storage : str
         The location to which the data should be copied, which is 
         referred to as `StorageLocation.TAPE.name`.
     delete : bool
-        Whether the data should be deleted from the indicated storage
+        Whether the data should be deleted from the indicated storage level
         after it has been copied.
 
     Notes
     -----
-        `StorageLocation.TAPE.name` indicates the location of the checkpoint 
-        data used to restart the forward solver.
+        `StorageLocation.TAPE.name` refers to the local storage that 
+        holds the checkpoint data used as the initial condition 
+        for the forward solver. It is not considered a storage level since is
+        specifically designated for storing this particular type of checkpoint data.
         The storage location are listed in the `StorageLocation`.
     
     See Also
