@@ -34,6 +34,7 @@ class StorageLocation(Enum):
     TAPE = -1
     NONE = None
 
+
 class CheckpointAction:
     """Checkpoint action object.
     
@@ -153,6 +154,7 @@ class Forward(CheckpointAction):
             Either :class:`StorageLocation.RAM.name` or :class:`StorageLocation.DISK.name`.
         """
         return self.args[4]
+
 
 class Reverse(CheckpointAction):
     """This checkpoint action indicates the adjoint advancement.
@@ -312,7 +314,6 @@ class EndForward(CheckpointAction):
     """
 
 
-
 class EndReverse(CheckpointAction):
     """A checkpointing action which indicates the end of an adjoint
     calculation.
@@ -348,17 +349,25 @@ class CheckpointSchedule(ABC):
     
     Notes
     -----
-    The schedule is defined by iter.
+    Actions in the schedule are accessed by iterating over elements, and
+    actions may be implemented using single-dispatch functions. e.g.
+    
+    .. code-block:: python
 
-    The iter method yields (action, data), with the actions:
+        @functools.singledispatch
+        def action(cp_action):
+            raise TypeError(f"Unexpected checkpointing action: {cp_action}")
 
-    `Forward(n0, n1, write_ics, adj_deps)`
+        @action.register(Forward)
+        def action_forward(cp_action):
+            logger.debug(f"forward: forward advance to {cp_action.n1:d}")
 
-    `Reverse(n1, n0, clear_adj_deps)`
+        # ...
 
-    `Copy(n, from_storage, to_storage, delete)`
-
-    `EndForward()`
+        for cp_action in cp_schedule:
+            action(cp_action)
+            if isinstance(cp_action, EndReverse):
+                break
 
     """
 

@@ -1,19 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 from checkpoint_schedules import RevolveCheckpointSchedule, StorageLocation
-    # (
-    # MemoryCheckpointSchedule,
-    #  PeriodicDiskCheckpointSchedule,
-    #  MultistageCheckpointSchedule,
-    #  TwoLevelCheckpointSchedule,
-     
-    #  MixedCheckpointSchedule
-    # )
 from checkpoint_schedules import \
-     (Forward, EndForward, Reverse, Copy, EndReverse)
+    (Forward, EndForward, Reverse, Copy, EndReverse)
 import functools
 # import time as tm
 # from tabulate import tabulate
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+
 
 
 class Manage():

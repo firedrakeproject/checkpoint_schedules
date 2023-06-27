@@ -12,8 +12,9 @@ __all__ = \
 
 
 class RevolveCheckpointSchedule(CheckpointSchedule):
-    """An H-Revolve checkpointing schedule.
-
+    """This object allows to iterate over a sequence
+    of the checkpoint schedule actions. 
+ 
     Attributes
     ----------
     max_n : int
@@ -32,6 +33,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
     rvect : tuple, optional
         The read cost associated with loading a forward restart checkpoint
         from RAM and disk.
+    self._schedule : 
     
     Notes
     -----
@@ -45,12 +47,11 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         self._exhausted = False
         self._snapshots_on_disk = snap_on_disk
         cvec = (snap_in_ram, snap_on_disk)
-        sequence = hrevolve(max_n - 1 , cvec, wvec, rvec)
+        sequence = hrevolve(max_n - 1, cvec, wvec, rvec)
         self._schedule = list(sequence)
 
     def iter(self):
-        """An iterator object used to execute the forward and adjoint 
-        computations. 
+        """This 
 
         Yields
         ------
@@ -212,13 +213,13 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
 
 
 def _convert_action(action):
-    """Convert the revolver schedules to inputs required to execute the 
+    """Convert the H-Revolve sequences to the inputs required to execute the 
     checkpoint schedule iterator.
 
     Parameters
     ----------
     action_n : Operation
-        An action given by H-revolve sequence.
+        A operation of the H-revolve sequence.
     
     Notes
     -----
