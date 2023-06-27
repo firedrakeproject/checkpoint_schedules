@@ -19,15 +19,15 @@ __all__ = \
 
 class StorageLocation(Enum):
     """
-    RAM : Set to as the first level of checkpoint storage.
+    RAM : It is the first level of checkpoint storage.
 
-    DISK : Set to as the second level of checkpoint storage.
+    DISK : It is the second level of checkpoint storage.
 
-    TAPE : Indicate the location where to store of the checkpoint 
-    data used to restart the forward solver.
+    TAPE : Refer to the local storage that holds the checkpoint 
+    data used as the initial condition for the forward solver.
 
-    NONE : This storage location indicates that checkpoint data which was 
-    stored in a level (either `RAM` or `DISK`) should be deleted. 
+    NONE : Indicate that there is no specific storage location defined 
+    for the checkpoint data.
     """
     RAM = 0
     DISK = 1
@@ -60,8 +60,8 @@ class CheckpointAction:
 
 
 class Forward(CheckpointAction):
-    """This checkpoint action indicates the forward advancement
-    and configure the intermediate storage.
+    """This action is responsible for advancing the forward solver, and
+    to configure the intermediate storage.
 
     Attributes
     ----------
@@ -70,17 +70,17 @@ class Forward(CheckpointAction):
     n1 : int
         Final step of the forward computation.
     write_ics : bool
-        This variable indicates whether to store the checkpoint data used 
+        Indicate whether to store the checkpoint data used 
         to restart the forward solver.
-    adj_deps : bool
-        This variable indicates whether to store the checkpont used in the 
-        reverse computation.
+    write_adj_deps : bool
+        Indicate whether to store the checkpont data used in 
+        the reverse computation.
     storage : str
-        Level of the checkpoint data storage, either `RAM` or `DISK`.
+        Indicate the storage level for the forward data, either `RAM` or `DISK`.
 
     """
-    def __init__(self, n0, n1, write_ics, adj_deps, storage):
-        super().__init__(n0, n1, write_ics, adj_deps, storage)
+    def __init__(self, n0, n1, write_ics, write_adj_deps, storage):
+        super().__init__(n0, n1, write_ics, write_adj_deps, storage)
 
     def __iter__(self):
         yield from range(self.n0, self.n1)
@@ -115,19 +115,18 @@ class Forward(CheckpointAction):
 
     @property
     def write_ics(self):
-        """Inform whether to store the checkpoint at the step `n0`.
+        """Indicate whether to store the checkpoint data.
 
         Returns
         -------
         bool
-            If ``True``, the checkpoint at step `n0` is going to be saved
-            in a storage level.
+            Write the forward data of step n0 if ``True``.
         """
         return self.args[2]
     
     @property
-    def adj_deps(self):
-        """Inform wheter to store the forward data at step `n1`.
+    def write_adj_deps(self):
+        """Indicate wheter to store the forward data at step `n1`.
 
         Returns
         -------
