@@ -17,7 +17,6 @@ This document describes the *checkpoint_schedules* package. This work aims to
 create end-to-end workflows to execute an adjoint-based sensitivity using the 
 H-Revolve schedule to as the checkpointing method.
 
-.. include:: abstract.txt
 
 Contents
 ========
