@@ -66,6 +66,6 @@ how to use checkpoint_schedule.
 
 The documentation of the *checkpoint_schedules* is availabe here: :ref:`checkpoint_schedule API reference
 <checkpoint_schedule-api-reference>`.
-If you are interest int the H-Revolve sequences, we have its documentation here: :ref:`schedule API reference
+The H-Revolve documentation is availabe here: :ref:`schedule API reference
 <schedule-api-reference>`
 
