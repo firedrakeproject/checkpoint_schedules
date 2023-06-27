@@ -189,7 +189,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
             assert cp_action.n0 not in snapshots[cp_action.storage]
             # len(ics.intersection(range(cp_action.n0, n1))) == 0
 
-        if cp_action.adj_deps:
+        if cp_action.write_adj_deps:
             # No non-linear dependency data for these steps is stored
             assert len(data.intersection(range(cp_action.n0, n1))) == 0
 
@@ -198,7 +198,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
         if cp_action.write_ics:
             ics.update(range(cp_action.n0, n1))
             snapshots[cp_action.storage][cp_action.n0] = (set(ics), set(data))
-        if cp_action.adj_deps:
+        if cp_action.write_adj_deps:
             data.update(range(cp_action.n0, n1))
 
         if len(ics) > 0:
