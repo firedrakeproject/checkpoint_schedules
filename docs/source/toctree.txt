@@ -3,9 +3,9 @@
 
    intro
    install
-   tutorial
-   checkpoint_schedules
-   checkpoint_schedules.revolve_sequences
+   notebook/burger.ipynb
+   checkpoint_schedules 
+   
 
 .. Local Variables:
 .. mode: rst

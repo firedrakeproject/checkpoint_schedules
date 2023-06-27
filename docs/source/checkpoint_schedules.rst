@@ -1,23 +1,20 @@
-Modules
-=======
+.. _checkpoint_schedule-api-reference:
+
+checkpoint_schedule API reference
+=================================
 Here we documet the checkpoint_schedules package API.
 
-
-*checkpoint\_schedules.revolvers*
----------------------------------
-Routine to execute foward and adjoint solver with checkpointing 
-method which follows by the H-Revolve schedule.
-
+See also the :doc:`schedule-api-reference <schedule>`.
+************
+Core classes
+************
 .. automodule:: checkpoint_schedules.revolvers
    :members:
    :undoc-members:
    :show-inheritance:
 
-*checkpoint\_schedules.schedule*
---------------------------------
-This module holds the checkpoint actions:
-
 .. automodule:: checkpoint_schedules.schedule
    :members:
    :undoc-members:
    :show-inheritance:
+
