@@ -4,7 +4,6 @@ checkpoint_schedule API reference
 =================================
 Here we documet the checkpoint_schedules package API.
 
-See also the :doc:`schedule-api-reference <schedule>`.
 ************
 Core classes
 ************
@@ -18,3 +17,4 @@ Core classes
    :undoc-members:
    :show-inheritance:
 
+Are you interested in the See also the :doc:`schedule-api-reference <schedule>`.

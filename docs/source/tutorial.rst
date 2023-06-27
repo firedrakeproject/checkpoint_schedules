@@ -1,6 +1,12 @@
 .. _checkpoint_schedule-tutorial:
-checkpoint_schedule tutorial
-============================
-{
-"path": "notebooks/burger.ipynb"
-}
+
+.. toctree::
+   :maxdepth: 2
+
+   notebook/burger.ipynb
+   
+
+.. Local Variables:
+.. mode: rst
+.. End:
+

@@ -1,29 +1,3 @@
-checkpoint_schedule 
-===================
-
-:Author:       Daiane Dolci
-:Contact:      d.dolci@imperial.ac.uk
-:Web Site:     https://github.com/firedrakeproject/checkpoint_schedules
-:Date:         |today|
-
-.. _dolfin-adjoint-about:
-
-.. title:: checkpoint_schedule
-
-*****
-About
-*****
-This document describes the *checkpoint_schedules* package. This work aims to
-create end-to-end workflows to execute an adjoint-based sensitivity using the 
-H-Revolve schedule to as the checkpointing method.
-
-
-Contents
-========
-
-.. include:: toctree.txt
-
-
 .. checkpoint_schedule 
 .. ===================
 
@@ -32,38 +6,66 @@ Contents
 .. :Web Site:     https://github.com/firedrakeproject/checkpoint_schedules
 .. :Date:         |today|
 
-.. .. _checkpoint_schedule-documentation:
+.. .. _dolfin-adjoint-about:
 
-.. .. title:: checkpoint_schedule documentation
+.. .. title:: checkpoint_schedule
 
-.. ******************************************
-.. Documentation for checkpoint_schedule |version|
-.. ******************************************
+.. *****
+.. About
+.. *****
+.. This document describes the *checkpoint_schedules* package. This work aims to
+.. create end-to-end workflows to execute an adjoint-based sensitivity using the 
+.. H-Revolve schedule to as the checkpointing method.
 
-.. Quickstart
-.. ==========
+.. .. include:: abstract.txt
+
+.. Contents
+.. ========
+
+.. .. include:: toctree.txt
 
 
-.. Resources
-.. =========
+checkpoint_schedule 
+===================
 
-.. .. raw:: html
+:Author:       Daiane Dolci
+:Contact:      d.dolci@imperial.ac.uk
+:Web Site:     https://github.com/firedrakeproject/checkpoint_schedules
+:Date:         |today|
 
-..   <div id="main">
-..   <div id="container" class="feature">
-..     <div id="content">
-..       <div id="sub-feature">
-.. 	<div id="front-block-1" class="front-block block">
-..           <h2> checkpoint_schedule tutorial </h2>
+.. _checkpoint_schedule-documentation:
 
-.. The :ref:`checkpoint_schedule tutorial <checkpoint_schedule-tutorial>` describes
-.. how to use checkpoint_schedule. 
+.. title:: checkpoint_schedule documentation
 
-.. .. raw:: html
+**************************************
+Documentation for checkpoint_schedule
+**************************************
 
-..   <h2>checkpoint_schedule API reference</h2>
+Quickstart
+==========
 
-.. Are you looking for the complete reference documentation? Look no
-.. further, it is right here: :ref:`checkpoint_schedule API reference
-.. <checkpoint_schedule-api-reference>`.
+
+Resources
+=========
+
+.. raw:: html
+
+  <div id="main">
+  <div id="container" class="feature">
+    <div id="content">
+      <div id="sub-feature">
+	<div id="front-block-1" class="front-block block">
+          <h2> checkpoint_schedule tutorial </h2>
+
+The :ref:`checkpoint_schedule tutorial <checkpoint_schedule-tutorial>` describes
+how to use checkpoint_schedule. 
+
+.. raw:: html
+
+  <h2>checkpoint_schedule API reference</h2>
+
+The documentation of the *checkpoint_schedules* is availabe here: :ref:`checkpoint_schedule API reference
+<checkpoint_schedule-api-reference>`.
+If you are interest int the H-Revolve sequences, we have its documentation here: :ref:`schedule API reference
+<schedule-api-reference>`
 
