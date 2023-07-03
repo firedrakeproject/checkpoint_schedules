@@ -3,14 +3,15 @@ import functools
 import matplotlib.pyplot as plt
 from sympy import *
 from scipy.sparse import lil_matrix
-
+from scipy.sparse.linalg import spsolve
+import pickle
 from scipy.optimize import newton_krylov
 from checkpoint_schedules import \
      (Forward, EndForward, Reverse, Copy, EndReverse)
 from checkpoint_schedules import RevolveCheckpointSchedule, StorageLocation
 
 
-class burger_equation():
+class BurgerEquation():
     """This object define the forward burger's equation its
     and adjoint system.
 
@@ -27,14 +28,16 @@ class burger_equation():
     nu : float
         The viscosity.
     """
-    def __init__(self, L, nx, dt, T, nu):
+    def __init__(self, L, nx, dt, T, nu, u0):
         self.nt = int(T/dt)
         self.nu = nu
         self.dx = L / (nx - 1)
         self.dt = dt
         self.nx = nx
+        self.fwd_ic = u0
+        self.lx = L
 
-    def forward(self, u0, n0, n1):
+    def forward(self, u0, n0, n1, checkpointing=True):
         """
         Execute the forward system in time.
 
@@ -56,10 +59,10 @@ class burger_equation():
         nx = self.nx
         dt = self.dt
         nu = self.nu
-
         u = u0.copy()
-        u_sol = [u]
-
+        if not checkpointing:
+            u_sol = []
+            u_sol.append(u)
         # Assemble the matrix system
         A = lil_matrix((nx, nx))
         B = lil_matrix((nx, nx))
@@ -92,14 +95,16 @@ class burger_equation():
 
             u_new = newton_krylov(non_linear, u)
             u = u_new.copy()
-            u_sol.append(u_new)
-            print(t)
+            if not checkpointing:
+                u_sol.append(u)
             t += 1
-
-        return u_sol
+        if not checkpointing:
+            return u_sol
+        else:
+            return u_new
 
     
-    def backward(self, u_fwd, p0, n0, n1):
+    def backward(self, u_fwd, p0, n0, n1, checkpointing=True):
         """Execute the adjoint system in time.
 
         Parameters
@@ -127,9 +132,13 @@ class burger_equation():
         A[0, 1] = 1 / 6
         A[nx - 1, nx - 1] = 1 / 3
         A[nx - 1, nx - 2] = 1 / 6
-        while t < steps - 1:
+        while t < steps:
             u[0] = u[nx - 1] = 0
-            uf = u_fwd[steps - 1 - t]
+            if checkpointing:
+                uf = u_fwd
+            else:
+                uf = u_fwd[steps - 1 - t]
+
             B[0, 0] = 1 / 3 - dt * (uf[0] / dx - b - 1 / 3 * (uf[1] - uf[0]) / dx)
             B[0, 1] = 1 / 6 + dt * (1 / 2 * uf[0] / dx + b - 1 / 6 * (uf[2] - uf[1]) / dx)
             B[nx - 1, nx - 1] = 1 / 3 + dt * (uf[nx - 1] / dx - b - 1 / 3 * (uf[nx - 1] - uf[nx - 2]) / dx)
@@ -203,26 +212,30 @@ class burger_equation():
         
         print(integ)
 
+
 class CheckpointingManager():
     """Manage the forward and backward solvers.
 
     Attributes
     ----------
-    forward : object
-        The forward solver.
+    max_n : int
+        Total steps used to execute the solvers.
+    equation : object
+        The object....
     backward : object
         The backward solver.
     save_ram : int
-        Number of checkpoint that will be stored.
-    total_steps : int
-        Total steps used to execute the solvers.
-
+        Number of checkpoint that will be stored in RAM.
+    save_disk : int
+        Number of checkpoint that will be stored on disk.
     """
     def __init__(self, max_n, equation, save_ram, save_disk):
+        self.max_n = max_n
         self.save_ram = save_ram
         self.save_disk = save_disk
         self.equation = equation
-        self.max_n = max_n
+        self.list_actions = []
+        
 
     def execute(self):
         """Execute forward and adjoint with checkpointing mehtod.
@@ -233,8 +246,26 @@ class CheckpointingManager():
 
         @action.register(Forward)
         def action_forward(cp_action):
-            nonlocal model_n
-            u0 = self.equation.forward(u0, cp_action.n0, cp_action.n1)
+            nonlocal model_n, fwd_tape, ics, adj_deps
+            if len(ics) == 0:
+                ics = {cp_action.n0: fwd_tape}
+                fwd_tape = None
+
+            fwd_tape = self.equation.forward(ics[cp_action.n0], cp_action.n0, cp_action.n1)
+
+            if cp_action.write_ics:
+                if cp_action.storage == StorageLocation(1).name:
+                    file_name = "fwd_data/ufwd_"+ str(cp_action.n0) +".dat"
+                    with open(file_name, "wb") as f:
+                        pickle.dump(ics[cp_action.n0], f)
+                    snapshots[cp_action.storage][cp_action.n0] = file_name
+                else:
+                    snapshots[cp_action.storage][cp_action.n0] = ics[cp_action.n0]
+            if cp_action.write_adj_deps:
+                adj_deps = {cp_action.n1: fwd_tape}
+
+            ics.clear()
+
             n1 = min(cp_action.n1, self.max_n)
             model_n = n1
             if cp_action.n1 == self.max_n:
@@ -242,18 +273,34 @@ class CheckpointingManager():
 
         @action.register(Reverse)
         def action_reverse(cp_action):
-            nonlocal model_r, p0
-            nonlocal p0
+            nonlocal model_r, bwd_tape, fwd_tape, adj_deps
             if model_r == 0:
-                p0 = u
-            p0 = self.equation(u0, p0)
+                # Initial condition of the adjoint system at the reverse step r=0.
+                p0 = fwd_tape
+                fwd_tape = None
+            else:
+                # Initialise the adjoint system for the reverse step r > 0.
+                p0 = bwd_tape
+
+            bwd_tape = self.equation.backward(adj_deps[cp_action.n1], p0, cp_action.n0, cp_action.n1)
             model_r += cp_action.n1 - cp_action.n0
+            
             if cp_action.clear_adj_deps:
-                data.clear()
+                adj_deps.clear()
 
         @action.register(Copy)
         def action_copy(cp_action):
-            pass
+            nonlocal ics
+            if cp_action.from_storage == StorageLocation(1).name:
+                file_name = snapshots[cp_action.from_storage][cp_action.n]
+                with open(file_name, "rb") as f:
+                    data = np.asarray(pickle.load(f), dtype=float)
+            else:
+                data = snapshots[cp_action.from_storage][cp_action.n]
+
+            ics = {cp_action.n: data}
+            if cp_action.delete:
+                del snapshots[cp_action.from_storage][cp_action.n]
 
         @action.register(EndForward)
         def action_end_forward(cp_action):
@@ -265,21 +312,38 @@ class CheckpointingManager():
 
         model_n = 0
         model_r = 0
-        p0 = None  # Initialiase the reverse computation.
-        ics = set()
-        data = set()
+        ics = {model_n: self.equation.fwd_ic}
+        adj_deps = {}
+        fwd_tape = None
+        bwd_tape = None
 
         snapshots = {StorageLocation(0).name: {}, StorageLocation(1).name: {}}
         cp_schedule = RevolveCheckpointSchedule(self.max_n, self.save_ram,
                                                 snap_on_disk=self.save_disk)
-        snapshots = {StorageLocation(0).name: {}, StorageLocation(1).name: {}}
-        
+        storage_limits = {StorageLocation(0).name: self.save_ram, 
+                          StorageLocation(1).name: self.save_disk}
+        if self.save_disk > 0 :
+            import os 
+            dir = "fwd_data"
+            os.mkdir(dir)
         while True:
             cp_action = next(cp_schedule)
             action(cp_action)
+            self.list_actions.append([str(cp_action)])
+
+            # Checkpoint storage limits are not exceeded
+            # for storage_type, storage_limit in storage_limits.items():
+            #     assert len(snapshots[storage_type]) <= storage_limit
+                
+            # Data storage limit is not exceeded
+            assert min(1, len(ics)) + len(adj_deps) <= 1
             if isinstance(cp_action, EndReverse):  
-                assert model_r == 0
+                x = np.linspace(0, self.equation.lx, self.equation.nx)
+                sens = np.trapz(bwd_tape*1.01*self.equation.forward_solution(0), x=x, dx=self.equation.dx)
+                print(sens)
                 break
+
+
 
 L = 1
 nx = 100
@@ -287,45 +351,63 @@ dt = 0.001
 T = 0.5
 nu = 0.01
 dx = L/nx
-burger = burger_equation(L, nx, dt, T, nu)
+max_n = int(T/dt)
+u = np.zeros(nx)
+x = np.linspace(0, L, nx)
+t0 = np.exp(1/(8*nu))
+t = 1
+for i in range(nx):
+    e = np.exp(x[i]*x[i]/(4*nu*t))
+    a = (t/t0)**(0.5)
+    u[i] = (x[i]/(t))/(1 + (a*e))
+
+
+save_ram = 200 # Number of steps to save in RAM.
+save_disk = max_n - save_ram - 10 # Number of steps to save in disk.
+
+burger = BurgerEquation(L, nx, dt, T, nu, u)
+chk_manager = CheckpointingManager(max_n, burger, save_ram, save_disk)
+chk_manager.execute()
 x = np.linspace(0, L, nx)
 # u0 =  np.sin(np.pi*x)
-f_step = int(T/dt)
+
 i_step = 0
 
-# u_n0 = burger.forward(burger.forward_solution(0), i_step, f_step)
-u_sol = []
-der = []
-steps = int(T/dt)
 
-# burger.energy(T)
-for s in range(steps):
-    t = s*dt
-    u = burger.forward_solution(t)
-    # dudx = burger.dudx(t)
-    # der.append(dudx)
-    u_sol.append(u)
-    # print(s)
-u_num = burger.forward(burger.forward_solution(0), i_step, f_step)
-u_num0 = burger.forward(1.01*burger.forward_solution(0), i_step, f_step)
-# # num_der = burger.num_derivative(u_num)
-integ = burger.num_energy(u_num[-1]*u_num[-1]*0.5, x, dx)
-integ0 = burger.num_energy(u_num0[-1]*u_num0[-1]*0.5, x, dx)
+
+# # u_n0 = burger.forward(burger.forward_solution(0), i_step, f_step)
+# u_sol = []
+# der = []
+# steps = int(T/dt)
+
+# # burger.energy(T)
+# for s in range(steps):
+#     t = s*dt
+#     u = burger.forward_solution(t)
+#     # dudx = burger.dudx(t)
+#     # der.append(dudx)
+#     u_sol.append(u)
+#     # print(s)
+u_num = burger.forward(burger.forward_solution(0), i_step, max_n, checkpointing=False)
+# u_num0 = burger.forward(1.01*burger.forward_solution(0), i_step, f_step)
+# # # num_der = burger.num_derivative(u_num)
+# integ = burger.num_energy(u_num[-1]*u_num[-1]*0.5, x, dx)
+# integ0 = burger.num_energy(u_num0[-1]*u_num0[-1]*0.5, x, dx)
 p0 = u_num[-1]
-p = burger.backward(u_num, p0, i_step, f_step)
+p = burger.backward(u_num, p0, i_step, max_n, checkpointing=False)
 sens = np.trapz(p*1.01*burger.forward_solution(0), x=x, dx=dx)
 print(sens)
-print((integ0 - integ)/0.01)
+# print((integ0 - integ)/0.01)
 
 
 
-# 
-print(p)
-# Plot the final solution
-plt.plot(x, p, label="adjoint")
-plt.plot(x, u_num[-1], label="numerical")
-plt.xlabel('x')
-plt.ylabel('u')
-plt.legend()
-# plt.title('')
-plt.show()
+# # 
+# print(p)
+# # Plot the final solution
+# plt.plot(x, p, label="adjoint")
+# plt.plot(x, u_num[-1], label="numerical")
+# plt.xlabel('x')
+# plt.ylabel('u')
+# plt.legend()
+# # plt.title('')
+# plt.show()
