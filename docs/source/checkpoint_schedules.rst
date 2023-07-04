@@ -1,6 +1,6 @@
-.. _checkpoint_schedule-api-reference:
+.. _checkpoint_schedules-api-reference:
 
-checkpoint_schedule API reference
+checkpoint_schedules API reference
 =================================
 Here we documet the checkpoint_schedules package API.
 
@@ -17,4 +17,4 @@ Core classes
    :undoc-members:
    :show-inheritance:
 
-Are you interested in the See also the :doc:`schedule-api-reference <schedule>`.
+Are you interested in the technical H-Revolve coding? Fell free to take a look the H-Revolve API reference here :doc:`schedule-api-reference <schedule>`.

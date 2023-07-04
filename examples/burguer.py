@@ -103,7 +103,6 @@ class BurgerEquation():
         else:
             return u_new
 
-    
     def backward(self, u_fwd, p0, n0, n1, checkpointing=True):
         """Execute the adjoint system in time.
 

@@ -1,48 +1,22 @@
-.. checkpoint_schedule 
-.. ===================
+.. _checkpoint_schedules-documentation:
+.. title:: checkpoint_schedules documentation
 
-.. :Author:       Daiane Dolci
-.. :Contact:      d.dolci@imperial.ac.uk
-.. :Web Site:     https://github.com/firedrakeproject/checkpoint_schedules
-.. :Date:         |today|
+***************************************
+Documentation for checkpoint_schedules |version|
+***************************************
 
-.. .. _dolfin-adjoint-about:
-
-.. .. title:: checkpoint_schedule
-
-.. *****
-.. About
-.. *****
-.. This document describes the *checkpoint_schedules* package. This work aims to
-.. create end-to-end workflows to execute an adjoint-based sensitivity using the 
-.. H-Revolve schedule to as the checkpointing method.
-
-.. .. include:: abstract.txt
-
-.. Contents
-.. ========
-
-.. .. include:: toctree.txt
-
-
-checkpoint_schedule 
-===================
-
-:Author:       Daiane Dolci
+:Author:       Daiane I. Dolci
 :Contact:      d.dolci@imperial.ac.uk
-:Web Site:     https://github.com/firedrakeproject/checkpoint_schedules
+:GitHub:     https://github.com/firedrakeproject/checkpoint_schedules
 :Date:         |today|
-
-.. _checkpoint_schedule-documentation:
-
-.. title:: checkpoint_schedule documentation
-
-**************************************
-Documentation for checkpoint_schedule
-**************************************
 
 Quickstart
 ==========
+
+Do you want to get up and employ the *checkpoint_schedules* quickly? Then, we suggest you
+  * Install :ref:`checkpoint_schedules and its dependencies <install>`.
+  * Go through to the :ref:`user guideline <checkpoint_schedules-guide>`.
+  * Fell free to take a look  :ref:`introduction to checkpoint_schedules <introduction>` or the :ref:`API reference <checkpoint_schedules-api-reference>`.
 
 
 Resources
@@ -55,17 +29,16 @@ Resources
     <div id="content">
       <div id="sub-feature">
 	<div id="front-block-1" class="front-block block">
-          <h2> checkpoint_schedule tutorial </h2>
+          <h2> User guideline </h2>
 
-The :ref:`checkpoint_schedule tutorial <checkpoint_schedule-tutorial>` describes
-how to use checkpoint_schedule. 
+The :ref:`user guideline <checkpoint_schedules-guide>` shows how to employ
+*checkpoint_schedules* package in a adjoint-based gradient problem.
 
 .. raw:: html
 
-  <h2>checkpoint_schedule API reference</h2>
+  <h2>API reference</h2>
 
-The documentation of the *checkpoint_schedules* is availabe here: :ref:`checkpoint_schedule API reference
-<checkpoint_schedule-api-reference>`.
-The H-Revolve documentation is availabe here: :ref:`schedule API reference
-<schedule-api-reference>`
+Technical details of *checkpoint_schedules* package is acessed in the  API reference availabe either in :ref:`API reference
+<checkpoint_schedules-api-reference>` or  in :ref:`introduction to checkpoint_schedules <introduction>`.
+
 
