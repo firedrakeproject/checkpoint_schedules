@@ -38,13 +38,13 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
     
     """
 
-    def __init__(self, max_n, snap_in_ram, snap_on_disk, f_cost=1.0, 
-                 b_cost=1.0, wvec=(0, 0.5), rvec=(0, 0.5)):
+    def __init__(self, max_n, snap_in_ram, snap_on_disk, fwd_cost=1.0,
+                 bwd_cost=1.0, wvec=(0, 0.5), rvec=(0, 0.5)):
         super().__init__(max_n)
         self._exhausted = False
         self._snapshots_on_disk = snap_on_disk
         cvec = (snap_in_ram, snap_on_disk)
-        sequence = hrevolve(max_n - 1, cvec, wvec, rvec)
+        sequence = hrevolve(max_n - 1, cvec, wvec, rvec, fwd_cost, bwd_cost)
         self._schedule = list(sequence)
 
     def iter(self):
@@ -266,44 +266,6 @@ def _convert_action(action):
         raise InvalidRevolverAction
     return cp_action, (n_0, n_1, storage)
 
-
-class HRevolve(RevolveCheckpointSchedule):
-    """H-Revolve sequence object.
-    """
-    def _sequence(self, max_n, snap_in_ram, snap_on_disk, wvec, rvec):
-        """H-Revolve sequence.
-
-        Parameters
-        ----------
-        max_n : int
-            The number of forward steps in the initial forward calculation.
-        snapshots_in_ram : int
-            The maximum number of forward restart checkpoints to store in
-            memory.
-        snapshots_on_disk : int
-            The maximum number of forward restart checkpoints to store on disk.
-        wvect : float, optional
-            The write cost associated with saving a forward restart checkpoint
-            to disk.
-        rvect : float, optional
-            The read cost associated with loading a forward restart checkpoint
-            from disk.
-        
-        Returns
-        -------
-
-        """
-
-        cvec = [snap_in_ram, snap_on_disk]
-        sequence = hrevolve(max_n - 1 , cvec, wvec, rvec)
-        return sequence
-
-
-# class HRevolve(RevolveCheckpointSchedule):
-
-#     def _sequence(self, max_n, snap_in_ram, snap_on_disk, wvec, rvec):
-#         cvec = (snap_in_ram, snap_on_disk)
-#         super()._schedule = hrevolve(max_n - 1 , cvec, wvec, rvec)
 
 class InvalidForwardStep(IndexError):
     "The forward step is not correct."

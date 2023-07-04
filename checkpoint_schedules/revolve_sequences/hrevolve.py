@@ -207,7 +207,7 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
         return sequence
 
 
-def hrevolve(l, cvect, wvect, rvect):
+def hrevolve(l, cvect, wvect, rvect, fwd_cost, bwd_cost):
     """H-Revolve scheduler.
     
     Parameters
@@ -229,7 +229,7 @@ def hrevolve(l, cvect, wvect, rvect):
     Sequence
         The H-Revolve schedules.
     """
-    params = revolver_parameters(wvect, rvect)
+    params = revolver_parameters(wvect, rvect, fwd_cost, bwd_cost)
     
     h_rev = hrevolve_recurse(l, len(cvect)-1, cvect[-1], cvect, wvect, rvect,
                             hoptp=None, hopt=None, **params)
