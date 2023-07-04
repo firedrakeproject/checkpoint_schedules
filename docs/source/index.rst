@@ -2,7 +2,7 @@
 .. title:: checkpoint_schedules documentation
 
 ***************************************
-Documentation for checkpoint_schedules |version|
+Documentation for checkpoint_schedules
 ***************************************
 
 :Author:       Daiane I. Dolci
@@ -14,10 +14,10 @@ Quickstart
 ==========
 
 Do you want to get up and employ the *checkpoint_schedules* quickly? Then, we suggest you
-  * Install :ref:`checkpoint_schedules and its dependencies <install>`.
+  * Install :ref:`checkpoint_schedules <install>`.
+  * Fell free to take a look  :ref:`introduction <introduction>`.
   * Go through to the :ref:`user guideline <checkpoint_schedules-guide>`.
-  * Fell free to take a look  :ref:`introduction to checkpoint_schedules <introduction>` or the :ref:`API reference <checkpoint_schedules-api-reference>`.
-
+  
 
 Resources
 =========

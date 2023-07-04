@@ -1,4 +1,5 @@
 .. _checkpoint_schedules-guide:
+
 User guideline
 ==============
 
