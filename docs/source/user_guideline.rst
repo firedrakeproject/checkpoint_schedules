@@ -3,11 +3,14 @@
 User guideline
 ==============
 
-checkpoint_schedule application: adjoint-based gradient
--------------------------------------------------------
+*checkpoint_schedule* application: adjoint-based gradient
+---------------------------------------------------------
 
-This user guideline describes the *checkpointing_schedules* package used
-simplified case of adjoint-based gradient computation.
+This user guideline describes an adjoint-based gradient computation
+using checkpointing given by *checkpointing_schedules* package.
+Therefore, we initally define the adjoint-based gradient and then the
+forward and adjoint solvers prescribed by *checkpointing_schedules*
+package.
 
 Defining the application
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -80,31 +83,32 @@ equation (4). Additionally, the gradient expression (3) is a function of
 :math:`u^{\dagger} (0, t)`, which is the final adjoint time 0.
 
 Discretisation
-~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^
 
-We discretise both the forward and adjoint systems using the Finite
-Element Method (FEM), following the discretisation that is explained in
-detail in [1] that obtains the approximated solution by applying
-Galerkin method with linear trial basis functions. The adjoint system is
-also discretized with this same methodology.
+Both the forward and adjoint systems are discretised using the Finite
+Element Method (FEM), employing a discretisation methodology detailed in
+[1]. This methodology uses the Galerkin method with linear trial basis
+functions to obtain an approximate solution. The backward finite
+difference method is employed to discretise the equations in time.
 
 Coding
-~~~~~~
+^^^^^^
 
-*BurgerGradAdj* provides the *forward* solver of Burger’s equation (2),
-the *backaward* solver of the adjoint equation (4) and the computation
-of the objective funtional (1). The constructor of the *BurgerGradAdj*
-class defines the spatial and temporal configurations for the problem.
-The forward equation system is implemented in the *forward* method,
-whereas the adjoint equation system is implemented in the *backward*
-method.
+The *BurgerGradAdj* class is implemented to set of functionalities for
+solving Burger’s equation (2) and its corresponding adjoint equation
+(4), as well as computing the objective functional (1). The
+*BurgerGradAdj* class constructor is responsible for defining the
+spatial and temporal configurations required for solving the problem. It
+sets up the necessary parameters and initializes the problem domain.
 
 .. code:: ipython3
 
     from scipy.sparse import lil_matrix
     from scipy.optimize import newton_krylov
     import numpy as np
+    import pickle
     from scipy.sparse.linalg import spsolve
+    import functools
     
     class BurgerGradAdj():
         """This class provides the solver of the non-linear forward burger's equation,
@@ -129,10 +133,14 @@ method.
             self.dx = L / (nx - 1)
             self.dt = dt
             self.nx = nx
-            self.fwd_ic = u0
+            self.u = {0: u0}
             self.lx = L
-    
-        def forward(self, u0, n0, n1, checkpointing=True):
+            self.snapshots = {'RAM': {}, 'DISK': {}}
+            self.adj_deps = {}
+            self.p = {}
+        
+      
+        def forward(self, n0, n1, write_ics=False, write_adj_deps=False, storage=None, checkpointing=True):
             """Solve the non-linear forward burger's equation in time.
     
             Parameters
@@ -154,10 +162,17 @@ method.
             nx = self.nx
             dt = self.dt
             nu = self.nu
-            u = u0.copy()
+            u = self.u[n0]
+            if write_ics:
+                if storage == 'RAM':
+                    self.store_in_ram(u, n0)
+                elif storage == 'DISK':
+                    self.store_on_disk(u, n0)
+    
             if not checkpointing:
                 u_sol = []
                 u_sol.append(u)
+                
             # Assemble the matrix system
             A = lil_matrix((nx, nx))
             B = lil_matrix((nx, nx))
@@ -193,12 +208,17 @@ method.
                 if not checkpointing:
                     u_sol.append(u)
                 t += 1
+            
+            if write_adj_deps:
+                self.store_adj_deps(u_new, n1)
+    
+            self.update_fwd_initcondition(u_new, n1)
             if not checkpointing:
                 return u_sol
             else:
                 return u_new
     
-        def backward(self, u_fwd, p0, n0, n1, checkpointing=True):
+        def backward(self, n0, n1, clear_adj_deps, checkpointing=True):
             """Execute the adjoint system in time.
     
             Parameters
@@ -216,7 +236,7 @@ method.
             nx = self.nx
             dt = self.dt
             b = self.nu / (dx * dx)
-            u = p0.copy()
+            u = self.p[n1]
             u_new = np.zeros(nx)
             steps = int(n1 - n0)
             t = 0
@@ -229,14 +249,17 @@ method.
             while t < steps:
                 u[0] = u[nx - 1] = 0
                 if checkpointing:
-                    uf = u_fwd
+                    uf = self.adj_deps[n1]
                 else:
-                    uf = u_fwd[steps - 1 - t]
+                    uf = self.adj_deps[steps - 1 - t]
     
                 B[0, 0] = 1 / 3 - dt * (uf[0] / dx - b - 1 / 3 * (uf[1] - uf[0]) / dx)
-                B[0, 1] = 1 / 6 + dt * (1 / 2 * uf[0] / dx + b - 1 / 6 * (uf[2] - uf[1]) / dx)
-                B[nx - 1, nx - 1] = 1 / 3 + dt * (uf[nx - 1] / dx - b - 1 / 3 * (uf[nx - 1] - uf[nx - 2]) / dx)
-                B[nx - 1, nx - 2] = 1 / 6 + dt * (1 / 2 * u_new[nx - 2] / dx + b - 1 / 6 * (uf[nx - 1] - uf[nx - 2]) / dx)
+                B[0, 1] = (1 / 6 + dt * (1 / 2 * uf[0] / dx + b - 1 / 6 * (uf[2] - uf[1]) / dx))
+                B[nx - 1, nx - 1] = (1 / 3 + dt * (uf[nx - 1] / dx - b 
+                                    - 1 / 3 * (uf[nx - 1] - uf[nx - 2]) / dx))
+                B[nx - 1, nx - 2] = (1 / 6 + dt * (1 / 2 * u_new[nx - 2] / dx 
+                                    + b - 1 / 6 * (uf[nx - 1] - uf[nx - 2]) / dx))
+                
                 for i in range(1, nx - 1):
                     v_m = uf[i] / dx
                     v_mm1 = uf[i - 1] / dx
@@ -253,12 +276,58 @@ method.
                 u_new = spsolve(A, d)
                 u = u_new.copy()
                 t += 1
-            return u_new
+            self.update_bwd_initcondition(u_new, n0)
+            if clear_adj_deps:
+                self.adj_deps.clear()
+            
+    
+        def copy_fwd_data(self, n, from_storage, delete):
+            if from_storage == 'DISK':
+                file_name = self.snapshots[from_storage][n]
+                with open(file_name, "rb") as f:
+                    u0 = np.asarray(pickle.load(f), dtype=float)
+            else:
+                u0 = self.snapshots[from_storage][n]
+            self.update_fwd_initcondition(u0, n)  
+            if delete:
+                del self.snapshots[from_storage][n]
+        
+        def compute_grad(self):
+            x = np.linspace(0, self.lx, self.nx)
+            sens = np.trapz(self.p[0]*1.01*np.sin(np.pi*x), x=x, dx=self.dx)
+            print("Sensitivity:", sens)
+        
+        def update_fwd_initcondition(self, data, n):
+            self.u.clear()
+            self.u = {n: data}
+    
+        def update_bwd_initcondition(self, data, n):
+            self.p.clear()
+            self.p = {n: data}
+    
+        def adj_initcondition(self, ic, n):
+            self.p = {n: ic}
+        
+        def store_in_ram(self, data, step):
+            """Store the forward data in RAM.
+            """
+            self.snapshots['RAM'][step] = data
+    
+        def store_on_disk(self, data, step):
+            """Store the forward data on disk.
+            """
+            file_name = "fwd_data/ufwd_"+ str(step) +".dat"
+            with open(file_name, "wb") as f:
+                pickle.dump(data, f)
+            self.snapshots['DISK'][step] = file_name
+            
+        def store_adj_deps(self, data, n):
+            self.adj_deps = {n: data}
     
       
 
-Adjoint problem with *checkpoint_schedules* package
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Using *checkpoint_schedules* package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 *checkpoint_schedules* package provides a set of actions used to execute
 the forward and adjoint solvers with the H-Revolve checkpointing method
@@ -278,7 +347,8 @@ by the *checkpoint_schedules* package.
     from checkpoint_schedules import Forward, EndForward, Reverse, Copy, EndReverse
     from checkpoint_schedules import RevolveCheckpointSchedule, StorageLocation
     import functools
-    import pickle
+    
+    
     class CheckpointingManager():
         """Manage the forward and backward solvers.
     
@@ -286,8 +356,8 @@ by the *checkpoint_schedules* package.
         ----------
         max_n : int
             Total steps used to execute the solvers.
-        equation : object
-            The object....
+        adj_grad_problem : object
+            Adjoint-based gradient object.
         backward : object
             The backward solver.
         save_ram : int
@@ -297,15 +367,14 @@ by the *checkpoint_schedules* package.
         list_actions : list
             Store the list of actions.
         """
-        def __init__(self, max_n, equation, save_ram, save_disk):
+        def __init__(self, max_n, adj_grad_problem, save_ram, save_disk):
             self.max_n = max_n
             self.save_ram = save_ram
             self.save_disk = save_disk
-            self.equation = equation
+            self.adj_grad_problem = adj_grad_problem
             self.list_actions = []
             
-    
-        def execute(self):
+        def execute(self, cp_schedule):
             """Execute forward and adjoint with checkpointing H-Revolve checkpointing method.
             """
             @functools.singledispatch
@@ -314,110 +383,55 @@ by the *checkpoint_schedules* package.
     
             @action.register(Forward)
             def action_forward(cp_action):
-                nonlocal model_n, fwd_tape, ics, adj_deps
-                if len(ics) == 0:
-                    ics = {cp_action.n0: fwd_tape}
-                    fwd_tape = None
-    
-                fwd_tape = self.equation.forward(ics[cp_action.n0], cp_action.n0, cp_action.n1)
-    
-                if cp_action.write_ics:
-                    if cp_action.storage == StorageLocation(1).name:
-                        file_name = "fwd_data/ufwd_"+ str(cp_action.n0) +".dat"
-                        with open(file_name, "wb") as f:
-                            pickle.dump(ics[cp_action.n0], f)
-                        snapshots[cp_action.storage][cp_action.n0] = file_name
-                    else:
-                        snapshots[cp_action.storage][cp_action.n0] = ics[cp_action.n0]
-                if cp_action.write_adj_deps:
-                    adj_deps = {cp_action.n1: fwd_tape}
-    
-                ics.clear()
+                self.adj_grad_problem.forward(cp_action.n0, cp_action.n1, 
+                                      write_ics=cp_action.write_ics, 
+                                      write_adj_deps=cp_action.write_adj_deps,
+                                      storage=cp_action.storage)
     
                 n1 = min(cp_action.n1, self.max_n)
-                model_n = n1
                 if cp_action.n1 == self.max_n:
                     cp_schedule.finalize(n1)
     
             @action.register(Reverse)
             def action_reverse(cp_action):
-                nonlocal model_r, bwd_tape, fwd_tape, adj_deps
-                if model_r == 0:
-                    # Initial condition of the adjoint system at the reverse step r=0.
-                    p0 = fwd_tape
-                    fwd_tape = None
-                else:
-                    # Initialise the adjoint system for the reverse step r > 0.
-                    p0 = bwd_tape
-    
-                bwd_tape = self.equation.backward(adj_deps[cp_action.n1], p0, cp_action.n0, cp_action.n1)
+                nonlocal model_r
+                self.adj_grad_problem.backward(cp_action.n0, cp_action.n1, 
+                                               clear_adj_deps=cp_action.clear_adj_deps)
                 model_r += cp_action.n1 - cp_action.n0
                 
-                if cp_action.clear_adj_deps:
-                    adj_deps.clear()
-    
             @action.register(Copy)
             def action_copy(cp_action):
-                nonlocal ics
-                if cp_action.from_storage == StorageLocation(1).name:
-                    file_name = snapshots[cp_action.from_storage][cp_action.n]
-                    with open(file_name, "rb") as f:
-                        data = np.asarray(pickle.load(f), dtype=float)
-                else:
-                    data = snapshots[cp_action.from_storage][cp_action.n]
-    
-                ics = {cp_action.n: data}
-                if cp_action.delete:
-                    del snapshots[cp_action.from_storage][cp_action.n]
+                self.adj_grad_problem.copy_fwd_data(cp_action.n, cp_action.from_storage, cp_action.delete)
     
             @action.register(EndForward)
             def action_end_forward(cp_action):
-                pass
+                ic = self.adj_grad_problem.u
+                self.adj_grad_problem.adj_initcondition(ic[self.max_n], self.max_n)
     
             @action.register(EndReverse)
             def action_end_reverse(cp_action):
-                pass
+                self.adj_grad_problem.compute_grad()
     
             model_n = 0
             model_r = 0
-            ics = {model_n: self.equation.fwd_ic}
-            adj_deps = {}
-            fwd_tape = None
-            bwd_tape = None
     
-            snapshots = {StorageLocation(0).name: {}, StorageLocation(1).name: {}}
-            cp_schedule = RevolveCheckpointSchedule(self.max_n, self.save_ram,
-                                                    snap_on_disk=self.save_disk)
             storage_limits = {StorageLocation(0).name: self.save_ram, 
                               StorageLocation(1).name: self.save_disk}
-            if self.save_disk > 0 :
-                import os 
-                dir = "fwd_data"
-                os.mkdir(dir)
+    
+            count = 0
             while True:
                 cp_action = next(cp_schedule)
                 action(cp_action)
-                self.list_actions.append([str(cp_action)])
-    
-                # Checkpoint storage limits are not exceeded
-                # for storage_type, storage_limit in storage_limits.items():
-                #     assert len(snapshots[storage_type]) <= storage_limit
-                    
-                # Data storage limit is not exceeded
-                assert min(1, len(ics)) + len(adj_deps) <= 1
+                self.list_actions.append([count, str(cp_action)])
+                count += 1
                 if isinstance(cp_action, EndReverse):  
-                    x = np.linspace(0, self.equation.lx, self.equation.nx)
-                    sens = np.trapz(bwd_tape*1.01*self.equation.fwd_ic, x=x, dx=self.equation.dx)
-                    print(sens)
                     break
     
 
 
-Firstly, let us consider few time-steps only to exemplify how it works
-the forward and adjoint computations with *checkpoint_schedules*
-package. So, we start by deffining the initial setup to execute an
-adjoint problem with the employment of checkpointing method given buy
-checkpoint_schedules\* package.
+Let us consider few time-steps only to exemplify how it works the
+forward and adjoint computations with *checkpoint_schedules* package.
+So, we start by deffining the basic problem setup.
 
 .. code:: ipython3
 
@@ -428,13 +442,13 @@ checkpoint_schedules\* package.
     T = 0.05 # Final time
     x = np.linspace(0, L, nx) 
     u0 = np.sin(np.pi*x)
-    burger_grad_adj = BurgerGradAdj(L, nx, dt, T, nu, u0) # Defining the object...
+    burger_grad_adj = BurgerGradAdj(L, nx, dt, T, nu, u0) # Defining the object able to execute forward/adjoint solvers and the computation of the cost function.
 
-Next, we want to get a manager object that is able to execute the
-forward and adjoint equation by following the *checkpoint_schedules*
-actions. To do that, we set the parameters necessary to obtain a
-sequence of actions. They are the total time-steps, and the number of
-checkpoint data that we want to store in RAM and on disk.
+We want to get a manager object able to execute the forward and adjoint
+equations by following the *checkpoint_schedules* actions. To do that,
+we set the parameters necessary to obtain a sequence of actions. They
+are the total time-steps, and the number of checkpoint data that we want
+to store in RAM and on disk.
 
 In this first example, we set checkpoint data associate to two steps of
 the forward problem to be stored in RAM and one checkpoint data
@@ -444,67 +458,74 @@ associate to one step to be stored in disk.
 
     max_n = int(T/dt) # Total steps.
     save_ram = 2 # Number of steps to save in RAM.
-    save_disk = 1 # Number of steps to save in disk.
-    chk_manager = CheckpointingManager(max_n, burger_grad_adj, save_ram, save_disk)
+    save_disk = 0 # Number of steps to save in disk.
+    chk_manager = CheckpointingManager(max_n, burger_grad_adj, save_ram, save_disk) # manager object able to execute the forward and adjoint equations
 
 After to define the manager object given by the *CheckpointingManager*
-class, we execute our adjoint-based gradient problem by the
-*chk_manager.execute()*.
+class, we execute our adjoint-based gradient problem by the ``execute``
+method as shown below, where the execution depends of the checkpoint
+schedule that is built from a list of checkpoint operations provided by
+the H-Revolve checkpointing method.
 
 .. code:: ipython3
 
-    chk_manager.execute()
+    cp_schedule = RevolveCheckpointSchedule(max_n, save_ram, snap_on_disk=save_disk)
+    chk_manager.execute(cp_schedule)
 
 
 .. parsed-literal::
 
-    11.975270553884258
+    /Users/ddolci/work/checkpoint_schedules/.venv/lib/python3.11/site-packages/scipy/sparse/linalg/_dsolve/linsolve.py:214: SparseEfficiencyWarning: spsolve requires A be CSC or CSR matrix format
+      warn('spsolve requires A be CSC or CSR matrix format',
+
+
+.. parsed-literal::
+
+    Sensitivity: 12.001369298736885
 
 
 To clarify how this adjoint problem works with the
 *checkpoint_schedules* package, we have the list of actions used in this
-first example given by the attribute *chk_manager.list_actions*.
+first example given by the attribute ``chk_manager.list_actions``.
 
 .. code:: ipython3
 
     from tabulate import tabulate
-    print(tabulate(chk_manager.list_actions, headers=["checkpoint_schedules actions"]))
+    print(tabulate(chk_manager.list_actions, headers=["Action number", "checkpoint_schedules actions"]))
 
 
 .. parsed-literal::
 
-    checkpoint_schedules actions
-    -----------------------------------
-    Forward(0, 3, True, False, 'RAM')
-    Forward(3, 4, True, False, 'RAM')
-    Forward(4, 5, False, True, 'RAM')
-    EndForward()
-    Reverse(5, 4, True)
-    Copy(3, 'RAM', 'TAPE', True)
-    Forward(3, 4, False, True, 'RAM')
-    Reverse(4, 3, True)
-    Copy(0, 'RAM', 'TAPE', False)
-    Forward(0, 1, False, False, 'NONE')
-    Forward(1, 2, True, False, 'RAM')
-    Forward(2, 3, False, True, 'RAM')
-    Reverse(3, 2, True)
-    Copy(1, 'RAM', 'TAPE', True)
-    Forward(1, 2, False, True, 'RAM')
-    Reverse(2, 1, True)
-    Copy(0, 'RAM', 'TAPE', True)
-    Forward(0, 1, False, True, 'RAM')
-    Reverse(1, 0, True)
-    EndReverse(True,)
+      Action number  checkpoint_schedules actions
+    ---------------  -----------------------------------
+                  0  Forward(0, 3, True, False, 'RAM')
+                  1  Forward(3, 4, True, False, 'RAM')
+                  2  Forward(4, 5, False, True, 'RAM')
+                  3  EndForward()
+                  4  Reverse(5, 4, True)
+                  5  Copy(3, 'RAM', 'TAPE', True)
+                  6  Forward(3, 4, False, True, 'RAM')
+                  7  Reverse(4, 3, True)
+                  8  Copy(0, 'RAM', 'TAPE', False)
+                  9  Forward(0, 1, False, False, 'NONE')
+                 10  Forward(1, 2, True, False, 'RAM')
+                 11  Forward(2, 3, False, True, 'RAM')
+                 12  Reverse(3, 2, True)
+                 13  Copy(1, 'RAM', 'TAPE', True)
+                 14  Forward(1, 2, False, True, 'RAM')
+                 15  Reverse(2, 1, True)
+                 16  Copy(0, 'RAM', 'TAPE', True)
+                 17  Forward(0, 1, False, True, 'RAM')
+                 18  Reverse(1, 0, True)
+                 19  EndReverse(True,)
 
 
 As we saw above, we have a list of *checkpoint_schedules* actions used
 in the current adjoint problem. To untersdant them, let us remind the
 actions in general form (this explanation is avaiable in the
-introduction) and in the *checkpoint_schedules* API reference . \*
-*Forward(n0, n1, write_ics, write_adj_deps, storage)*:
+introduction and in the *checkpoint_schedules* API reference): 
 
-::
-
+- *Forward(n0, n1, write_ics, write_adj_deps, storage)*:
    - Executes the forward solver from step *n0* to step *n1*.
    - Write the forward data of step *n0* if *write_ics* is *True*.
    - Indicates whether to store the forward data for the adjoint computation (*write_adj_deps*).
@@ -531,16 +552,17 @@ introduction) and in the *checkpoint_schedules* API reference . \*
 
    -  Indicate the finalisation of the adjoint solver.
 
-Therefore, for this particular case:
+Therefore, for the currrent particular case we have some explanations
+relations to some actions:
 
--  *Forward(0, 3, True, False, ‘RAM’)*:
+-  Action number 0: *Forward(0, 3, True, False, ‘RAM’)*:
 
    -  Execute the forward solver from step 0 to step 3.
    -  Write the forward data (*write_ics*) of step 0 to RAM (storage).
    -  The forward data is not stored for the adjoint computation
       (*write_adj_deps* is False).
 
--  *Forward(4, 5, False, True, ‘RAM’)*:
+-  Action number 1: *Forward(4, 5, False, True, ‘RAM’)*:
 
    -  Execute the forward solver from step 4 to step 5.
    -  Do not write the forward data (*write_ics*) of step 4.
@@ -565,9 +587,7 @@ Therefore, for this particular case:
    -  Delete the copied data from RAM (*delete* is *True*) as it is not
       needed anymore.
 
-After to give an example over how the adjoint problem is executed, we
-would like to clarify how the sequence of actions is created according
-to the cost of save
+
 
 References
 ~~~~~~~~~~

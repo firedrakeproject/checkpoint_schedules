@@ -13,11 +13,12 @@ Documentation for checkpoint_schedules
 Quickstart
 ==========
 
-Do you want to get up and employ the *checkpoint_schedules* quickly? Then, we suggest you
-  * Install :ref:`checkpoint_schedules <install>`.
-  * Fell free to take a look  :ref:`introduction <introduction>`.
+If you want to quickly get up and running with *checkpoint_schedules* your adjoint problem, follow these steps:
+  * Install *checkpoint_schedules* using the :ref:`installation guide <install>`.
+  * Familiarise with the basics of *checkpoint_schedules* by acessing the :ref:`introduction <introduction>`.
   * Go through to the :ref:`user guideline <checkpoint_schedules-guide>`.
   
+Enjoy using *checkpoint_schedules* to save memory usage in your adjoint-based problems!
 
 Resources
 =========

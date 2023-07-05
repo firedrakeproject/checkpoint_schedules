@@ -2,21 +2,26 @@
 
 Introduction
 ============
-The *checkpoint_schedules* package provides a set of actions that prescribes the forward and adjoint
-executions, e. g., prescribes when to the data related to a forward time-step shall be stored, or when the 
+Checkpointing is a technique frequently employed to manage memory usage during adjoint-based gradient calculation is used to various scientific applications, such as sensitivity analyses in fluids (cite), inverse problems (cite), and topology optimization (cite).
+In a typical checkpointing method, the forward calculation is divided into a series of steps, often corresponding to timesteps in a time-dependent numerical solver. 
+A checkpointing schedule then determines when checkpoints should be stored and loaded, as well as when the forward and adjoint calculations should advance.
+
+
+*checkpoint_schedules* is a Python package provide schedule able to be employed in adjoint-based gradient problems.
+
+*checkpoint_schedules* provides a set of actions and an iterator that allows to iterate over a sequence of the checkpoint schedule. 
+For instance, prescribes when to the data related to a forward time-step shall be stored, or when the 
 forward/adjoint solver should advance in time. The *checkpoint_schedules* actions are *Forward, Reverse, 
-Copy, End_Forward, End_Reverse*. 
+Copy, End_Forward, End_Reverse*. These actions have specific roles in the computation process as explained below.
 
-The actions have specific roles in the computation process. Let us describe their functions in more detail:
-
-- The *Forward* action is responsible for advancing the forward solver by a specified number of steps. It also configures the intermediate checkpoint data storage during the forward computation.
+- The *Forward* action is responsible for advancing the forward solver by a specified number of steps. It also configures the intermediate checkpoint data storage during the forward computation. The general form of *Forward* action is described as follow.
     - *Forward(n0, n1, write_ics, write_adj_deps, storage)*:
         - Executes the forward solver from step *n0* to step *n1*.
         - Write the forward data of step *n0* if *write_ics* is *True*.
         - Indicates whether to store the forward data for the adjoint computation (*write_adj_deps*).
         - Indicate the storage level for the forward data (storage).
 
-- The *Reverse* action is used to execute the adjoint solver starting from a initial step (n0) to the step, n1. Additionally,  it clears the forward data that is used in the adjoint solver.
+- The *Reverse* action is used to execute the adjoint solver starting from a step m0 to the step, n1. Furthermore, it  clears the forward data that is used in the adjoint solver.
     * *Reverse(n0, n1, clear_adj_deps)*:
         - Executes the adjoint solver from step *n0* to step *n1*.
         - Clears the adjoint dependencies (*adj_deps*) used in the adjoint computation.
@@ -27,14 +32,9 @@ The actions have specific roles in the computation process. Let us describe thei
         - Indicate whether to delete the copied data from the source storage location (delete).
 - The actions *End_Forward* and *End_Reverse* serve as indicators of the finalization of the forward and reverse solvers, respectively. They signify the completion of the corresponding computation processes.
    
-Therefore, it is essential to import the actions from the *checkpoint_schedules* package to ensure proper functionality.
-Hence, from the *checkpoint_schedules* library we import the actions used to execute our current adjoint-based gradient with the H-Revolve checkpointing method [2].
+The schedules are designed to manage the number of checkpoints saved in RAM and on disk. This allows for efficient memory usage and storage management. The specific number of checkpoints to be saved in RAM and on disk can be determined based on the requirements and constraints of the computation.
 
-Additionally, the schedules are designed to manage the number of checkpoints saved in RAM and on disk. This allows for efficient memory usage and storage management. The specific number of checkpoints to be saved in RAM and on disk can be determined based on the requirements and constraints of the computation.
-
-We also import two additional objects from the *checkpoint_schedules* package: *RevolveCheckpointSchedule* and *StorageLocation*.
-
-The *RevolveCheckpointSchedule* object serves as an iterator, allowing us to iterate over a sequence of the checkpoint schedule actions. It provides a structured and organized way to execute the actions in the desired order.
+The *RevolveCheckpointSchedule* object allows to iterate over a sequence of the checkpoint schedule actions. It provides a structured and organized way to execute the actions in the desired order.
 
 The *StorageLocation* object is responsible for specifying the locations where the checkpoint data is stored and copied during the computation. The storage locations are: RAM, DISK, TAPE, and NONE.
 
