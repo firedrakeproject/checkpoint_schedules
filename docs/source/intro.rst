@@ -12,6 +12,14 @@ of forward steps is established, the algorithm further minimizes the frequency o
 The revolvers algorithm provides an optimal schedule in scenarios where the number of forward steps is known prior to the calculation, 
 and where checkpoints store the necessary data for restarting the forward computation.
 
+Concerned with the optimal checkpointing strategy, the revolve algorithm ask to minimize the number of forward steps taken and then, given that the number of forward steps is minimal, 
+further minimizes the number of times a checkpoint is stored. The revolve algorithm provides an optimal schedule for the case where the number of forward steps is known ahead of the 
+calculation, and where checkpoints store data required to restart the forward but not necessarily data required to advance the adjoint, which does not attend enterly the general 
+adjoint-based gradient problem since the data required to restart a forward calculation, and the data required by the adjoint, differ. Concerning with this issue, the *checkpoint_schedules* is a Python package that provide schedule that the forward calculation divided into a known sequence of steps, and considers the 
+problem of defining a schedule with advancement of the forward or adjoint over full steps. The schedule explicitly incorporates the buffering of data in an “intermediate storage”, 
+ensuring that forward variables can be defined and computed by the forward before storage in a checkpoint. The schedule distinguishes between storage of forward restart and non-linear 
+dependency data. Additionaly, *checkpoint_schedules* is flexible to be applied to a number of existing approaches, including the revolve algorithm. It is already working for the multistage 
+approach of Stumm and Walther [10], the two-level mixed periodic/binomial approach described in Pringle et al. [21] and H-Revolve schedules [13].
 
 In summary, checkpointing strategies involve creating a sequence of schedules that coordinate the selective 
 storage of forward data at specific time steps. During the adjoint computation, these schedules provide instructions for restarting 
