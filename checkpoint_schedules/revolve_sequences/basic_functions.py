@@ -30,12 +30,38 @@ official_names = {
 
 
 def beta(x, y):
+    """A function used in the optimal makespan computation.
+
+    Parameters
+    ----------
+    x : float
+        The number of slots available in memory.
+    y : int
+        _description_
+
+    Returns
+    -------
+    int
+        _description_
+    """
     if y < 0:
         return 0
     return math.factorial(x+y) / (math.factorial(x) * math.factorial(y))
 
 
 def argmin(l):
+    """_summary_
+
+    Parameters
+    ----------
+    l : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     # Return the last argmin (1-based)
     index = 0
     m = l[0]
@@ -47,6 +73,18 @@ def argmin(l):
 
 
 def argmin0(l):
+    """_summary_
+
+    Parameters
+    ----------
+    l : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     # Return the first argmin (0-based)
     index = 0
     m = l[0]
@@ -58,6 +96,18 @@ def argmin0(l):
 
 
 def argmin_list(l):
+    """_summary_
+
+    Parameters
+    ----------
+    l : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     index_list = [0]
     m = l[0]
     for i in range(len(l)):
@@ -70,6 +120,18 @@ def argmin_list(l):
 
 
 def from_list_to_string(l):
+    """_summary_
+
+    Parameters
+    ----------
+    l : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     s = ""
     for x in l[:-1]:
         s += str(x) + ", "
@@ -78,6 +140,8 @@ def from_list_to_string(l):
 
 
 class Operation:
+    """_summary_
+    """
     def __init__(self, operation_type, operation_index, params):
         if operation_type not in official_names:
             raise ValueError("Unreconized operation name: " + operation_type)
@@ -88,9 +152,11 @@ class Operation:
     def __repr__(self):
         if self.index is None:
             return official_names[self.type]
-        if type(self.index) is int:
+        if isinstance(self.index, int):
+            # type(self.index) is int:
             return official_names[self.type] + "_" + str(self.index)
-        elif type(self.index) is list:
+        elif isinstance(self.index, list):
+            # type(self.index) is list:
             if self.type == "Forward" or self.type == "Backward":
                 return official_names[self.type] + "_" + str(self.index[0]) + "->" + str(self.index[1])
             elif self.type == "Forward_branch":
@@ -99,6 +165,18 @@ class Operation:
                 return official_names[self.type] + "^" + str(self.index[0]) + "_" + str(self.index[1])
 
     def cost(self):
+        """_summary_
+
+        Returns
+        -------
+        _type_
+            _description_
+
+        Raises
+        ------
+        ValueError
+            _description_
+        """
         if self.type == "Forward":
             return (self.index[1] - self.index[0]) * self.params["uf"]
         if self.type == "Backward":
@@ -192,6 +270,8 @@ class Function:
 
 
 class Sequence:
+    """_summary_
+    """
     def __init__(self, function, levels=None, concat=0):
         self.sequence = []  # List of Operation and Sequence
         self.function = function  # Description the function (name and parameters)
@@ -227,6 +307,25 @@ class Sequence:
         return l
 
     def concat_sequence(self, concat):
+        """_summary_
+
+        Parameters
+        ----------
+        concat : _type_
+            _description_
+
+        Returns
+        -------
+        _type_
+            _description_
+
+        Raises
+        ------
+        ValueError
+            _description_
+        ValueError
+            _description_
+        """
         l = []
         for x in self.sequence:
             if x.__class__.__name__ == "Operation":
@@ -251,6 +350,23 @@ class Sequence:
         return l
 
     def concat_sequence_hierarchic(self, concat):
+        """_summary_
+
+        Parameters
+        ----------
+        concat : _type_
+            _description_
+
+        Returns
+        -------
+        _type_
+            _description_
+
+        Raises
+        ------
+        ValueError
+            _description_
+        """
         l = []
         for x in self.sequence:
             if x.__class__.__name__ == "Operation":
@@ -267,6 +383,13 @@ class Sequence:
         return l
 
     def insert(self, operation):
+        """_summary_
+
+        Parameters
+        ----------
+        operation : _type_
+            _description_
+        """
         self.sequence.append(operation)
         self.makespan += operation.cost()
         if operation.type == "Write_memory":
@@ -283,6 +406,13 @@ class Sequence:
             self.memory.append((operation.index[0], operation.index[1]))
 
     def remove(self, operation_index):
+        """_summary_
+
+        Parameters
+        ----------
+        operation_index : _type_
+            _description_
+        """
         self.makespan -= self.sequence[operation_index].cost()
         if self.sequence[operation_index].type == "Write_memory":
             self.memory.remove(self.sequence[operation_index].index)
@@ -297,6 +427,13 @@ class Sequence:
         del self.sequence[operation_index]
 
     def insert_sequence(self, sequence):
+        """_summary_
+
+        Parameters
+        ----------
+        sequence : _type_
+            _description_
+        """
         self.sequence.append(sequence)
         self.makespan += sequence.makespan
         if self.function.name == "HRevolve" or self.function.name == "hrevolve_aux":
@@ -307,6 +444,20 @@ class Sequence:
             self.disk += sequence.disk
 
     def shift(self, size, branch=-1):
+        """_summary_
+
+        Parameters
+        ----------
+        size : _type_
+            _description_
+        branch : int, optional
+            _description_, by default -1
+
+        Returns
+        -------
+        _type_
+            _description_
+        """
         for x in self.sequence:
             x.shift(size, branch=branch)
         if self.function.name == "HRevolve" or self.function.name == "hrevolve_aux":
@@ -318,6 +469,18 @@ class Sequence:
         return self
 
     def remove_useless_wm(self, K=-1):
+        """_summary_
+
+        Parameters
+        ----------
+        K : int, optional
+            _description_, by default -1
+
+        Returns
+        -------
+        _type_
+            _description_
+        """
         if len(self.sequence) > 0:
             if self.sequence[0].type == "Write_memory" or self.sequence[0].type == "Checkpoint":
                 self.remove(0)
@@ -330,24 +493,57 @@ class Sequence:
         return self
 
     def remove_last_discard(self):
+        """_summary_
+        """
         if self.sequence[-1].type == "Function":
             self.sequence[-1].remove_last_discard()
         if self.sequence[-1].type in ["Discard_memory", "Discard_disk", "Discard", "Discard_branch"]:
             self.remove(-1)
 
     def first_operation(self):
+        """_summary_
+
+        Returns
+        -------
+        _type_
+            _description_
+        """
         if self.sequence[0].type == "Function":
             return self.sequence[0].first_operation()
         else:
             return self.sequence[0]
 
     def next_operation(self, i):
+        """_summary_
+
+        Parameters
+        ----------
+        i : _type_
+            _description_
+
+        Returns
+        -------
+        _type_
+            _description_
+        """
         if self.sequence[i+1].type == "Function":
             return self.sequence[i+1].first_operation()
         else:
             return self.sequence[i+1]
 
     def convert_old_to_branch(self, index):
+        """_summary_
+
+        Parameters
+        ----------
+        index : _type_
+            _description_
+
+        Returns
+        -------
+        _type_
+            _description_
+        """
         for (i, x) in enumerate(self.memory):
             if type(x) is int:
                 self.memory[i] = (index, x)
@@ -392,6 +588,18 @@ class Sequence:
         return self
 
     def convert_new_to_branch(self, index):
+        """_summary_
+
+        Parameters
+        ----------
+        index : _type_
+            _description_
+
+        Returns
+        -------
+        _type_
+            _description_
+        """
         for (i, x) in enumerate(self.memory):
             if type(x) is int:
                 self.memory[i] = (index, x)
@@ -420,17 +628,33 @@ class Sequence:
 
 
 class Table:
+    """_summary_
+    """
     def __init__(self, n=0, x=float("inf")):
         self.content = [x for _ in range(n)]
         self.size = n
         self.print_table = 0
 
     def set_to_print(self, file_name):
+        """_summary_
+
+        Parameters
+        ----------
+        file_name : _type_
+            _description_
+        """
         self.print_table = 1
         self.file = open(file_name, "w")
         self.file.write("#l\tvalue\n")
 
     def append(self, x):
+        """_summary_
+
+        Parameters
+        ----------
+        x : _type_
+            _description_
+        """
         self.content.append(x)
         self.size += 1
         if self.print_table:
@@ -439,6 +663,13 @@ class Table:
                 self.file.flush()
 
     def remove(self, x):
+        """_summary_
+
+        Parameters
+        ----------
+        x : _type_
+            _description_
+        """
         self.content.remove(x)
         self.size -= 1
 

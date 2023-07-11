@@ -1,37 +1,14 @@
 checkpoint\_schedules package
 =============================
 
+
 Submodules
 ----------
 
-checkpoint\_schedules.binomial module
--------------------------------------
+checkpoint\_schedules.revolvers module
+--------------------------------------
 
-.. automodule:: checkpoint_schedules.binomial
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-checkpoint\_schedules.hrevolve module
--------------------------------------
-
-.. automodule:: checkpoint_schedules.hrevolve
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-checkpoint\_schedules.mixed module
-----------------------------------
-
-.. automodule:: checkpoint_schedules.mixed
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-checkpoint\_schedules.periodic module
--------------------------------------
-
-.. automodule:: checkpoint_schedules.periodic
+.. automodule:: checkpoint_schedules.revolvers
    :members:
    :undoc-members:
    :show-inheritance:
@@ -51,3 +28,11 @@ Module contents
    :members:
    :undoc-members:
    :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   checkpoint_schedules.revolve_sequences
