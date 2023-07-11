@@ -164,7 +164,8 @@ def mxrr_close_formula(cm, uf, rd, wd, **params):
 #     return int(math.factorial(n)/(math.factorial(k)*math.factorial(n-k)))
 
 
-def periodic_disk_revolve(l, cm, rd, wd, opt_0=None, opt_1d=None, mmax=None):
+def periodic_disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost, period,
+                          opt_0=None, opt_1d=None, mmax=None):
     """Compute the periodic disk revolve sequence.
             
 
@@ -191,7 +192,7 @@ def periodic_disk_revolve(l, cm, rd, wd, opt_0=None, opt_1d=None, mmax=None):
         Return the periodic sequence with optimal period.
     """
     
-    params = revolver_parameters(wd, rd)
+    params = revolver_parameters(wd, rd, fwd_cost, bwd_cost, mx=period)
     parameters = dict(params)
     # parameters.update(params)
     mx = parameters["mx"]

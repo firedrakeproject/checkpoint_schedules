@@ -3,11 +3,11 @@
 import logging
 from .schedule import CheckpointSchedule, Forward, Reverse, Copy,\
     EndForward, EndReverse, StorageLocation
-from .revolve_sequences import hrevolve
+from .revolve_sequences import hrevolve, disk_revolve, periodic_disk_revolve
 
 __all__ = \
     [
-        "RevolveCheckpointSchedule"
+        "HRevolve", "DiskRevolve", "PeriodicDiskRevolve",
     ]
 
 
@@ -19,33 +19,19 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
     ----------
     max_n : int
         The number of forward steps in the initial forward calculation.
-    snapshots_in_ram : int
-       The maximum number of forward restart checkpoints to store in memory.
-    snapshots_on_disk : int
-        The maximum number of forward restart checkpoints to store on disk.
-    f_cost : float, optional
-        The cost of advancing the forward one step.
-    b_cost : float, optional
-        The cost of advancing the adjoint over that step.
-    wvect : tuple, optional
-        The write cost associated with saving a forward restart checkpoint to
-        RAM and disk.
-    rvect : tuple, optional
-        The read cost associated with loading a forward restart checkpoint
-        from RAM and disk.
     self._schedule : list
         H-Revolve sequence of operations.
     
     """
 
-    def __init__(self, max_n, snap_in_ram, snap_on_disk, fwd_cost=1.0,
-                 bwd_cost=1.0, wvec=(0, 0.5), rvec=(0, 0.5)):
+    def __init__(self, max_n, snap_in_ram, snap_on_disk):
         super().__init__(max_n)
         self._exhausted = False
         self._snapshots_on_disk = snap_on_disk
-        cvec = (snap_in_ram, snap_on_disk)
-        sequence = hrevolve(max_n - 1, cvec, wvec, rvec, fwd_cost, bwd_cost)
-        self._schedule = list(sequence)
+        self._snapshots_in_ram = snap_in_ram
+        self._schedule = None
+        # revolver._sequence(max_n, snap_in_ram, snap_on_disk,
+        # #                                     fwd_cost, bwd_cost, wd_cost, rd_cost)
 
     def iter(self):
         """A checkpoint schedules iterator.
@@ -68,7 +54,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         w_storage = None
         write_ics = False
         adj_deps = False
-
+        
         i = 0
         while i < len(self._schedule):
             cp_action, (n_0, n_1, storage) = _convert_action(self._schedule[i])
@@ -107,7 +93,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                     raise InvalidForwardStep
                 self._r += 1
                 yield Reverse(n_0, n_1, clear_adj_deps=True)
-            elif cp_action == "Read":
+            elif cp_action == "Read" or cp_action == "Read_memory":
                 self._n = n_0
                 n_cp_action, (w_n0, _, w_storage) = _convert_action(self._schedule[i + 1])
                 f_cp_action, (f_n0, _, _) = _convert_action(self._schedule[i + 2])
@@ -174,7 +160,6 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 if i < 2:
                     raise InvalidRevolverAction
                 snapshots.remove(n_0)
-                # yield Copy(n_0, storage, StorageLocation(None).name, delete=True)
             elif cp_action == "Discard_Forward" or cp_action == "Discard_Forward_memory":
                 if n_0 != self._n:
                     raise InvalidActionIndex
@@ -186,7 +171,6 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         
         self._exhausted = True
         yield EndReverse(True)
-
 
     def is_exhausted(self):
         """Indicate whether the schedule has concluded.
@@ -210,8 +194,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
 
 
 def _convert_action(action):
-    """Read an H-Revolve operation attributes required to 
-    define the next checkpoint action.
+    """Convert an revolver operation to the `checkpoint_schedules` actions.
 
     Parameters
     ----------
@@ -284,3 +267,80 @@ class InvalidRevolverAction(Exception):
 class InvalidActionIndex(IndexError):
     "The index of the action is not correct."
     pass
+
+
+class HRevolve(RevolveCheckpointSchedule):
+    """H-Revolve checkpointing schedule."""
+
+    def sequence(self, fwd_cost=1.0, bwd_cost=1.0, w_cost=(0, 0.5), r_cost=(0, 0.5)):
+        """Define the H-Revolve sequence of operations.
+        
+        Parameters
+        ----------
+        fwd_cost : float, optional
+            The cost of advancing the forward one step.
+        bwd_cost : float, optional
+            The cost of advancing the adjoint over that step.
+        w_cost : tuple(float, float), optional
+            The cost of writing to memory or disk.
+        r_cost : tuple(float, float), optional
+            The cost of reading from memory or disk.
+        
+        """
+        cvec = (self._snapshots_in_ram, self._snapshots_on_disk)
+        self._schedule = list(hrevolve(self._max_n - 1, cvec, w_cost, r_cost,
+                                       fwd_cost, bwd_cost))
+        return self._schedule
+
+
+class DiskRevolve(RevolveCheckpointSchedule):
+    """Disk Revolve checkpointing schedule."""
+
+    def sequence(self, fwd_cost=1.0, bwd_cost=1.0, w_cost=0.5, r_cost=0.5):
+        """Return the sequence of operation of the disk revolver checkpointing.
+
+        Parameters
+        ----------
+        fwd_cost : float, optional
+            The cost of advancing the forward one step.
+        bwd_cost : float, optional
+            The cost of advancing the adjoint over that step.
+        wvect : float, optional
+            The write cost associated with saving a forward restart checkpoint to
+            RAM and disk.
+        rvect : float, optional
+            The read cost associated with loading a forward restart checkpoint
+            from RAM and disk.
+        """
+        
+        super()._schedule = disk_revolve(self._max_n - 1,
+                                         self._snapshots_in_ram,
+                                         w_cost, r_cost, fwd_cost, bwd_cost)
+
+
+class PeriodicDiskRevolve(RevolveCheckpointSchedule):
+    """Periodic Disk Revolve checkpointing schedule."""
+
+    def sequence(self, fwd_cost=1.0, bwd_cost=1.0, w_cost=0.5, r_cost=0.5,
+                 period=1):
+        """Return the sequence of operation of the periodic disk revolver
+        checkpointing.
+
+        Parameters
+        ----------
+        fwd_cost : float, optional
+            The cost of advancing the forward one step.
+        bwd_cost : float, optional
+            The cost of advancing the adjoint over that step.
+        wvect : float, optional
+            The write cost associated with saving a forward restart checkpoint to
+            RAM and disk.
+        rvect : float, optional
+            The read cost associated with loading a forward restart checkpoint
+            from RAM and disk.
+        """
+
+        self._schedule = list(periodic_disk_revolve(self._max_n - 1,
+                                                    self._snapshots_in_ram,
+                                                    w_cost, r_cost, fwd_cost,
+                                                    bwd_cost, period))

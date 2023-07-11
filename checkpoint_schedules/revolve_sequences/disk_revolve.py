@@ -66,7 +66,8 @@ def get_opt_inf_table(lmax, cm, uf, ub, rd, wd, one_read_disk, print_table=None,
     return opt_inf
 
     
-def disk_revolve(l, cm, rd, wd, opt_0=None, opt_1d=None, opt_inf=None):
+def disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost,
+                 opt_0=None, opt_1d=None, opt_inf=None):
     """Return the Disk-Revolve sequence.
 
     Parameters
@@ -87,7 +88,7 @@ def disk_revolve(l, cm, rd, wd, opt_0=None, opt_1d=None, opt_inf=None):
 
         Return the optimal sequence of makespan Opt_inf(l, cm).
     """
-    params = revolver_parameters(wd, rd)
+    params = revolver_parameters(wd, rd, fwd_cost, bwd_cost)
     parameters = dict(params)
     uf = parameters["uf"]
     rd = parameters["rd"]

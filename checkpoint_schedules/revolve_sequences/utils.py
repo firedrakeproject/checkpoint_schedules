@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-def revolver_parameters(wd, rd, uf, ub):
+def revolver_parameters(wd, rd, uf, ub, mx=2):
     """Set default revolver parameters.
     
     Parameters
@@ -23,7 +23,7 @@ def revolver_parameters(wd, rd, uf, ub):
         "up": 1,   # Cost of the loss function.
         "wd": wd,  # Cost of writing to disk.
         "rd": rd,  # Cost of reading from disk.
-        "mx": 2,   # Size of the period (defaults to the optimal).
+        "mx": mx,  # Size of the period (defaults to the optimal).
         "one_read_disk": False,  # Disk checkpoints are only read once.
         "fast": False,  # Use the clode formula for mx.
         "concat": 0,  # Level of sequence concatenation.
