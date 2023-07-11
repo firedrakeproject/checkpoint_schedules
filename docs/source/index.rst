@@ -1,45 +1,34 @@
 .. _checkpoint_schedules-documentation:
 .. title:: checkpoint_schedules documentation
 
-***************************************
-Documentation for checkpoint_schedules
-***************************************
-
-:Author:       Daiane I. Dolci
+********************
+checkpoint_schedules
+********************
+:Authors:       Daiane I. Dolci ...
 :Contact:      d.dolci@imperial.ac.uk
-:GitHub:     https://github.com/firedrakeproject/checkpoint_schedules
+:GitHub:       https://github.com/firedrakeproject/checkpoint_schedules
 :Date:         |today|
 
 Quickstart
 ==========
 
 If you want to quickly get up and running with *checkpoint_schedules* your adjoint problem, follow these steps:
-  * Install *checkpoint_schedules* using the :ref:`installation guide <install>`.
-  * Familiarise with the basics of *checkpoint_schedules* by acessing the :ref:`introduction <introduction>`.
-  * Go through to the :ref:`user guideline <checkpoint_schedules-guide>`.
-  
-Enjoy using *checkpoint_schedules* to save memory usage in your adjoint-based problems!
+ 
+* Install *checkpoint_schedules* via pip ::
 
-Resources
-=========
+  $  pip install checkpoint_schedule
 
-.. raw:: html
+* Familiarise with *checkpoint_schedules* by acessing the :ref:`introduction <introduction>`.
+* Go through to a basic :ref:`example <example_checkpoint_schedules>` that explain how *checkpoint_schedule* works
+  in a first illustration of a adjoint problem. Whereas :ref:`tutorial <tutorial_checkpoint_schedules>` shows a more
+  complex example of the application of the *checkpoint_schedules* package in a adjoint-based gradient problem 
+  involving burger's equation.
 
-  <div id="main">
-  <div id="container" class="feature">
-    <div id="content">
-      <div id="sub-feature">
-	<div id="front-block-1" class="front-block block">
-          <h2> User guideline </h2>
+API documentation
+=================
 
-The :ref:`user guideline <checkpoint_schedules-guide>` shows how to employ
-*checkpoint_schedules* package in a adjoint-based gradient problem.
+The complete list of all the classes and methods in Firedrake is available at the :ref:`API reference
+<checkpoint_schedules-api-reference>`.
 
-.. raw:: html
-
-  <h2>API reference</h2>
-
-Technical details of *checkpoint_schedules* package is acessed in the  API reference availabe either in :ref:`API reference
-<checkpoint_schedules-api-reference>` or  in :ref:`introduction to checkpoint_schedules <introduction>`.
 
 

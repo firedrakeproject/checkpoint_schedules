@@ -1,7 +1,6 @@
-.. _checkpoint_schedules-guide:
-
-User guideline
-==============
+.. _tutorial_checkpoint_schedules:
+Tutorial
+========
 
 *checkpoint_schedule* application: adjoint-based gradient
 ---------------------------------------------------------
@@ -108,7 +107,6 @@ sets up the necessary parameters and initializes the problem domain.
     import numpy as np
     import pickle
     from scipy.sparse.linalg import spsolve
-    import functools
     
     class BurgerGradAdj():
         """This class provides the solver of the non-linear forward burger's equation,
@@ -329,13 +327,14 @@ sets up the necessary parameters and initializes the problem domain.
 Using *checkpoint_schedules* package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-*checkpoint_schedules* package provides a set of actions used to execute
-the forward and adjoint solvers with the H-Revolve checkpointing method
-[2]. Therefore, it is essential to import the actions (*Forward,
-EndForward, Reverse, Copy, EndReverse*) to ensure proper functionality.
-Also, *checkpoint_schedules* provides the checkpoint schedules iterator
-*RevolveCheckpointSchedule*, where the actions in the schedule are
-accessed by iterating over a sequence.
+*checkpoint_schedules* package that provides schedule enable to execute
+forward and adjoint solver, store the foward data, restart the forward
+and adjoint solvers according to a checkpointing strategy. The schedule
+is built with a sequence of checkpoint actions referred to as *Forward,
+EndForward, Reverse, Copy, EndReverse*. In addition,
+*checkpoint_schedules* provides an iterator that convert the revolver
+operations to the *checkpoint_schedules*. The actions are accessed by
+iterating over a sequence of schedule.
 
 The actions are implemented using single-dispatch functions as carried
 out in *CheckpointingManager* class, which provides a management of the
@@ -482,111 +481,6 @@ the H-Revolve checkpointing method.
 .. parsed-literal::
 
     Sensitivity: 12.001369298736885
-
-
-To clarify how this adjoint problem works with the
-*checkpoint_schedules* package, we have the list of actions used in this
-first example given by the attribute ``chk_manager.list_actions``.
-
-.. code:: ipython3
-
-    from tabulate import tabulate
-    print(tabulate(chk_manager.list_actions, headers=["Action number", "checkpoint_schedules actions"]))
-
-
-.. parsed-literal::
-
-      Action number  checkpoint_schedules actions
-    ---------------  -----------------------------------
-                  0  Forward(0, 3, True, False, 'RAM')
-                  1  Forward(3, 4, True, False, 'RAM')
-                  2  Forward(4, 5, False, True, 'RAM')
-                  3  EndForward()
-                  4  Reverse(5, 4, True)
-                  5  Copy(3, 'RAM', 'TAPE', True)
-                  6  Forward(3, 4, False, True, 'RAM')
-                  7  Reverse(4, 3, True)
-                  8  Copy(0, 'RAM', 'TAPE', False)
-                  9  Forward(0, 1, False, False, 'NONE')
-                 10  Forward(1, 2, True, False, 'RAM')
-                 11  Forward(2, 3, False, True, 'RAM')
-                 12  Reverse(3, 2, True)
-                 13  Copy(1, 'RAM', 'TAPE', True)
-                 14  Forward(1, 2, False, True, 'RAM')
-                 15  Reverse(2, 1, True)
-                 16  Copy(0, 'RAM', 'TAPE', True)
-                 17  Forward(0, 1, False, True, 'RAM')
-                 18  Reverse(1, 0, True)
-                 19  EndReverse(True,)
-
-
-As we saw above, we have a list of *checkpoint_schedules* actions used
-in the current adjoint problem. To untersdant them, let us remind the
-actions in general form (this explanation is avaiable in the
-introduction and in the *checkpoint_schedules* API reference): 
-
-- *Forward(n0, n1, write_ics, write_adj_deps, storage)*:
-   - Executes the forward solver from step *n0* to step *n1*.
-   - Write the forward data of step *n0* if *write_ics* is *True*.
-   - Indicates whether to store the forward data for the adjoint computation (*write_adj_deps*).
-   - Indicate the storage level for the forward data (storage).
-
--  *Reverse(n0, n1, clear_adj_deps)*:
-
-   -  Executes the adjoint solver from step *n0* to step *n1*.
-   -  Clears the adjoint dependencies (*adj_deps*) used in the adjoint
-      computation.
-
--  *Copy(n, from_storage, to_storage, delete)*:
-
-   -  Copy the forward data related to step n from one storage location
-      (*from_storage*) to another storage location (*to_storage*).
-   -  Indicate whether to delete the copied data from the source storage
-      location (delete).
-
--  *EndForward()*:
-
-   -  Indicates the finalization of the forward solver.
-
--  *EndReverse()*:
-
-   -  Indicate the finalisation of the adjoint solver.
-
-Therefore, for the currrent particular case we have some explanations
-relations to some actions:
-
--  Action number 0: *Forward(0, 3, True, False, ‘RAM’)*:
-
-   -  Execute the forward solver from step 0 to step 3.
-   -  Write the forward data (*write_ics*) of step 0 to RAM (storage).
-   -  The forward data is not stored for the adjoint computation
-      (*write_adj_deps* is False).
-
--  Action number 1: *Forward(4, 5, False, True, ‘RAM’)*:
-
-   -  Execute the forward solver from step 4 to step 5.
-   -  Do not write the forward data (*write_ics*) of step 4.
-   -  Store the forward data for the adjoint computation
-      (*write_adj_deps* is *True*) of step 5 in RAM.
-
--  *Reverse(4, 3, True)*:
-
-   -  Execute the adjoint solver from step 4 to step 3.
-   -  Clear the adjoint dependencies (*adj_deps*) used in the adjoint
-      computation.
-
--  Copy(0, ‘RAM’, ‘TAPE’, False):
-
-   -  Copy the forward data related to step 0 from RAM to TAPE.
-   -  Do not delete the copied data from RAM (*delete* is *False*) since
-      it will be used again to restart the forward solver.
-
--  Copy(0, ‘RAM’, ‘TAPE’, True):
-
-   -  Copy the forward data related to step 0 from RAM to TAPE.
-   -  Delete the copied data from RAM (*delete* is *True*) as it is not
-      needed anymore.
-
 
 
 References
