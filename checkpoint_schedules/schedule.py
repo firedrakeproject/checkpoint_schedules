@@ -6,7 +6,7 @@ from enum import Enum
 
 __all__ = \
     [
-        "StorageLocation",
+        "StorageLevel",
         "CheckpointAction",
         "Forward",
         "Reverse",
@@ -17,21 +17,17 @@ __all__ = \
     ]
 
 
-class StorageLocation(Enum):
+class StorageLevel(Enum):
     """
     RAM : It is the first level of checkpoint storage.
 
     DISK : It is the second level of checkpoint storage.
-
-    TAPE : Refer to the local storage that holds the checkpoint 
-    data used as the initial condition for the forward solver.
 
     NONE : Indicate that there is no specific storage location defined 
     for the checkpoint data.
     """
     RAM = 0
     DISK = 1
-    TAPE = -1
     NONE = None
 
 
@@ -155,16 +151,16 @@ class Forward(CheckpointAction):
 
         Notes
         -----
-        The storage location list are available at `StorageLocation`.
+        The storage location list are available at `StorageLevel`.
 
         See Also
         --------
-        :class:`StorageLocation`.
+        :class:`StorageLevel`.
 
         Returns
         -------
         str
-            Either :class:`StorageLocation.RAM.name` or :class:`StorageLocation.DISK.name`.
+            Either :class:`StorageLevel.RAM.name` or :class:`StorageLevel.DISK.name`.
         """
         return self.args[4]
 
@@ -240,29 +236,18 @@ class Copy(CheckpointAction):
         The step with which the copied data is associated.
     from_storage : str
         The storage level from which the data should be copied. Either
-        `StorageLocation.RAM.name` or `StorageLocation.DISK.name`. 
-    to_storage : str
-        The location to which the data should be copied, which is 
-        referred to as `StorageLocation.TAPE.name`.
+        `StorageLevel.RAM.name` or `StorageLevel.DISK.name`. 
     delete : bool
         Whether the data should be deleted from the indicated storage level
         after it has been copied.
-
-    Notes
-    -----
-        `StorageLocation.TAPE.name` refers to the local storage that 
-        holds the checkpoint data used as the initial condition 
-        for the forward solver. It is not considered a storage level since is
-        specifically designated for storing this particular type of checkpoint data.
-        The storage location are listed in the `StorageLocation`.
     
     See Also
     --------
-    :class:`StorageLocation` 
+    :class:`StorageLevel` 
 
     """
-    def __init__(self, n, from_storage, to_storage, delete=False):
-        super().__init__(n, from_storage, to_storage, delete)
+    def __init__(self, n, from_storage, delete=False):
+        super().__init__(n, from_storage, delete)
 
     @property
     def n(self):
@@ -281,12 +266,12 @@ class Copy(CheckpointAction):
 
         Notes
         -----
-        Storage location are available in `StorageLocation`.
+        Storage location are available in `StorageLevel`.
 
         
         See Also
         --------
-        :class:`StorageLocation`
+        :class:`StorageLevel`
 
         
         Returns
@@ -295,17 +280,6 @@ class Copy(CheckpointAction):
             Either `RAM` or `DISK`.
         """
         return self.args[1]
-    
-    @property
-    def to_storage(self):
-        """The tape used to restart the foward solver.
-
-        Returns
-        -------
-        str
-            The `TAPE`.
-        """
-        return self.args[2]
     
     @property
     def delete(self):
@@ -321,7 +295,7 @@ class Copy(CheckpointAction):
         bool
             Delete the checkpoint data if ``True``.
         """
-        return self.args[3]
+        return self.args[2]
 
 
 class EndForward(CheckpointAction):

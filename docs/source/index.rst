@@ -19,15 +19,14 @@ If you want to quickly get up and running with *checkpoint_schedules* your adjoi
   $  pip install checkpoint_schedule
 
 * Familiarise with *checkpoint_schedules* by acessing the :ref:`introduction <introduction>`.
-* Go through to a basic :ref:`example <example_checkpoint_schedules>` that explain how *checkpoint_schedule* works
-  in a first illustration of a adjoint problem. Whereas :ref:`tutorial <tutorial_checkpoint_schedules>` shows a more
+* Go through to a basic :ref:`example <example_checkpoint_schedules>` that explain how *checkpoint_schedule* works in a first illustration of a adjoint problem. Whereas :ref:`tutorial <tutorial_checkpoint_schedules>` shows a more
   complex example of the application of the *checkpoint_schedules* package in a adjoint-based gradient problem 
   involving burger's equation.
 
 API documentation
 =================
 
-The complete list of all the classes and methods in Firedrake is available at the :ref:`API reference
+The complete list of all the classes and methods in *checkpoint_schedules* is available at the :ref:`API reference
 <checkpoint_schedules-api-reference>`.
 
 

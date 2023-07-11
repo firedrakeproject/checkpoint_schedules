@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from checkpoint_schedules import HRevolve, DiskRevolve, PeriodicDiskRevolve
+from checkpoint_schedules import HRevolve, PeriodicDiskRevolve
 # from checkpoint_schedules import \
 #     (Forward, EndForward, Reverse, Copy, EndReverse)
 # import functools
@@ -228,3 +228,17 @@ manage.actions()
 
 
 
+# To exemplify the *checkpoint_schedules* usage in adjoint-based gradient problems, 
+# let us consider a class that illustrates the implementation of an adjoint-based gradient. 
+# Below is the `GradAdj` class, which includes the forward and backward methods to execute 
+# respectively the forward and adjoint systems. The `copy_fwd_data` function carries forward
+# data copying from either RAM or disk. This data is then used as the initial condition in 
+# the forward solver restarting. The functions `store_ram` and `store_disk` are responsible 
+# for storing the forward data for restarting purposes. Additionally, the `store_adj_deps` 
+# function 
+# is responsible for storing the forward data required for the adjoint computation.
+# :class:`~checkpoint_schedules.schedule.Forward`, 
+# :class:`~checkpoint_schedules.schedule.EndForward`, 
+# :class:`~checkpoint_schedules.schedule.Reverse`, 
+# :class:`~checkpoint_schedules.schedule.Copy`,
+# :class:`~checkpoint_schedules.schedule.EndReverse`

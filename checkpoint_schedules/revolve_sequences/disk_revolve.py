@@ -91,6 +91,7 @@ def disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost,
     params = revolver_parameters(wd, rd, fwd_cost, bwd_cost)
     parameters = dict(params)
     uf = parameters["uf"]
+    ub = parameters["ub"]
     rd = parameters["rd"]
     wd = parameters["wd"]
     one_read_disk = parameters["one_read_disk"]
@@ -148,7 +149,7 @@ def disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost,
         sequence.insert(Operation("Write_disk", 0))
         sequence.insert(Operation("Forward", [0, jmin]))
         sequence.insert_sequence(
-            disk_revolve(l - jmin, cm, rd, wd, opt_0=opt_0, opt_1d=opt_1d, opt_inf=opt_inf).shift(jmin)
+            disk_revolve(l - jmin, cm, rd, wd, uf, ub, opt_0=opt_0, opt_1d=opt_1d, opt_inf=opt_inf).shift(jmin)
         )
         sequence.insert(Operation("Read_disk", 0))
         if one_read_disk:

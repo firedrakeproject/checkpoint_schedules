@@ -157,8 +157,11 @@ Using *checkpoint_schedules* package
 The *checkpoint_schedules* package offers a squedule of actions that
 enable the coordination of an adjoint-based gradient executions through
 a checkpoint strategy. The checkpoint schedule is built by the sequence
-of actions referred to as *Forward, EndForward, Reverse, Copy,
-EndReverse*. The actions provides functionalities such as storing the
+of actions referred to as :class:`~checkpoint_schedules.schedule.Forward`, 
+:class:`~checkpoint_schedules.schedule.EndForward`, 
+:class:`~checkpoint_schedules.schedule.Reverse`, 
+:class:`~checkpoint_schedules.schedule.Copy`,
+:class:`~checkpoint_schedules.schedule.EndReverse`. The actions provides functionalities such as storing the
 forward checkpoint data used to restart the forward solver, storing the
 forward checkpoint data for adjoint computations, and retrieving the
 stored data for both the forward solver restart and the adjoint
@@ -219,7 +222,7 @@ are provided by using the register method of the base function
             @action.register(Forward)
             def action_forward(cp_action):
                 nonlocal model_n
-                print(Fore.BLUE + ("|" + "--->"*(cp_action.n1-cp_action.n0)).rjust(cp_action.n1*4))
+                print(("|" + "--->"*(cp_action.n1-cp_action.n0)).rjust(cp_action.n1*4))
                 self.adj_grad_problem.forward(cp_action.n0, cp_action.n1, 
                                               write_ics=cp_action.write_ics, 
                                               write_adj_deps=cp_action.write_adj_deps,
@@ -233,7 +236,7 @@ are provided by using the register method of the base function
             @action.register(Reverse)
             def action_reverse(cp_action):
                 nonlocal model_r
-                print(Fore.RED + ("<---"*(cp_action.n1-cp_action.n0) + "|").rjust(cp_action.n1*4))
+                print(("<---"*(cp_action.n1-cp_action.n0) + "|").rjust(cp_action.n1*4))
                 self.adj_grad_problem.backward(cp_action.n0, cp_action.n1, 
                                                cp_action.clear_adj_deps)
                 model_r += cp_action.n1 - cp_action.n0

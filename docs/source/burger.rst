@@ -472,11 +472,6 @@ the H-Revolve checkpointing method.
     chk_manager.execute(cp_schedule)
 
 
-.. parsed-literal::
-
-    /Users/ddolci/work/checkpoint_schedules/.venv/lib/python3.11/site-packages/scipy/sparse/linalg/_dsolve/linsolve.py:214: SparseEfficiencyWarning: spsolve requires A be CSC or CSR matrix format
-      warn('spsolve requires A be CSC or CSR matrix format',
-
 
 .. parsed-literal::
 

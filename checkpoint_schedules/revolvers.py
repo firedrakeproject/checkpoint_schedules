@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import logging
 from .schedule import CheckpointSchedule, Forward, Reverse, Copy,\
-    EndForward, EndReverse, StorageLocation
+    EndForward, EndReverse, StorageLevel
 from .revolve_sequences import hrevolve, disk_revolve, periodic_disk_revolve
 
 __all__ = \
@@ -64,7 +64,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 self._n = n_1
                 w_cp_action, (w_n0, _, w_storage) = _convert_action(self._schedule[i - 1])
                 if (w_cp_action == "Write"
-                    or w_cp_action == "Write_disk" 
+                    or w_cp_action == "Write_disk"
                     or w_cp_action == "Write_memory"):
                     if w_n0 != n_0:
                         raise InvalidActionIndex
@@ -80,7 +80,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 else:
                     write_ics = False
                     adj_deps = False
-                    w_storage = StorageLocation(None).name
+                    w_storage = StorageLevel(None).name
                 yield Forward(n_0, n_1, write_ics, adj_deps, w_storage)
                 if self._n == self._max_n:
                     if self._r != 0:
@@ -93,47 +93,15 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                     raise InvalidForwardStep
                 self._r += 1
                 yield Reverse(n_0, n_1, clear_adj_deps=True)
-            elif cp_action == "Read" or cp_action == "Read_memory":
+            elif (cp_action == "Read" 
+                  or cp_action == "Read_memory"
+                  or cp_action == "Read_disk"):
                 self._n = n_0
-                n_cp_action, (w_n0, _, w_storage) = _convert_action(self._schedule[i + 1])
-                f_cp_action, (f_n0, _, _) = _convert_action(self._schedule[i + 2])
                 if n_0 == self._max_n - self._r - 1:
                     delete = True
                 else:
                     delete = False
-                yield Copy(n_0, storage, StorageLocation(-1).name, delete=delete)
-            elif cp_action == "Read_disk":
-                self._n = n_0
-                n_cp_action, (w_n0, _, w_storage) = _convert_action(self._schedule[i + 1])
-                f_cp_action, (f_n0, _, _) = _convert_action(self._schedule[i + 2])
-                if n_cp_action == "Write_memory":
-                    assert n_0 == w_n0
-                    yield Copy(n_0, storage, w_storage)
-                elif n_cp_action == "Write_Forward_memory":
-                    if f_cp_action != "Forward":
-                        raise InvalidRevolverAction
-                    assert n_0 == f_n0
-                    yield Copy(n_0, storage, StorageLocation(-1).name)
-                elif n_cp_action == "Forward":
-                    assert n_0 == w_n0
-                    yield Copy(n_0, storage, StorageLocation(-1).name)
-                else:
-                    raise InvalidRevolverAction
-            elif cp_action == "Read_memory":
-                self._n = n_0
-                n_cp_action, (w_n0, _, w_storage) = _convert_action(self._schedule[i + 1])
-                f_cp_action, (f_n0, _, _) = _convert_action(self._schedule[i + 2])
-
-                if n_cp_action == "Write_Forward_memory":
-                    if f_cp_action != "Forward":
-                        raise InvalidRevolverAction
-                    assert n_0 == f_n0
-                    yield Copy(n_0, storage, StorageLocation(-1).name)
-                elif n_cp_action == "Forward":
-                    assert n_0 == w_n0
-                    yield Copy(n_0, storage, StorageLocation(-1).name)
-                else:
-                    raise InvalidRevolverAction
+                yield Copy(n_0, storage, delete=delete)
             elif (cp_action == "Write" or cp_action == "Write_disk"
                   or cp_action == "Write_memory"):
                 if n_0 != self._n:
@@ -229,22 +197,22 @@ def _convert_action(action):
                        "Write_Forward", "Discard_Forward"]:
         storage, n_0 = action.index
         n_1 = None
-        storage = {0: StorageLocation(0).name, 1: StorageLocation(1).name}[storage]
+        storage = {0: StorageLevel(0).name, 1: StorageLevel(1).name}[storage]
     elif cp_action in ["Write_Forward_memory",
                        "Discard_Forward_memory"]:
         n_0 = action.index
         n_1 = None
-        storage = {0: StorageLocation(0).name}[0]
+        storage = {0: StorageLevel(0).name}[0]
     elif cp_action in ["Read_disk", "Write_disk", "Discard_disk"]:
         n_0 = action.index
         n_1 = None
         storage = 1
-        storage = {1: StorageLocation(1).name}[storage]
+        storage = {1: StorageLevel(1).name}[storage]
     elif cp_action in ["Read_memory", "Write_memory", "Discard_memory"]:
         n_0 = action.index
         n_1 = None
         storage = 0
-        storage = {0: StorageLocation(0).name}[storage]
+        storage = {0: StorageLevel(0).name}[storage]
     else:
         raise InvalidRevolverAction
     return cp_action, (n_0, n_1, storage)
@@ -313,9 +281,9 @@ class DiskRevolve(RevolveCheckpointSchedule):
             from RAM and disk.
         """
         
-        super()._schedule = disk_revolve(self._max_n - 1,
+        self._schedule = list(disk_revolve(self._max_n - 1,
                                          self._snapshots_in_ram,
-                                         w_cost, r_cost, fwd_cost, bwd_cost)
+                                         w_cost, r_cost, fwd_cost, bwd_cost))
 
 
 class PeriodicDiskRevolve(RevolveCheckpointSchedule):

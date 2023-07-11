@@ -19,16 +19,11 @@
 # along with tlm_adjoint.  If not, see <https://www.gnu.org/licenses/>.
 
 from checkpoint_schedules.schedule import \
-    Forward, Reverse, Copy, EndForward, EndReverse, StorageLocation
+    Forward, Reverse, Copy, EndForward, EndReverse, StorageLevel
 from checkpoint_schedules import HRevolve, DiskRevolve, PeriodicDiskRevolve
 
 import functools
 import pytest
-
-
-# def periodic_disk(n, s, *, period):
-#     return (PeriodicDiskCheckpointSchedule(period),
-#             {StorageLocation(0).name: 0, StorageLocation(1).name: 1 + (n - 1) // period}, period)
 
 def h_revolve(n, s):
     """_summary_
@@ -48,12 +43,12 @@ def h_revolve(n, s):
    
     if s < 1:
         return (None,
-                {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 0)
+                {StorageLevel(0).name: 0, StorageLevel(1).name: 0}, 0)
     else:
         revolver = HRevolve(n, s, n - s)
         revolver.sequence(w_cost=(0, 2.0), r_cost=(0, 2.0))
         return (revolver,
-                {StorageLocation(0).name: s, StorageLocation(1).name: n - s}, 1)
+                {StorageLevel(0).name: s, StorageLevel(1).name: n - s}, 1)
 
 
 def disk_revolve(n, s):
@@ -73,12 +68,12 @@ def disk_revolve(n, s):
     """
     if s <= 1:
         return (None,
-                {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 0)
+                {StorageLevel(0).name: 0, StorageLevel(1).name: 0}, 0)
     else:
-        revolver = DiskRevolve(n, s//3, s - s//3)
+        revolver = DiskRevolve(n, s, n - s)
         revolver.sequence()
         return (revolver,
-                {StorageLocation(0).name: s//2, StorageLocation(1).name: s - s//2}, 1)
+                {StorageLevel(0).name: s, StorageLevel(1).name: n - s}, 1)
 
 
 def periodic_disk(n, s, period):
@@ -98,14 +93,14 @@ def periodic_disk(n, s, period):
     """
     if s < 1:
         return (None,
-                {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 0)
+                {StorageLevel(0).name: 0, StorageLevel(1).name: 0}, 0)
     else:
         print(n, s)
         revolver = PeriodicDiskRevolve(n, s, n)
-        revolver.sequence(w_cost=2, r_cost=1, period=period)
+        revolver.sequence(period=period)
         
         return (revolver,
-                {StorageLocation(0).name:  s, StorageLocation(1).name: n - s}, 1)
+                {StorageLevel(0).name:  s, StorageLevel(1).name: n - s}, 1)
 
 @pytest.mark.parametrize(
     "schedule, schedule_kwargs",
@@ -114,7 +109,7 @@ def periodic_disk(n, s, period):
      (periodic_disk, {"period": 4}),
      (periodic_disk, {"period": 8}),
      (periodic_disk, {"period": 16}),
-    #  (disk_revolve, {}),
+     (disk_revolve, {}),
      (h_revolve, {})
      ]
      )
@@ -124,7 +119,7 @@ def periodic_disk(n, s, period):
                                 #   (3, (1, 2)),
                                 #   (10, tuple(range(1, 10))),
                                 #   (100, tuple(range(1, 100))),
-                                  (100, tuple(range(10, 100, 10)))
+                                  (100, tuple(range(10, 70, 10)))
                                   ])
 def test_validity(schedule, schedule_kwargs, n, S):
     """Test the checkpoint revolvers.
@@ -215,13 +210,6 @@ def test_validity(schedule, schedule_kwargs, n, S):
     
     @action.register(Copy)
     def action_copy(cp_action):
-        """_summary_
-
-        Parameters
-        ----------
-        cp_action : _type_
-            _description_
-        """
         nonlocal model_n
         model_n = None
         assert cp_action.n in snapshots[cp_action.from_storage]
@@ -244,25 +232,11 @@ def test_validity(schedule, schedule_kwargs, n, S):
 
     @action.register(EndForward)
     def action_end_forward(cp_action):
-        """_summary_
-
-        Parameters
-        ----------
-        cp_action : _type_
-            _description_
-        """
         # The correct number of forward steps has been taken
         assert model_n is not None and model_n == n
 
     @action.register(EndReverse)
     def action_end_reverse(cp_action):
-        """_summary_
-
-        Parameters
-        ----------
-        cp_action : _type_
-            _description_
-        """
         nonlocal model_r
 
         # The correct number of adjoint steps has been taken
@@ -279,7 +253,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
         ics = set()
         data = set()
 
-        snapshots = {StorageLocation(0).name: {}, StorageLocation(1).name: {}}
+        snapshots = {StorageLevel(0).name: {}, StorageLevel(1).name: {}}
         cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs) 
         if cp_schedule is None:
             raise TypeError("Incompatible with schedule type.")

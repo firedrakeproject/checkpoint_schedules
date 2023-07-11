@@ -1,20 +1,38 @@
-.. _checkpoint_schedules-api-reference:
+checkpoint\_schedules package
+=============================
 
-checkpoint_schedules API reference
-=================================
-Here we documet the checkpoint_schedules package API.
 
-************
-Core classes
-************
+Submodules
+----------
+
+checkpoint\_schedules.revolvers module
+--------------------------------------
+
 .. automodule:: checkpoint_schedules.revolvers
    :members:
    :undoc-members:
    :show-inheritance:
+
+checkpoint\_schedules.schedule module
+-------------------------------------
 
 .. automodule:: checkpoint_schedules.schedule
    :members:
    :undoc-members:
    :show-inheritance:
 
-Are you interested in the technical H-Revolve coding? Fell free to take a look the H-Revolve API reference here :doc:`schedule-api-reference <schedule>`.
+Module contents
+---------------
+
+.. automodule:: checkpoint_schedules
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   checkpoint_schedules.revolve_sequences
