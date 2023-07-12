@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from abc import ABC, abstractmethod
 import functools
-from enum import Enum
+from enum import Enum, IntEnum
 
 __all__ = \
     [
@@ -21,14 +21,26 @@ class StorageLevel(Enum):
     """
     RAM : It is the first level of checkpoint storage.
 
-    DISK : It is the second level of checkpoint storage.
+    disk : It is the second level of checkpoint storage.
 
     NONE : Indicate that there is no specific storage location defined 
     for the checkpoint data.
     """
     RAM = 0
-    DISK = 1
+    disk = 1
     NONE = None
+
+
+class StepType(IntEnum):
+    """Step type cost.
+    """
+    NONE = 0
+    FORWARD = 1
+    FORWARD_REVERSE = 2
+    WRITE_DATA = 3
+    WRITE_ICS = 4
+    READ_DATA = 5
+    READ_ICS = 6
 
 
 class CheckpointAction:
@@ -335,12 +347,12 @@ class CheckpointSchedule(ABC):
     ----------
     max_n : int
         The number of forward steps in the initial forward calculation.
-    
+
     Notes
     -----
     Actions in the schedule are accessed by iterating over elements, and
     actions may be implemented using single-dispatch functions. e.g.
-    
+
     .. code-block:: python
 
         @functools.singledispatch
@@ -357,7 +369,6 @@ class CheckpointSchedule(ABC):
             action(cp_action)
             if isinstance(cp_action, EndReverse):
                 break
-
     """
 
     def __init__(self, max_n=None):

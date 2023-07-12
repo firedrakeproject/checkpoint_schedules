@@ -21,6 +21,20 @@ bibliography: paper.bib
 
 ---
 # Summary
+The time-dependent adjoint-based gradient is characterised by its backward progression in time and 
+its dependence on the solution of a forward system. Consequently, the time-dependent adjoint 
+requires either storing the forward data or recomputation of the forward problem to obtain essential 
+data for the adjoint computations.
+
+Storing the forward data at every time step is impractical for large systems, as it can result in high
+memory usage for extensive time executions. This challenge can be overcome by employing the 
+checkpointing method, which is an efficient manages memory usage [3, 5]. In summary, checkpointing strategies 
+involve creating a sequence of schedules that coordinate the selective storage of forward data at specific time steps. 
+During the adjoint computation, these schedules provide instructions for restarting the forward solver from the nearest 
+time step where forward data was stored, in case the forward data is unavailable, until the step where the adjoint 
+needs to be computed. An optimal checkpointing strategy aims to obtain an optimal schedule with a minimal number of 
+forward solver recomputation according the desired checkpoint storage. Revolvers may also store the forward checkpoint data 
+in different type of storage [1, 2, 3, 4].
 
 Checkpointing strategies involve creating a sequence of schedules that coordinate the selective 
 storage of forward data at specific time steps. During the adjoint computation, these schedules provide instructions for restarting 

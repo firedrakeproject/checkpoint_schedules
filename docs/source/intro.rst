@@ -13,26 +13,22 @@ checkpointing method, which is an efficient manages memory usage [3, 5]. In summ
 involve creating a sequence of schedules that coordinate the selective storage of forward data at specific time steps. 
 During the adjoint computation, these schedules provide instructions for restarting the forward solver from the nearest 
 time step where forward data was stored, in case the forward data is unavailable, until the step where the adjoint 
-needs to be computed.
+needs to be computed. 
 
-
-To determine an optimal checkpointing strategy, the revolvers algorithm aims to obtain an optimal 
-schedule with a minimal number of forward solver recomputation according the desired checkpoint storage. 
-The revolvers algorithm provide an optimal schedule in scenarios where the number of forward steps 
-is known prior to the calculation, and where checkpoints store the necessary data for restarting the 
-forward computation. Revolvers may also store the forward checkpoint data in different type of storage [1, 2, 3, 4].
-
-The *checkpoint_schedules* is a Python package that offers schedules given by a sequence of actions that provides 
-functionalities of forward or adjoint advancement over the entire interval of steps, data storage, and data retrieval.
-The *checkpoint_schedules* package explicitly incorporates data buffering in an intermediate storage, ensuring that forward 
-variables can be defined and computed before storage in a checkpoint. Furthermore, the schedule distinguishes 
-between the storage of forward restart data and the forward data required for the adjoint computation. 
-The *checkpoint_schedules* package is flexible to interpret and convert designs from various existing approaches, 
-including the revolve algorithm. It has already been successfully with the multistage approach [2], the two-level mixed 
+In the adjoint-based gradient computation, the forward data used as initial conditions for the forward solver restarting can differ 
+from the forward data required for the adjoint computation, e. g., for non-linear problems. Thus, we propose the *checkpoint_schedules* 
+Python package the schedule distinguishes between the storage of forward restart data and the forward data required for the adjoint 
+computation. The *checkpoint_schedules* package offers schedules given by a sequence of actions that provides functionalities 
+of forward or adjoint advancement over the entire interval of steps. The *checkpoint_schedules* package explicitly incorporates data
+buffering in an intermediate storage, ensuring that forward variables can be defined and computed before storage in a checkpoint. 
+Furthermore, the *checkpoint_schedules* package is flexible to interpret and convert designs from various existing approaches, 
+including the revolve algorithm. It has already been successfully working with the multistage approach [2], the two-level mixed 
 periodic/binomial [6], and H-Revolve schedules [4]. 
 
-To advance in the basics of *checkpoint_schedules* employiment in the adjoint-based gradient computation, 
-we recommend to read the following :ref:`section <example_checkpoint_schedules>`.
+The *checkpoint_schedules* also provides a generator able to iterate over the schedules and return the next action to perform. To advance 
+in the basics of *checkpoint_schedules* employment and the generator usage, we recommend to read the following 
+:ref:`section <example_checkpoint_schedules>`.
+
 
 References
 ~~~~~~~~~~

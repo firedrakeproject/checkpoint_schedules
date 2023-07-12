@@ -98,7 +98,13 @@ solving Burger’s equation (2) and its corresponding adjoint equation
 (4), as well as computing the objective functional (1). The
 *BurgerGradAdj* class constructor is responsible for defining the
 spatial and temporal configurations required for solving the problem. It
-sets up the necessary parameters and initializes the problem domain.
+sets up the necessary parameters and initializes the problem domain. The
+``copy_fwd_data`` function carries forward data copying from either RAM
+or disk. This data is then used as the initial condition in the forward
+solver restarting. The functions ``store_ram`` and ``store_disk`` are
+responsible for storing the forward data for restarting purposes.
+Additionally, the ``store_adj_deps`` function is responsible for storing
+the forward data required for the adjoint computation.
 
 .. code:: ipython3
 
@@ -107,6 +113,7 @@ sets up the necessary parameters and initializes the problem domain.
     import numpy as np
     import pickle
     from scipy.sparse.linalg import spsolve
+    import functools
     
     class BurgerGradAdj():
         """This class provides the solver of the non-linear forward burger's equation,
@@ -327,24 +334,14 @@ sets up the necessary parameters and initializes the problem domain.
 Using *checkpoint_schedules* package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-*checkpoint_schedules* package that provides schedule enable to execute
-forward and adjoint solver, store the foward data, restart the forward
-and adjoint solvers according to a checkpointing strategy. The schedule
-is built with a sequence of checkpoint actions referred to as *Forward,
-EndForward, Reverse, Copy, EndReverse*. In addition,
-*checkpoint_schedules* provides an iterator that convert the revolver
-operations to the *checkpoint_schedules*. The actions are accessed by
-iterating over a sequence of schedule.
-
-The actions are implemented using single-dispatch functions as carried
-out in *CheckpointingManager* class, which provides a management of the
-forward and adjoint solvers coordinated by the sequence of actions given
-by the *checkpoint_schedules* package.
+Analagous to the previous example, we mplement the
+*CheckpointingManager* class, which provides a management of the forward
+and adjoint solvers coordinated by the sequence of actions given by the
+*checkpoint_schedules* package.
 
 .. code:: ipython3
 
-    from checkpoint_schedules import Forward, EndForward, Reverse, Copy, EndReverse
-    from checkpoint_schedules import RevolveCheckpointSchedule, StorageLocation
+    from checkpoint_schedules import Forward, EndForward, Reverse, Copy, EndReverse, StorageLevel
     import functools
     
     
@@ -414,8 +411,8 @@ by the *checkpoint_schedules* package.
             model_n = 0
             model_r = 0
     
-            storage_limits = {StorageLocation(0).name: self.save_ram, 
-                              StorageLocation(1).name: self.save_disk}
+            storage_limits = {StorageLevel(0).name: self.save_ram, 
+                              StorageLevel(1).name: self.save_disk}
     
             count = 0
             while True:
@@ -428,17 +425,16 @@ by the *checkpoint_schedules* package.
     
 
 
-Let us consider few time-steps only to exemplify how it works the
-forward and adjoint computations with *checkpoint_schedules* package.
-So, we start by deffining the basic problem setup.
+Below we define the viscosity parameter, the initial condition imposed
+at the initial step, and the time and spatial discretisation parameters.
 
 .. code:: ipython3
 
-    L = 1  # Domain lenght
-    nx = 500 # Number of nodes.
+    L = 1      # Domain lenght
+    nx = 300   # Number of nodes.
     nu = 0.005 # Viscosity
-    dt = 0.01 # Time variation.
-    T = 0.05 # Final time
+    dt = 0.001  # Time variation.
+    T = 0.01   # Final time
     x = np.linspace(0, L, nx) 
     u0 = np.sin(np.pi*x)
     burger_grad_adj = BurgerGradAdj(L, nx, dt, T, nu, u0) # Defining the object able to execute forward/adjoint solvers and the computation of the cost function.
@@ -455,9 +451,9 @@ associate to one step to be stored in disk.
 
 .. code:: ipython3
 
-    max_n = int(T/dt) # Total steps.
-    save_ram = 2 # Number of steps to save in RAM.
-    save_disk = 0 # Number of steps to save in disk.
+    max_n = int(T/dt)             # Total steps.
+    save_ram = 10          # Number of steps to save in RAM.
+    save_disk = 3  # Number of steps to save in disk.
     chk_manager = CheckpointingManager(max_n, burger_grad_adj, save_ram, save_disk) # manager object able to execute the forward and adjoint equations
 
 After to define the manager object given by the *CheckpointingManager*
@@ -468,14 +464,22 @@ the H-Revolve checkpointing method.
 
 .. code:: ipython3
 
-    cp_schedule = RevolveCheckpointSchedule(max_n, save_ram, snap_on_disk=save_disk)
-    chk_manager.execute(cp_schedule)
+    from checkpoint_schedules import HRevolve
+    revolver = HRevolve(max_n, save_ram, save_disk)
+    revolver.sequence()
+    chk_manager.execute(revolver)
 
 
 
 .. parsed-literal::
 
-    Sensitivity: 12.001369298736885
+    /Users/ddolci/work/checkpoint_schedules/.venv/lib/python3.11/site-packages/scipy/sparse/linalg/_dsolve/linsolve.py:214: SparseEfficiencyWarning: spsolve requires A be CSC or CSR matrix format
+      warn('spsolve requires A be CSC or CSR matrix format',
+
+
+.. parsed-literal::
+
+    Sensitivity: 0.5030633572529428
 
 
 References
@@ -484,7 +488,3 @@ References
 [1] Aksan, E. N. “A numerical solution of Burgers’ equation by finite
 element method constructed on the method of discretization in time.”
 Applied mathematics and computation 170.2 (2005): 895-904.
-
-[2] Aupy, Guillaume, and Julien Herrmann. H-Revolve: a framework for
-adjoint computation on synchrone hierarchical platforms.
-(https://hal.inria.fr/hal-02080706/document), 2019.
