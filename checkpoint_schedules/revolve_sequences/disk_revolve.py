@@ -154,7 +154,7 @@ def disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost,
         sequence.insert(Operation("Read_disk", 0))
         if one_read_disk:
             sequence.insert_sequence(
-                revolve(jmin - 1, cm, opt_0=opt_0, **parameters)
+                revolve(jmin - 1, cm, rd, wd, uf, ub, opt_0=opt_0)
             )
         else:
             sequence.insert_sequence(
@@ -162,5 +162,5 @@ def disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost,
             )
         return sequence
     else:
-        sequence.insert_sequence(revolve(l, cm, opt_0=opt_0, **parameters))
+        sequence.insert_sequence(revolve(l, cm, rd, wd, uf, ub, opt_0=opt_0))
         return sequence

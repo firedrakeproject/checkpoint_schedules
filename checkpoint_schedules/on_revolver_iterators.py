@@ -4,6 +4,7 @@
 import sys
 from .schedule import CheckpointSchedule, Forward, Reverse, Copy,\
     EndForward, EndReverse, StorageLevel
+from .utils import n_advance
 
 __all__ = \
     [

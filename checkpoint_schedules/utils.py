@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import functools
-from .schedule import StorageLevel
+import numpy as np
+from .schedule import StorageLevel, StepType
 
 try:
     import numba

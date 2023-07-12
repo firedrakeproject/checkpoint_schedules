@@ -6,7 +6,7 @@ import warnings
 from operator import itemgetter
 from .schedule import CheckpointSchedule, Forward, Reverse, Copy,\
     EndForward, EndReverse, StorageLevel, StepType
-from .revolve_sequences import hrevolve, disk_revolve, periodic_disk_revolve
+from .revolve_sequences import hrevolve, disk_revolve, periodic_disk_revolve, revolve
 from .utils import convert_action, mixed_step_memoization,\
     mixed_step_memoization_0, mixed_steps_tabulation, mixed_steps_tabulation_0,\
     n_advance
@@ -15,7 +15,8 @@ from .utils import convert_action, mixed_step_memoization,\
 __all__ = \
     [
         "HRevolve", "DiskRevolve", "PeriodicDiskRevolve",
-        "MultistageCheckpointSchedule", "MixedCheckpointSchedule"
+        "MultistageCheckpointSchedule", "MixedCheckpointSchedule", 
+        "Revolve"
     ]
 
 try:
@@ -37,7 +38,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
     
     """
 
-    def __init__(self, max_n, snap_in_ram, snap_on_disk):
+    def __init__(self, max_n, snap_in_ram, snap_on_disk=0):
         super().__init__(max_n)
         self._exhausted = False
         self._snapshots_on_disk = snap_on_disk
@@ -51,11 +52,6 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         ------
         action, (n0, n1, storage)
             Schedule actions, step `n0`, step `n1` and the storage type.
-
-        Notes
-        -----
-        The actions and the data `n0`, `n1` and `sorage` follow the H-Revolve 
-        schedule.
         
         """
         if self._max_n is None:
@@ -172,26 +168,6 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         return self._snapshots_on_disk > 0
 
 
-class InvalidForwardStep(IndexError):
-    "The forward step is not correct."
-    pass
-
-
-class InvalidReverseStep(IndexError):
-    "The reverse step is not correct."
-    pass
-
-
-class InvalidRevolverAction(Exception):
-    "The action is not expected for this iterator."
-    pass
-
-
-class InvalidActionIndex(IndexError):
-    "The index of the action is not correct."
-    pass
-
-
 class HRevolve(RevolveCheckpointSchedule):
     """H-Revolve checkpointing schedule."""
 
@@ -268,6 +244,29 @@ class PeriodicDiskRevolve(RevolveCheckpointSchedule):
                                                     w_cost, r_cost, fwd_cost,
                                                     bwd_cost, period))     
 
+
+class Revolve(RevolveCheckpointSchedule):
+    """Revolve checkpointing schedule."""
+
+    def sequence(self, fwd_cost=1.0, bwd_cost=1.0, w_cost=2.0, r_cost=2.0):
+        """Return the sequence of operation of the periodic disk revolver
+        checkpointing.
+
+        Parameters
+        ----------
+        fwd_cost : float, optional
+            The cost of advancing the forward one step.
+        bwd_cost : float, optional
+            The cost of advancing the adjoint over that step.
+        wvect : float, optional
+            The write cost associated with saving a forward restart checkpoint to
+            RAM and disk.
+        rvect : float, optional
+            The read cost associated with loading a forward restart checkpoint
+            from RAM and disk.
+        """
+        self._schedule = list(revolve(self._max_n - 1, self._snapshots_in_ram,
+                                      w_cost, r_cost, fwd_cost, bwd_cost))
 
 def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
                        write_weight=1.0, read_weight=1.0, delete_weight=0.0,
@@ -433,12 +432,11 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
 
         def write(n):
             if len(snapshots) >= self._snapshots_in_ram + self._snapshots_on_disk:  # noqa: E501
-                raise RuntimeError("Invalid checkpointing state")
+                raise RuntimeError("Unexpected snapshot number.")
             snapshots.append(n)
             return self._storage[len(snapshots) - 1]
 
         # Forward
-
         if self._max_n is None:
             raise RuntimeError("Invalid checkpointing state")
         while self._n < self._max_n - 1:
@@ -600,17 +598,17 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                         self._n = n1 - 1
                         yield Forward(n0, n1 - 1, False, False, StorageLevel(None).name)
                     elif n1 <= n0:
-                        raise RuntimeError("Invalid step")
+                        raise InvalidForwardStep
                     self._n += 1
                     yield Forward(n1 - 1, n1, False, True, StorageLevel(0).name)
                 elif step_type == StepType.FORWARD:
                     if n1 <= n0:
-                        raise RuntimeError("Invalid step")
+                        raise InvalidForwardStep
                     self._n = n1
                     yield Forward(n0, n1, False, False, StorageLevel(None).name)
                 elif step_type == StepType.WRITE_DATA:
                     if n1 != n0 + 1:
-                        raise RuntimeError("Invalid step")
+                        raise InvalidForwardStep
                     self._n = n1
                     yield Forward(n0, n1, False, True, self._storage)
                     if n0 in snapshot_n:
@@ -621,7 +619,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                     snapshots.append((StepType.READ_DATA, n0))
                 elif step_type == StepType.WRITE_ICS:
                     if n1 <= n0 + 1:
-                        raise ValueError("Invalid step")
+                        raise InvalidActionIndex
                     self._n = n1
                     yield Forward(n0, n1, True, False, self._storage)
                     if n0 in snapshot_n:
@@ -633,7 +631,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                 else:
                     raise RuntimeError("Unexpected step type")
             if self._n != self._max_n - self._r:
-                raise RuntimeError("Invalid checkpointing state")
+                raise InvalidForwardStep
             if step_type not in (StepType.FORWARD_REVERSE, StepType.READ_DATA):
                 raise RuntimeError("Invalid checkpointing state")
 
@@ -680,3 +678,23 @@ class MixedCheckpointSchedule(CheckpointSchedule):
 
     def uses_disk_storage(self):
         return self._max_n > 1 and self._storage == "disk"
+
+
+class InvalidForwardStep(IndexError):
+    "The forward step is not correct."
+    pass
+
+
+class InvalidReverseStep(IndexError):
+    "The reverse step is not correct."
+    pass
+
+
+class InvalidRevolverAction(Exception):
+    "The action is not expected for this iterator."
+    pass
+
+
+class InvalidActionIndex(IndexError):
+    "The index of the action is not correct."
+    pass

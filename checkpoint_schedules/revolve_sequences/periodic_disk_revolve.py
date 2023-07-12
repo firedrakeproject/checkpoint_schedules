@@ -228,7 +228,7 @@ def periodic_disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost, period,
         current_task += mx
     if one_read_disk or opt_1d[l - current_task] == opt_0[cm][l - current_task]:
         sequence.insert_sequence(
-            revolve(l - current_task, cm, opt_0=opt_0, **parameters).shift(current_task)
+            revolve(l - current_task, cm, rd, wd, fwd_cost, bwd_cost, opt_0=opt_0).shift(current_task)
         )
     else:
         sequence.insert(Operation("Write_disk", current_task))
@@ -240,7 +240,7 @@ def periodic_disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost, period,
         sequence.insert(Operation("Read_disk", current_task))
         if one_read_disk:
             sequence.insert_sequence(
-                revolve(mx - 1, cm, opt_0=opt_0, **parameters).shift(current_task)
+                revolve(mx - 1, cm, rd, wd, fwd_cost, bwd_cost, opt_0=opt_0).shift(current_task)
             )
         else:
             sequence.insert_sequence(
