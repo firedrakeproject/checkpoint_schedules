@@ -6,7 +6,7 @@ from enum import Enum, IntEnum
 
 __all__ = \
     [
-        "StorageLevel",
+        "StorageType",
         "CheckpointAction",
         "Forward",
         "Reverse",
@@ -17,17 +17,17 @@ __all__ = \
     ]
 
 
-class StorageLevel(Enum):
+class StorageType(Enum):
     """
     RAM : It is the first level of checkpoint storage.
 
-    disk : It is the second level of checkpoint storage.
+    DISK : It is the second level of checkpoint storage.
 
     NONE : Indicate that there is no specific storage location defined 
     for the checkpoint data.
     """
     RAM = 0
-    disk = 1
+    DISK = 1
     NONE = None
 
 
@@ -326,6 +326,7 @@ class EndReverse(CheckpointAction):
         If ``True`` then this action should be the last action in the schedule.
     """
     def __init__(self, exhausted):
+        # delete exhausted
         super().__init__(exhausted)
 
     @property
@@ -382,10 +383,10 @@ class CheckpointSchedule(ABC):
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
 
-        cls_iter = cls.iter
+        cls_iter = cls._iterator
 
         @functools.wraps(cls_iter)
-        def iter(self):
+        def _iterator(self):
             """Abstract checkpoint schedule iterator.
 
             Returns
@@ -398,22 +399,22 @@ class CheckpointSchedule(ABC):
                 self._iter = cls_iter(self)
             return self._iter
 
-        cls.iter = iter
+        cls._iterator = _iterator
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        return next(self.iter())
+        return next(self._iterator())
 
     @abstractmethod
-    def iter(self):
+    def _iterator(self):
         """A generator which should be overridden in derived classes in order
         to define a checkpointing schedule.
         """
         raise NotImplementedError
 
-    @abstractmethod
+    @property
     def is_exhausted(self):
         """Return whether the schedule has concluded. 
         
@@ -425,7 +426,7 @@ class CheckpointSchedule(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def uses_disk_storage(self):
+    def uses_storage_type(self):
         """Return whether the schedule may use disk storage. 
         """
         raise NotImplementedError
@@ -468,7 +469,8 @@ class CheckpointSchedule(ABC):
             The number of forward steps.
         """
         return self._max_n
-
+    
+    @property
     def is_running(self):
         """Return whether the schedule is `running`.
 

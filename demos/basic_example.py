@@ -1,6 +1,8 @@
 from checkpoint_schedules import Forward, EndForward, Reverse, Copy, EndReverse
 from checkpoint_schedules import Revolve
+import functools
 
+ 
 class CheckpointingManager():
     """Manage the forward and adjoint solvers.
 
@@ -87,13 +89,13 @@ class CheckpointingManager():
             if isinstance(cp_action, EndReverse):  
                 break
 
-max_n = 4 # Total number of time steps.
-save_ram = 1 # Number of steps to save i RAM.
-save_disk = 2 # Number of steps to save in disk.
 
-chk_manager = CheckpointingManager(max_n, save_ram, save_disk) # manager object
+max_n = 4  # Total number of time steps.
+save_ram = 1  # Number of steps to save i RAM.
+save_disk = 2  # Number of steps to save in disk.
 
+chk_manager = CheckpointingManager(max_n, save_ram, save_disk)  # manager object
 
 revolver = Revolve(max_n, save_ram)
-print(revolver._schedule)
-# chk_manager.execute(revolver)
+revolver.sequence()
+chk_manager.execute(revolver)

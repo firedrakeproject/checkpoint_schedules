@@ -4,6 +4,14 @@ checkpoint\_schedules.revolve\_sequences package
 Submodules
 ----------
 
+checkpoint\_schedules.revolve\_sequences.basic\_functions module
+----------------------------------------------------------------
+
+.. automodule:: checkpoint_schedules.revolve_sequences.basic_functions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 checkpoint\_schedules.revolve\_sequences.disk\_revolve module
 -------------------------------------------------------------
 
@@ -48,14 +56,6 @@ checkpoint\_schedules.revolve\_sequences.utils module
 -----------------------------------------------------
 
 .. automodule:: checkpoint_schedules.revolve_sequences.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-checkpoint\_schedules.revolve\_sequences.basic\_functions module
-----------------------------------------------------------------
-
-.. automodule:: checkpoint_schedules.revolve_sequences.basic_functions
    :members:
    :undoc-members:
    :show-inheritance:

@@ -5,7 +5,7 @@ import functools
 import warnings
 from operator import itemgetter
 from .schedule import CheckpointSchedule, Forward, Reverse, Copy,\
-    EndForward, EndReverse, StorageLevel, StepType
+    EndForward, EndReverse, StorageType, StepType
 from .revolve_sequences import hrevolve, disk_revolve, periodic_disk_revolve, revolve
 from .utils import convert_action, mixed_step_memoization,\
     mixed_step_memoization_0, mixed_steps_tabulation, mixed_steps_tabulation_0,\
@@ -45,7 +45,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         self._snapshots_in_ram = snap_in_ram
         self._schedule = None
 
-    def iter(self):
+    def _iterator(self):
         """A checkpoint schedules iterator.
 
         Yields
@@ -87,7 +87,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 else:
                     write_ics = False
                     adj_deps = False
-                    w_storage = StorageLevel(None).name
+                    w_storage = StorageType(None).name
                 yield Forward(n_0, n_1, write_ics, adj_deps, w_storage)
                 if self._n == self._max_n:
                     if self._r != 0:
@@ -147,6 +147,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         self._exhausted = True
         yield EndReverse(True)
 
+    @property
     def is_exhausted(self):
         """Indicate whether the schedule has concluded.
 
@@ -157,7 +158,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         """
         return self._exhausted
     
-    def uses_disk_storage(self):
+    def uses_storage_type(self):
         """Indicate whether the `disk` storage level is used.
 
         Returns
@@ -169,8 +170,8 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
 
 
 class HRevolve(RevolveCheckpointSchedule):
-    """H-Revolve checkpointing schedule."""
 
+    """H-Revolve checkpointing schedule."""
     def sequence(self, fwd_cost=1.0, bwd_cost=1.0, w_cost=(0, 2.0), r_cost=(0, 2.0)):
         """Define the H-Revolve sequence of operations.
         
@@ -268,6 +269,7 @@ class Revolve(RevolveCheckpointSchedule):
         self._schedule = list(revolve(self._max_n - 1, self._snapshots_in_ram,
                                       w_cost, r_cost, fwd_cost, bwd_cost))
 
+
 def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
                        write_weight=1.0, read_weight=1.0, delete_weight=0.0,
                        trajectory="maximum"):
@@ -352,10 +354,10 @@ def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
     #   offline checkpointing', SIAM Journal on Scientific Computing, 31(3),
     #   pp. 1946--1967, 2009, doi: 10.1137/080718036
 
-    allocation = [StorageLevel(1).name for _ in range(snapshots)]
+    allocation = [StorageType(1).name for _ in range(snapshots)]
     for i, _ in sorted(enumerate(weights), key=itemgetter(1),
                        reverse=True)[:snapshots_in_ram]:
-        allocation[i] = StorageLevel(0).name
+        allocation[i] = StorageType(0).name
 
     return tuple(weights), tuple(allocation)
 
@@ -409,16 +411,16 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
         snapshots_in_ram = min(snapshots_in_ram, max_n - 1)
         snapshots_on_disk = min(snapshots_on_disk, max_n - 1)
         if snapshots_in_ram == 0:
-            storage = tuple(StorageLevel(1).name for _ in range(snapshots_on_disk))
+            storage = tuple(StorageType(1).name for _ in range(snapshots_on_disk))
         elif snapshots_on_disk == 0:
-            storage = tuple(StorageLevel(0).name for _ in range(snapshots_in_ram))
+            storage = tuple(StorageType(0).name for _ in range(snapshots_in_ram))
         else:
             _, storage = allocate_snapshots(
                 max_n, snapshots_in_ram, snapshots_on_disk,
                 trajectory=trajectory)
 
-        snapshots_in_ram = storage.count(StorageLevel(0).name)
-        snapshots_on_disk = storage.count(StorageLevel(1).name)
+        snapshots_in_ram = storage.count(StorageType(0).name)
+        snapshots_on_disk = storage.count(StorageType(1).name)
 
         super().__init__(max_n=max_n)
         self._snapshots_in_ram = snapshots_in_ram
@@ -427,7 +429,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
         self._exhausted = False
         self._trajectory = trajectory
 
-    def iter(self):
+    def _iterator(self):
         snapshots = []
 
         def write(n):
@@ -456,7 +458,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
 
         # Forward -> reverse
         self._n += 1
-        yield Forward(self._n - 1, self._n, False, True, StorageLevel(0).name)
+        yield Forward(self._n - 1, self._n, False, True, StorageType(0).name)
 
         yield EndForward()
 
@@ -485,7 +487,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
                                     trajectory=self._trajectory)
                 assert n1 > n0
                 self._n = n1
-                yield Forward(n0, n1, False, False, StorageLevel(None).name)
+                yield Forward(n0, n1, False, False, StorageType(None).name)
 
                 while self._n < self._max_n - self._r - 1:
                     n_snapshots = (self._snapshots_in_ram
@@ -504,7 +506,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
                     raise RuntimeError("Invalid checkpointing state")
                 
             self._n += 1
-            yield Forward(self._n - 1, self._n, False, True, StorageLevel(0).name)
+            yield Forward(self._n - 1, self._n, False, True, StorageType(0).name)
             self._r += 1
             yield Reverse(self._n, self._n - 1, True)
         if self._r != self._max_n:
@@ -515,10 +517,11 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
         self._exhausted = True
         yield EndReverse(True)
 
+    @property
     def is_exhausted(self):
         return self._exhausted
 
-    def uses_disk_storage(self):
+    def uses_storage_type(self):
         return self._snapshots_on_disk > 0
  
 
@@ -545,7 +548,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
     def __init__(self, max_n, snapshots, *, storage="disk"):
         if snapshots < min(1, max_n - 1):
             raise ValueError("Invalid number of snapshots")
-        if storage not in [StorageLevel(0).name, StorageLevel(1).name]:
+        if storage not in [StorageType(0).name, StorageType(1).name]:
             raise ValueError("Invalid storage")
 
         super().__init__(max_n)
@@ -553,7 +556,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
         self._snapshots = min(snapshots, max_n - 1)
         self._storage = storage
 
-    def iter(self):
+    def _iterator(self):
         snapshot_n = set()
         snapshots = []
 
@@ -596,16 +599,16 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                 if step_type == StepType.FORWARD_REVERSE:
                     if n1 > n0 + 1:
                         self._n = n1 - 1
-                        yield Forward(n0, n1 - 1, False, False, StorageLevel(None).name)
+                        yield Forward(n0, n1 - 1, False, False, StorageType(None).name)
                     elif n1 <= n0:
                         raise InvalidForwardStep
                     self._n += 1
-                    yield Forward(n1 - 1, n1, False, True, StorageLevel(0).name)
+                    yield Forward(n1 - 1, n1, False, True, StorageType(0).name)
                 elif step_type == StepType.FORWARD:
                     if n1 <= n0:
                         raise InvalidForwardStep
                     self._n = n1
-                    yield Forward(n0, n1, False, False, StorageLevel(None).name)
+                    yield Forward(n0, n1, False, False, StorageType(None).name)
                 elif step_type == StepType.WRITE_DATA:
                     if n1 != n0 + 1:
                         raise InvalidForwardStep
@@ -673,10 +676,11 @@ class MixedCheckpointSchedule(CheckpointSchedule):
         self._exhausted = True
         yield EndReverse(True)
 
+    @property
     def is_exhausted(self):
         return self._exhausted
 
-    def uses_disk_storage(self):
+    def uses_storage_type(self):
         return self._max_n > 1 and self._storage == "disk"
 
 

@@ -1,7 +1,7 @@
 .. _checkpoint_schedules-api-reference:
-
 checkpoint_schedules
 ====================
+
 .. toctree::
    :maxdepth: 4
 

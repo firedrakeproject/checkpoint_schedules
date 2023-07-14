@@ -3,24 +3,24 @@
 """Online checkpointing schedules iterator for the adjoint method."""
 import sys
 from .schedule import CheckpointSchedule, Forward, Reverse, Copy,\
-    EndForward, EndReverse, StorageLevel
+    EndForward, EndReverse, StorageType
 from .utils import n_advance
 
 __all__ = \
     [
-        "MemoryCheckpointSchedule", "TwoLevelCheckpointSchedule",
-        "NoneCheckpointSchedule", "PeriodicDiskCheckpointSchedule",
+        "SingleStorageSchedule", "TwoLevelCheckpointSchedule",
+        "NoneCheckpointSchedule",
     ]
 
 
-class MemoryCheckpointSchedule(CheckpointSchedule):
+class SingleStorageSchedule(CheckpointSchedule):
     """A checkpointing schedule where all forward restart and non-linear
     dependency data are stored in memory.
 
     Online, unlimited adjoint calculations permitted.
     """
 
-    def iter(self):
+    def _iterator(self):
         # Forward
 
         if self._max_n is not None:
@@ -31,7 +31,7 @@ class MemoryCheckpointSchedule(CheckpointSchedule):
             n0 = self._n
             n1 = n0 + sys.maxsize
             self._n = n1
-            yield Forward(n0, n1, True, True, StorageLevel(0).name)
+            yield Forward(n0, n1, True, True, StorageType(0).name)
 
         yield EndForward()
 
@@ -49,10 +49,11 @@ class MemoryCheckpointSchedule(CheckpointSchedule):
             else:
                 raise RuntimeError("Invalid checkpointing state")
 
+    @property
     def is_exhausted(self):
         return False
 
-    def uses_disk_storage(self):
+    def uses_storage_type(self):
         return False
 
 
@@ -91,7 +92,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                  binomial_trajectory="maximum"):
         if period < 1:
             raise ValueError("period must be positive")
-        if binomial_storage not in [StorageLevel(0).name, StorageLevel(1).name]:
+        if binomial_storage not in [StorageType(0).name, StorageType(1).name]:
             raise ValueError("Invalid storage")
 
         super().__init__()
@@ -101,7 +102,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
         self._binomial_storage = binomial_storage
         self._trajectory = binomial_trajectory
 
-    def iter(self):
+    def _iterator(self):
         # Forward
 
         while self._max_n is None:
@@ -111,7 +112,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
             n0 = self._n
             n1 = n0 + self._period
             self._n = n1
-            yield Forward(n0, n1, True, False, StorageLevel(1).name)
+            yield Forward(n0, n1, True, False, StorageType(1).name)
 
         yield EndForward()
 
@@ -134,13 +135,13 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                         snapshots.pop()
                         self._n = cp_n
                         if cp_n == n0s:
-                            yield Copy(cp_n, StorageLevel(1).name, False)
+                            yield Copy(cp_n, StorageType(1).name, False)
                         else:
                             yield Copy(cp_n, self._binomial_storage, True)
                     else:
                         self._n = cp_n
                         if cp_n == n0s:
-                            yield Copy(cp_n, StorageLevel(1).name, False)
+                            yield Copy(cp_n, StorageType(1).name, False)
                         else:
                             yield Copy(cp_n, self._binomial_storage, False)
 
@@ -152,7 +153,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                                             trajectory=self._trajectory)
                         assert n1 > n0
                         self._n = n1
-                        yield Forward(n0, n1, False, False, StorageLevel(None).name)
+                        yield Forward(n0, n1, False, False, StorageType(None).name)
 
                         while self._n < self._max_n - self._r - 1:
                             n_snapshots = (self._binomial_snapshots + 1
@@ -174,7 +175,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                             raise RuntimeError("Invalid checkpointing state")
 
                     self._n += 1
-                    yield Forward(self._n - 1, self._n, False, True, StorageLevel(0).name)
+                    yield Forward(self._n - 1, self._n, False, True, StorageType(0).name)
 
                     self._r += 1
                     yield Reverse(self._n, self._n - 1, True)
@@ -191,10 +192,11 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
             self._r = 0
             yield EndReverse(False)
 
+    @property
     def is_exhausted(self):
         return False
 
-    def uses_disk_storage(self):
+    def uses_storage_type(self):
         return True
 
 
@@ -209,7 +211,7 @@ class NoneCheckpointSchedule(CheckpointSchedule):
         super().__init__()
         self._exhausted = False
 
-    def iter(self):
+    def _iterator(self):
         # Forward
 
         if self._max_n is not None:
@@ -220,80 +222,15 @@ class NoneCheckpointSchedule(CheckpointSchedule):
             n0 = self._n
             n1 = n0 + sys.maxsize
             self._n = n1
-            yield Forward(n0, n1, False, False, StorageLevel(None).name)
+            yield Forward(n0, n1, False, False, StorageType(None).name)
 
         self._exhausted = True
         yield EndForward()
 
+    @property
     def is_exhausted(self):
         return self._exhausted
 
-    def uses_disk_storage(self):
+    def uses_storage_type(self):
         return False
 
-
-class PeriodicDiskCheckpointSchedule(CheckpointSchedule):
-    """A checkpointing schedule where forward restart checkpoints are stored
-    periodically to disk. Non-linear dependency data is recomputed for use by
-    the adjoint by re-running the forward from these checkpoints. If the
-    storage period is greater than one then non-linear dependency data for
-    multiple steps is recomputed and stored when advancing the adjoint.
-
-    Online, unlimited adjoint calculations permitted.
-
-    :arg period: Forward restart checkpoints are stored to disk every `period`
-        forward steps in the initial forward calculation.
-    """
-
-    def __init__(self, period):
-        if period < 1:
-            raise ValueError("period must be positive")
-
-        super().__init__()
-        self._period = period
-
-    def iter(self):
-        # Forward
-
-        while self._max_n is None:
-            if self._max_n is not None:
-                # Unexpected finalize
-                raise RuntimeError("Invalid checkpointing state")
-            n0 = self._n
-            n1 = n0 + self._period
-            self._n = n1
-            yield Forward(n0, n1, True, False, StorageLevel(1).name)
-
-        yield EndForward()
-
-        while True:
-            # Reverse
-
-            while self._r < self._max_n:
-                n = self._max_n - self._r - 1
-                n0 = (n // self._period) * self._period
-                del n
-                n1 = min(n0 + self._period, self._max_n)
-                if self._r != self._max_n - n1:
-                    raise RuntimeError("Invalid checkpointing state")
-
-                self._n = n0
-                yield Copy(n0, StorageLevel(1).name, False)
-                self._n = n1
-                yield Forward(n0, n1, False, True, StorageLevel(0).name)
-
-                self._r = self._max_n - n0
-                yield Reverse(n1, n0, True)
-            if self._r != self._max_n:
-                raise RuntimeError("Invalid checkpointing state")
-
-            # Reset for new reverse
-
-            self._r = 0
-            yield EndReverse(False)
-
-    def is_exhausted(self):
-        return False
-
-    def uses_disk_storage(self):
-        return True

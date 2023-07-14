@@ -18,12 +18,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with tlm_adjoint.  If not, see <https://www.gnu.org/licenses/>.
 
-from checkpoint_schedules.schedule import \
-    Forward, Reverse, Copy, EndForward, EndReverse, StorageLevel
-from checkpoint_schedules import HRevolve, DiskRevolve, PeriodicDiskRevolve
-
 import functools
 import pytest
+from checkpoint_schedules.schedule import \
+    Forward, Reverse, Copy, EndForward, EndReverse, StorageType
+from checkpoint_schedules import HRevolve, DiskRevolve, PeriodicDiskRevolve
+
 
 def h_revolve(n, s):
     """_summary_
@@ -43,13 +43,13 @@ def h_revolve(n, s):
    
     if s < 1:
         return (None,
-                {StorageLevel(0).name: 0, StorageLevel(1).name: 0}, 0)
+                {StorageType(0).name: 0, StorageType(1).name: 0}, 0)
     else:
         revolver = HRevolve(n, s//3, s - s//3)
         revolver.sequence(w_cost=(0, 5.0), r_cost=(0, 5.0))
         print(s//3, s - s//3)
         return (revolver,
-                {StorageLevel(0).name: s//3, StorageLevel(1).name: s - s//3}, 1)
+                {StorageType(0).name: s//3, StorageType(1).name: s - s//3}, 1)
 
 
 def disk_revolve(n, s):
@@ -69,12 +69,12 @@ def disk_revolve(n, s):
     """
     if s <= 1:
         return (None,
-                {StorageLevel(0).name: 0, StorageLevel(1).name: 0}, 0)
+                {StorageType(0).name: 0, StorageType(1).name: 0}, 0)
     else:
         revolver = DiskRevolve(n, s, n - s)
         revolver.sequence()
         return (revolver,
-                {StorageLevel(0).name: s, StorageLevel(1).name: n - s}, 1)
+                {StorageType(0).name: s, StorageType(1).name: n - s}, 1)
 
 
 def periodic_disk(n, s, period):
@@ -94,14 +94,14 @@ def periodic_disk(n, s, period):
     """
     if s < 1:
         return (None,
-                {StorageLevel(0).name: 0, StorageLevel(1).name: 0}, 0)
+                {StorageType(0).name: 0, StorageType(1).name: 0}, 0)
     else:
         print(n, s)
         revolver = PeriodicDiskRevolve(n, s, n)
         revolver.sequence(period=period)
         
         return (revolver,
-                {StorageLevel(0).name:  s, StorageLevel(1).name: n - s}, 1)
+                {StorageType(0).name:  s, StorageType(1).name: n - s}, 1)
 
 @pytest.mark.parametrize(
     "schedule, schedule_kwargs",
@@ -110,7 +110,7 @@ def periodic_disk(n, s, period):
     #  (periodic_disk, {"period": 4}),
     #  (periodic_disk, {"period": 8}),
     #  (periodic_disk, {"period": 16}),
-    #  (disk_revolve, {}),
+     (disk_revolve, {}),
      (h_revolve, {})
      ]
      )
@@ -120,7 +120,7 @@ def periodic_disk(n, s, period):
                                 #   (3, (1, 2)),
                                 #   (10, tuple(range(1, 10))),
                                 #   (100, tuple(range(1, 100))),
-                                  (100, tuple(range(3, 100, 15)))
+                                  (250, tuple(range(20, 250, 20)))
                                   ])
 def test_validity(schedule, schedule_kwargs, n, S):
     """Test the checkpoint revolvers.
@@ -254,7 +254,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
         ics = set()
         data = set()
 
-        snapshots = {StorageLevel(0).name: {}, StorageLevel(1).name: {}}
+        snapshots = {StorageType(0).name: {}, StorageType(1).name: {}}
         cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs) 
         if cp_schedule is None:
             raise TypeError("Incompatible with schedule type.")

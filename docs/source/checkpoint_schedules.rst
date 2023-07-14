@@ -1,14 +1,29 @@
 checkpoint\_schedules package
 =============================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   checkpoint_schedules.revolve_sequences
 
 Submodules
 ----------
 
-checkpoint\_schedules.revolvers module
---------------------------------------
+checkpoint\_schedules.off\_revolver\_iterators module
+-----------------------------------------------------
 
-.. automodule:: checkpoint_schedules.revolvers
+.. automodule:: checkpoint_schedules.off_revolver_iterators
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+checkpoint\_schedules.on\_revolver\_iterators module
+----------------------------------------------------
+
+.. automodule:: checkpoint_schedules.on_revolver_iterators
    :members:
    :undoc-members:
    :show-inheritance:
@@ -21,6 +36,14 @@ checkpoint\_schedules.schedule module
    :undoc-members:
    :show-inheritance:
 
+checkpoint\_schedules.utils module
+----------------------------------
+
+.. automodule:: checkpoint_schedules.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
@@ -28,11 +51,3 @@ Module contents
    :members:
    :undoc-members:
    :show-inheritance:
-
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 4
-
-   checkpoint_schedules.revolve_sequences

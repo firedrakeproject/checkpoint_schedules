@@ -87,6 +87,8 @@ def revolve_1d(l, cm, opt_0=None, opt_1d=None, **params):
     parameters = dict(params)
     rd = parameters["rd"]
     uf = parameters["uf"]
+    wd = parameters["wd"]
+    ub = parameters["ub"]
     one_read_disk = parameters["one_read_disk"]
     if opt_0 is None:
         opt_0 = get_opt_0_table(l, cm, **parameters)
@@ -149,5 +151,5 @@ def revolve_1d(l, cm, opt_0=None, opt_1d=None, **params):
             )
         return sequence
     else:
-        sequence.insert_sequence(revolve(l, cm, opt_0=opt_0, **parameters))
+        sequence.insert_sequence(revolve(l, cm, rd, wd, uf, ub, opt_0=opt_0))
         return sequence
