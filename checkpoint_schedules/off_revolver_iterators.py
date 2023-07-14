@@ -145,7 +145,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             raise RuntimeError("Unexpected snapshot number.")
         
         self._exhausted = True
-        yield EndReverse(True)
+        yield EndReverse()
 
     @property
     def is_exhausted(self):
@@ -515,7 +515,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
             raise RuntimeError("Invalid checkpointing state")
 
         self._exhausted = True
-        yield EndReverse(True)
+        yield EndReverse()
 
     @property
     def is_exhausted(self):
