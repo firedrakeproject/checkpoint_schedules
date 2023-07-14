@@ -95,10 +95,12 @@ class Forward(CheckpointAction):
     To exemplify, let us consider a particular case:
     Forward(0, 3, True, False, 'RAM'):
     This action is read as:
-    - Execute the forward solver from step 0 to step 3.
-    - Write the forward data (*write_ics*) of step 0 to RAM (storage).
-    - It is not required to store the forward data for the adjoint 
-    computation since *write_adj_deps* is False.
+        - Execute the forward solver from step 0 to step 3.
+
+        - Write the forward data (*write_ics*) of step 0 to RAM (storage).
+
+        - It is not required to store the forward data for the adjoint 
+        computation since *write_adj_deps* is False.
 
     """
     def __init__(self, n0, n1, write_ics, write_adj_deps, storage):
@@ -163,16 +165,16 @@ class Forward(CheckpointAction):
 
         Notes
         -----
-        The storage location list are available at `StorageLevel`.
+        The storage location list are available at `StorageType`.
 
         See Also
         --------
-        :class:`StorageLevel`.
+        :class:`StorageType`.
 
         Returns
         -------
         str
-            Either :class:`StorageLevel.RAM.name` or :class:`StorageLevel.DISK.name`.
+            Either :class:`StorageType.RAM.name` or :class:`StorageType.DISK.name`.
         """
         return self.args[4]
 
@@ -248,14 +250,14 @@ class Copy(CheckpointAction):
         The step with which the copied data is associated.
     from_storage : str
         The storage level from which the data should be copied. Either
-        `StorageLevel.RAM.name` or `StorageLevel.DISK.name`. 
+        `StorageType.RAM.name` or `StorageType.DISK.name`. 
     delete : bool
         Whether the data should be deleted from the indicated storage level
         after it has been copied.
     
     See Also
     --------
-    :class:`StorageLevel` 
+    :class:`StorageType` 
 
     """
     def __init__(self, n, from_storage, delete=False):
@@ -278,12 +280,12 @@ class Copy(CheckpointAction):
 
         Notes
         -----
-        Storage location are available in `StorageLevel`.
+        Storage location are available in `StorageType`.
 
         
         See Also
         --------
-        :class:`StorageLevel`
+        :class:`StorageType`
 
         
         Returns
@@ -406,7 +408,7 @@ class CheckpointSchedule(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def uses_storage_type(self, storage):
+    def uses_storage_type(self):
         """Return whether the schedule may use disk storage. 
         """
         raise NotImplementedError
