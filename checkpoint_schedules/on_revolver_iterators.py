@@ -20,7 +20,7 @@ class SingleStorageSchedule(CheckpointSchedule):
     Online, unlimited adjoint calculations permitted.
     """
 
-    def _iterator(self):
+    def _iter(self):
         # Forward
 
         if self._max_n is not None:
@@ -45,10 +45,13 @@ class SingleStorageSchedule(CheckpointSchedule):
                 # Reset for new reverse
 
                 self._r = 0
-
-                yield EndReverse()
+                yield EndReverse(False)
             else:
                 raise RuntimeError("Invalid checkpointing state")
+
+    @property
+    def is_exhausted(self):
+        return False
 
     def uses_storage_type(self):
         return False
@@ -99,7 +102,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
         self._binomial_storage = binomial_storage
         self._trajectory = binomial_trajectory
 
-    def _iterator(self):
+    def _iter(self):
         # Forward
 
         while self._max_n is None:
@@ -187,7 +190,11 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
             # Reset for new reverse
 
             self._r = 0
-            yield EndReverse()
+            yield EndReverse(False)
+
+    @property
+    def is_exhausted(self):
+        return False
 
     def uses_storage_type(self):
         return True
@@ -202,8 +209,9 @@ class NoneCheckpointSchedule(CheckpointSchedule):
 
     def __init__(self):
         super().__init__()
+        self._exhausted = False
 
-    def _iterator(self):
+    def _iter(self):
         # Forward
 
         if self._max_n is not None:
@@ -216,7 +224,12 @@ class NoneCheckpointSchedule(CheckpointSchedule):
             self._n = n1
             yield Forward(n0, n1, False, False, StorageType(None).name)
 
+        self._exhausted = True
         yield EndForward()
+
+    @property
+    def is_exhausted(self):
+        return self._exhausted
 
     def uses_storage_type(self):
         return False

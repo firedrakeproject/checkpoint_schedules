@@ -144,7 +144,19 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         if len(snapshots) > self._snapshots_on_disk:
             raise RuntimeError("Unexpected snapshot number.")
         
-        yield EndReverse()
+        self._exhausted = True
+        yield EndReverse(True)
+
+    @property
+    def is_exhausted(self):
+        """Indicate whether the schedule has concluded.
+
+        Returns
+        -------
+        bool
+            End the reverse computation if ``True``.
+        """
+        return self._exhausted
     
     def uses_storage_type(self):
         """Indicate whether the `disk` storage level is used.
@@ -414,6 +426,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
         self._snapshots_in_ram = snapshots_in_ram
         self._snapshots_on_disk = snapshots_on_disk
         self._storage = storage
+        self._exhausted = False
         self._trajectory = trajectory
 
     def _iterator(self):
@@ -501,7 +514,12 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
         if len(snapshots) != 0:
             raise RuntimeError("Invalid checkpointing state")
 
-        yield EndReverse()
+        self._exhausted = True
+        yield EndReverse(True)
+
+    @property
+    def is_exhausted(self):
+        return self._exhausted
 
     def uses_storage_type(self):
         return self._snapshots_on_disk > 0
@@ -534,6 +552,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
             raise ValueError("Invalid storage")
 
         super().__init__(max_n)
+        self._exhausted = False
         self._snapshots = min(snapshots, max_n - 1)
         self._storage = storage
 
@@ -654,7 +673,12 @@ class MixedCheckpointSchedule(CheckpointSchedule):
         if len(snapshot_n) > 0 or len(snapshots) > 0:
             raise RuntimeError("Invalid checkpointing state")
 
+        self._exhausted = True
         yield EndReverse()
+
+    @property
+    def is_exhausted(self):
+        return self._exhausted
 
     def uses_storage_type(self):
         return self._max_n > 1 and self._storage == "disk"

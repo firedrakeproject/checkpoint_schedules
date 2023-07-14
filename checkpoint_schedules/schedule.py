@@ -394,6 +394,17 @@ class CheckpointSchedule(ABC):
         """
         raise NotImplementedError
 
+    @property
+    def is_exhausted(self):
+        """Return whether the schedule has concluded. 
+        
+        Notes
+        -----
+        Note that some schedules permit multiple adjoint calculation, 
+        and may never conclude.
+        """
+        raise NotImplementedError
+
     @abstractmethod
     def uses_storage_type(self):
         """Return whether the schedule may use disk storage. 
