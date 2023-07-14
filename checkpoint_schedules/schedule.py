@@ -228,6 +228,7 @@ class Reverse(CheckpointAction):
         """
         return self.args[0]
 
+    @property
     def clear_adj_deps(self):
         """Indicate whether to clear the forward data used in the reverse
         solver.
