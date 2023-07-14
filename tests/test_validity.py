@@ -243,9 +243,6 @@ def test_validity(schedule, schedule_kwargs, n, S):
         # The correct number of adjoint steps has been taken
         assert model_r == n
 
-        if not cp_action.exhausted:
-            model_r = 0
-
     for s in S:
         print(f"{n=:d} {s=:d}")
        

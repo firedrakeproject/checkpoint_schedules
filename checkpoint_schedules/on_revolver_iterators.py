@@ -45,13 +45,10 @@ class SingleStorageSchedule(CheckpointSchedule):
                 # Reset for new reverse
 
                 self._r = 0
-                yield EndReverse(False)
+
+                yield EndReverse()
             else:
                 raise RuntimeError("Invalid checkpointing state")
-
-    @property
-    def is_exhausted(self):
-        return False
 
     def uses_storage_type(self):
         return False
@@ -190,11 +187,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
             # Reset for new reverse
 
             self._r = 0
-            yield EndReverse(False)
-
-    @property
-    def is_exhausted(self):
-        return False
+            yield EndReverse()
 
     def uses_storage_type(self):
         return True
@@ -209,7 +202,6 @@ class NoneCheckpointSchedule(CheckpointSchedule):
 
     def __init__(self):
         super().__init__()
-        self._exhausted = False
 
     def _iterator(self):
         # Forward
@@ -224,12 +216,7 @@ class NoneCheckpointSchedule(CheckpointSchedule):
             self._n = n1
             yield Forward(n0, n1, False, False, StorageType(None).name)
 
-        self._exhausted = True
         yield EndForward()
-
-    @property
-    def is_exhausted(self):
-        return self._exhausted
 
     def uses_storage_type(self):
         return False

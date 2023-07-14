@@ -318,27 +318,7 @@ class EndForward(CheckpointAction):
 class EndReverse(CheckpointAction):
     """A checkpointing action which indicates the end of an adjoint
     calculation.
-
-    Attributes
-    ----------
-    exhausted : bool
-        Indicate whether the schedule has concluded.
-        If ``True`` then this action should be the last action in the schedule.
     """
-    def __init__(self, exhausted):
-        # delete exhausted
-        super().__init__(exhausted)
-
-    @property
-    def exhausted(self):
-        """Indicates whether the schedule has concluded.
-
-        Returns
-        -------
-        bool
-            If ``True`` then this action should be the last action in the schedule.
-        """
-        return self.args[0]
     
 
 class CheckpointSchedule(ABC):
@@ -411,17 +391,6 @@ class CheckpointSchedule(ABC):
     def _iterator(self):
         """A generator which should be overridden in derived classes in order
         to define a checkpointing schedule.
-        """
-        raise NotImplementedError
-
-    @property
-    def is_exhausted(self):
-        """Return whether the schedule has concluded. 
-        
-        Notes
-        -----
-        Note that some schedules permit multiple adjoint calculation, 
-        and may never conclude.
         """
         raise NotImplementedError
 
