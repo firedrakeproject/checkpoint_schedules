@@ -1,6 +1,7 @@
 #!/usr/bin/python
-from .basic_functions import (Operation as Op, Sequence, Function, Table, beta, argmin)
 from functools import partial
+from .basic_functions import (Operation as Op, Sequence, Function, Table, beta, argmin)
+from .utils import revolver_parameters
 
 
 def get_t(l, cm):
@@ -93,7 +94,7 @@ def get_opt_0_table(lmax, mmax, uf, ub, print_table=None, **params):
     return opt
 
 
-def revolve(l, cm, opt_0=None, **params):
+def revolve(l, cm, rd, wd, fwd_cost, bwd_cost, opt_0=None):
     """Return a revolve sequence.
 
     Parameters
@@ -115,6 +116,7 @@ def revolve(l, cm, opt_0=None, **params):
     ValueError
         _description_
     """
+    params = revolver_parameters(wd, rd, fwd_cost, bwd_cost)
     parameters = dict(params)
     if opt_0 is None:
         opt_0 = get_opt_0_table(l, cm, **params)
@@ -166,10 +168,10 @@ def revolve(l, cm, opt_0=None, **params):
     sequence.insert(Operation("Write_memory", 0))
     sequence.insert(Operation("Forward", [0, jmin]))
     sequence.insert_sequence(
-        revolve(l - jmin, cm - 1, opt_0=opt_0, **parameters).shift(jmin)
+        revolve(l - jmin, cm - 1, wd, rd, fwd_cost, bwd_cost, opt_0=opt_0).shift(jmin)
     )
     sequence.insert(Operation("Read_memory", 0))
     sequence.insert_sequence(
-        revolve(jmin - 1, cm, opt_0=opt_0, **parameters).remove_useless_wm()
+        revolve(jmin - 1, cm, wd, rd, fwd_cost, bwd_cost, opt_0=opt_0).remove_useless_wm()
     )
     return sequence

@@ -1,13 +1,5 @@
 #!/usr/bin/python
-"""This function is a copy of the original disk_revolve
-module that composes the python H-Revolve implementation
-published by Herrmann and Pallez [1].
-
-Refs:
-[1] Herrmann, Pallez, "H-Revolve: A Framework for
-Adjoint Computation on Synchronous Hierarchical
-Platforms", ACM Transactions on Mathematical
-Software  46(2), 2020.
+"""Rotine of the Disk-Revolve schedules.
 """
 from functools import partial
 from .basic_functions import (Operation as Op, Table, Sequence, Function, argmin)
@@ -66,21 +58,24 @@ def get_opt_inf_table(lmax, cm, uf, ub, rd, wd, one_read_disk, print_table=None,
     # Opt_inf[2...lmax] for cm
     for l in range(2, lmax + 1):
         if one_read_disk:
-            opt_inf.append(min(opt_0[cm][l], min([wd + j * uf + opt_inf[l - j] + rd + opt_0[cm][j-1] for j in range(1, l)])))
+            min_aux = min([wd + j * uf + opt_inf[l - j] + rd + opt_0[cm][j-1] for j in range(1, l)])
+            opt_inf.append(min(opt_0[cm][l], min_aux))
         else:
-            opt_inf.append(min(opt_0[cm][l], min([wd + j * uf + opt_inf[l - j] + rd + opt_1d[j-1] for j in range(1, l)])))
+            min_aux = min([wd + j * uf + opt_inf[l - j] + rd + opt_1d[j-1] for j in range(1, l)])
+            opt_inf.append(min(opt_0[cm][l], min_aux))
     return opt_inf
 
     
-def disk_revolve(l, cm, rd, wd, opt_0=None, opt_1d=None, opt_inf=None):
-    """Return a disk revolve sequence.
+def disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost,
+                 opt_0=None, opt_1d=None, opt_inf=None):
+    """Return the Disk-Revolve sequence.
 
     Parameters
     ----------
     l : int
-        Number of forward step to execute in the AC graph.
+        The number of forward steps to execute in the AC graph.
     cm : int
-        Number of available memory slots.
+        The maximum number of forward restart checkpoints to store in memory.
     opt_0 : _type_, optional
         _description_, by default None
     opt_1d : _type_, optional
@@ -93,9 +88,10 @@ def disk_revolve(l, cm, rd, wd, opt_0=None, opt_1d=None, opt_inf=None):
 
         Return the optimal sequence of makespan Opt_inf(l, cm).
     """
-    params = revolver_parameters(wd, rd)
+    params = revolver_parameters(wd, rd, fwd_cost, bwd_cost)
     parameters = dict(params)
     uf = parameters["uf"]
+    ub = parameters["ub"]
     rd = parameters["rd"]
     wd = parameters["wd"]
     one_read_disk = parameters["one_read_disk"]
@@ -153,12 +149,12 @@ def disk_revolve(l, cm, rd, wd, opt_0=None, opt_1d=None, opt_inf=None):
         sequence.insert(Operation("Write_disk", 0))
         sequence.insert(Operation("Forward", [0, jmin]))
         sequence.insert_sequence(
-            disk_revolve(l - jmin, cm, rd, wd, opt_0=opt_0, opt_1d=opt_1d, opt_inf=opt_inf).shift(jmin)
+            disk_revolve(l - jmin, cm, rd, wd, uf, ub, opt_0=opt_0, opt_1d=opt_1d, opt_inf=opt_inf).shift(jmin)
         )
         sequence.insert(Operation("Read_disk", 0))
         if one_read_disk:
             sequence.insert_sequence(
-                revolve(jmin - 1, cm, opt_0=opt_0, **parameters)
+                revolve(jmin - 1, cm, rd, wd, uf, ub, opt_0=opt_0)
             )
         else:
             sequence.insert_sequence(
@@ -166,5 +162,5 @@ def disk_revolve(l, cm, rd, wd, opt_0=None, opt_1d=None, opt_inf=None):
             )
         return sequence
     else:
-        sequence.insert_sequence(revolve(l, cm, opt_0=opt_0, **parameters))
+        sequence.insert_sequence(revolve(l, cm, rd, wd, uf, ub, opt_0=opt_0))
         return sequence

@@ -18,83 +18,100 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with tlm_adjoint.  If not, see <https://www.gnu.org/licenses/>.
 
-from checkpoint_schedules.schedule import \
-    Forward, Reverse, Copy, EndForward, EndReverse
-from checkpoint_schedules import RevolveCheckpointSchedule, StorageLocation
-
 import functools
 import pytest
-
-
-# def memory(n, s):
-#     return (MemoryCheckpointSchedule(),
-#             {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 1 + n)
-
-
-# def periodic_disk(n, s, *, period):
-#     return (PeriodicDiskCheckpointSchedule(period),
-#             {StorageLocation(0).name: 0, StorageLocation(1).name: 1 + (n - 1) // period}, period)
-
-
-# def multistage(n, s):
-#     return (MultistageCheckpointSchedule(n, 0, s),
-#             {StorageLocation(0).name: 0, StorageLocation(1).name: s}, 1)
-
-
-# def two_level(n, s, *, period):
-#     return (TwoLevelCheckpointSchedule(period, s, binomial_storage=StorageLocation(0).name),
-#             {StorageLocation(0).name: s, StorageLocation(1).name: 1 + (n - 1) // period}, 1)
+from checkpoint_schedules.schedule import \
+    Forward, Reverse, Copy, EndForward, EndReverse, StorageType
+from checkpoint_schedules import HRevolve, DiskRevolve, PeriodicDiskRevolve
 
 
 def h_revolve(n, s):
+    """_summary_
+
+    Parameters
+    ----------
+    n : _type_
+        _description_
+    s : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
    
-    if s <= 1:
+    if s < 1:
         return (None,
-                {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 0)
+                {StorageType(0).name: 0, StorageType(1).name: 0}, 0)
     else:
-        return (RevolveCheckpointSchedule(n, s - s//3, s//3),
-                {StorageLocation(0).name: s - s//3, StorageLocation(1).name: s//3}, 1)
+        revolver = HRevolve(n, s//3, s - s//3)
+        revolver.sequence(w_cost=(0, 5.0), r_cost=(0, 5.0))
+        print(s//3, s - s//3)
+        return (revolver,
+                {StorageType(0).name: s//3, StorageType(1).name: s - s//3}, 1)
 
 
 def disk_revolve(n, s):
+    """_summary_
+
+    Parameters
+    ----------
+    n : _type_
+        _description_
+    s : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     if s <= 1:
         return (None,
-                {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 0)
+                {StorageType(0).name: 0, StorageType(1).name: 0}, 0)
     else:
-        return (RevolveCheckpointSchedule(n, s, schedule="disk_revolve"),
-                {StorageLocation(0).name: s, StorageLocation(1).name: n - s}, 1)
+        revolver = DiskRevolve(n, s, n - s)
+        revolver.sequence()
+        return (revolver,
+                {StorageType(0).name: s, StorageType(1).name: n - s}, 1)
 
-def periodic_disk_revolve(n, s):
-    if s <= 1:
+
+def periodic_disk(n, s, period):
+    """_summary_
+
+    Parameters
+    ----------
+    n : _type_
+        _description_
+    s : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    if s < 1:
         return (None,
-                {StorageLocation(0).name: 0, StorageLocation(1).name: 0}, 0)
+                {StorageType(0).name: 0, StorageType(1).name: 0}, 0)
     else:
-        return (RevolveCheckpointSchedule(n, s, schedule="periodic_disk_revolve"),
-                {StorageLocation(0).name: s, StorageLocation(1).name: n - s}, 1)
-# def mixed(n, s):
-#     return (MixedCheckpointSchedule(n, s),
-#             {StorageLocation(0).name: 0, StorageLocation(1).name: s}, 1)
-
+        print(n, s)
+        revolver = PeriodicDiskRevolve(n, s, n)
+        revolver.sequence(period=period)
+        
+        return (revolver,
+                {StorageType(0).name:  s, StorageType(1).name: n - s}, 1)
 
 @pytest.mark.parametrize(
     "schedule, schedule_kwargs",
     [
-    # (memory, {}),
-    #  (periodic_disk, {"period": 1}),
     #  (periodic_disk, {"period": 2}),
-    #  (periodic_disk, {"period": 7}),
-    #  (periodic_disk, {"period": 10}),
-    #  (multistage, {}),
-    #  (two_level, {"period": 1}),
-    #  (two_level, {"period": 2}),
-    #  (two_level, {"period": 7}),
-    #  (two_level, {"period": 10}),
-    
-        (h_revolve, {},
-        #  marks=pytest.mark.skipif(hrevolve is None,
-        #                           reason="H-Revolve not available")),
-    #  (mixed, {}
-    )
+    #  (periodic_disk, {"period": 4}),
+    #  (periodic_disk, {"period": 8}),
+    #  (periodic_disk, {"period": 16}),
+     (disk_revolve, {}),
+     (h_revolve, {})
      ]
      )
 @pytest.mark.parametrize("n, S", [
@@ -103,7 +120,7 @@ def periodic_disk_revolve(n, s):
                                 #   (3, (1, 2)),
                                 #   (10, tuple(range(1, 10))),
                                 #   (100, tuple(range(1, 100))),
-                                  (250, tuple(range(25, 250, 25)))
+                                  (250, tuple(range(20, 250, 20)))
                                   ])
 def test_validity(schedule, schedule_kwargs, n, S):
     """Test the checkpoint revolvers.
@@ -125,6 +142,13 @@ def test_validity(schedule, schedule_kwargs, n, S):
 
     @action.register(Forward)
     def action_forward(cp_action):
+        """_summary_
+
+        Parameters
+        ----------
+        cp_action : _type_
+            _description_
+        """
         nonlocal model_n
         # Start at the current location of the forward
         assert model_n is not None and model_n == cp_action.n0
@@ -140,7 +164,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
             assert cp_action.n0 not in snapshots[cp_action.storage]
             # len(ics.intersection(range(cp_action.n0, n1))) == 0
 
-        if cp_action.adj_deps:
+        if cp_action.write_adj_deps:
             # No non-linear dependency data for these steps is stored
             assert len(data.intersection(range(cp_action.n0, n1))) == 0
 
@@ -149,7 +173,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
         if cp_action.write_ics:
             ics.update(range(cp_action.n0, n1))
             snapshots[cp_action.storage][cp_action.n0] = (set(ics), set(data))
-        if cp_action.adj_deps:
+        if cp_action.write_adj_deps:
             data.update(range(cp_action.n0, n1))
 
         if len(ics) > 0:
@@ -165,6 +189,13 @@ def test_validity(schedule, schedule_kwargs, n, S):
 
     @action.register(Reverse)
     def action_reverse(cp_action):
+        """_summary_
+
+        Parameters
+        ----------
+        cp_action : _type_
+            _description_
+        """
         nonlocal model_r
 
         # Start at the current location of the adjoint
@@ -223,9 +254,8 @@ def test_validity(schedule, schedule_kwargs, n, S):
         ics = set()
         data = set()
 
-        snapshots = {StorageLocation(0).name: {}, StorageLocation(1).name: {}}
+        snapshots = {StorageType(0).name: {}, StorageType(1).name: {}}
         cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs) 
-
         if cp_schedule is None:
             raise TypeError("Incompatible with schedule type.")
         assert cp_schedule.n() == 0
@@ -233,7 +263,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
         assert cp_schedule.max_n() is None or cp_schedule.max_n() == n
         while True:
             cp_action = next(cp_schedule)
-            # print(cp_action.info())
+            
             action(cp_action)
             assert model_n is None or model_n == cp_schedule.n()
             assert model_r == cp_schedule.r()
@@ -241,8 +271,11 @@ def test_validity(schedule, schedule_kwargs, n, S):
             # Checkpoint storage limits are not exceeded
             for storage_type, storage_limit in storage_limits.items():
                 assert len(snapshots[storage_type]) <= storage_limit
+                
             # Data storage limit is not exceeded
             assert min(1, len(ics)) + len(data) <= data_limit
 
             if isinstance(cp_action, EndReverse):
                 break
+
+

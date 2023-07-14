@@ -43,7 +43,24 @@ def RelCostX(m, opt_1d_m_moins_1, wd, rd, **params):
 
 
 def compute_mx(cm, opt_0=None, opt_1d=None, mmax=None, **params):
-    """Compute the optimal period mX, as defined in the paper. """
+    """Compute the optimal period.
+
+    Parameters
+    ----------
+    cm : _type_
+        _description_
+    opt_0 : _type_, optional
+        _description_, by default None
+    opt_1d : _type_, optional
+        _description_, by default None
+    mmax : _type_, optional
+        _description_, by default None
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     if mmax is None:
         mmax = compute_mmax(cm, **params)
     if opt_0 is None or len(opt_0) < mmax:
@@ -54,7 +71,6 @@ def compute_mx(cm, opt_0=None, opt_1d=None, mmax=None, **params):
     objbest = RelCostX(1, opt_1d[0], **params)
     for mxi in range(2, mmax+1):
         obj = RelCostX(mxi, opt_1d[mxi-1], **params)
-        # print("mxi", mxi, "opt", opt_1d[mxi-1], "wd", wd, "rd", rd, "obj", obj)
         if obj <= objbest:
             objbest = obj
             mx = mxi
@@ -62,8 +78,22 @@ def compute_mx(cm, opt_0=None, opt_1d=None, mmax=None, **params):
 
 
 def mx_close_formula(cm, rd, wd, opt_0=None, opt_1d=None, **params):
-    """ Compute mX using the close formula in the paper
-        It's not proven yet, but it's been verified and it's faster """
+    """Compute mX using the close formula in the paper
+        It's not proven yet, but it's been verified and it's faster
+
+    Parameters
+    ----------
+    cm : _type_
+        _description_
+    rd : _type_
+        _description_
+    wd : _type_
+        _description_
+    opt_0 : _type_, optional
+        _description_, by default None
+    opt_1d : _type_, optional
+        _description_, by default None
+    """
     def f(x, y, c):
         return int(beta(c + 1, x + y - 1) - sum([beta(c, k) for k in range(0, y)]))
 
@@ -91,7 +121,24 @@ def mx_close_formula(cm, rd, wd, opt_0=None, opt_1d=None, **params):
 
 
 def mxrr_close_formula(cm, uf, rd, wd, **params):
-    """ Compute mXrr using the close formula in the paper"""
+    """Compute mXrr using the close formula in the paper.
+
+    Parameters
+    ----------
+    cm : _type_
+        _description_
+    uf : _type_
+        _description_
+    rd : _type_
+        _description_
+    wd : _type_
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
     t = 0
     while beta(cm+1, t) <= (wd + rd) / uf:
         t += 1
@@ -99,16 +146,53 @@ def mxrr_close_formula(cm, uf, rd, wd, **params):
     return int(beta(cm, t))
 
 
-def combin(k, n):
-    return int(math.factorial(n)/(math.factorial(k)*math.factorial(n-k)))
+# def combin(k, n):
+#     """_summary_
+
+#     Parameters
+#     ----------
+#     k : _type_
+#         _description_
+#     n : _type_
+#         _description_
+
+#     Returns
+#     -------
+#     _type_
+#         _description_
+#     """
+#     return int(math.factorial(n)/(math.factorial(k)*math.factorial(n-k)))
 
 
-def periodic_disk_revolve(l, cm, rd, wd, opt_0=None, opt_1d=None, mmax=None):
-    """ l : number of forward step to execute in the AC graph
-            cm : number of available memory slots
-            Return the periodic sequence with optimal period"""
+def periodic_disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost, period,
+                          opt_0=None, opt_1d=None, mmax=None):
+    """Compute the periodic disk revolve sequence.
+            
+
+    Parameters
+    ----------
+    l : int
+        The number of forward step to execute in the AC graph.
+    cm : int
+        The number of slots available in memory.
+    rd : float
+        Cost of read the checkpoint data in disk.
+    wd : _type_
+        Cost of write the checkpoint data in disk.
+    opt_0 : _type_, optional
+        _description_, by default None
+    opt_1d : _type_, optional
+        _description_, by default None
+    mmax : _type_, optional
+        _description_, by default None
+
+    Returns
+    -------
+    _type_
+        Return the periodic sequence with optimal period.
+    """
     
-    params = revolver_parameters(wd, rd)
+    params = revolver_parameters(wd, rd, fwd_cost, bwd_cost, mx=period)
     parameters = dict(params)
     # parameters.update(params)
     mx = parameters["mx"]
@@ -144,7 +228,7 @@ def periodic_disk_revolve(l, cm, rd, wd, opt_0=None, opt_1d=None, mmax=None):
         current_task += mx
     if one_read_disk or opt_1d[l - current_task] == opt_0[cm][l - current_task]:
         sequence.insert_sequence(
-            revolve(l - current_task, cm, opt_0=opt_0, **parameters).shift(current_task)
+            revolve(l - current_task, cm, rd, wd, fwd_cost, bwd_cost, opt_0=opt_0).shift(current_task)
         )
     else:
         sequence.insert(Operation("Write_disk", current_task))
@@ -156,7 +240,7 @@ def periodic_disk_revolve(l, cm, rd, wd, opt_0=None, opt_1d=None, mmax=None):
         sequence.insert(Operation("Read_disk", current_task))
         if one_read_disk:
             sequence.insert_sequence(
-                revolve(mx - 1, cm, opt_0=opt_0, **parameters).shift(current_task)
+                revolve(mx - 1, cm, rd, wd, fwd_cost, bwd_cost, opt_0=opt_0).shift(current_task)
             )
         else:
             sequence.insert_sequence(

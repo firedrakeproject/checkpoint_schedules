@@ -1,13 +1,5 @@
 #!/usr/bin/python
-"""This function is a copy of the original revolve_1d
-module that composes the python H-Revolve implementation
-published by Herrmann and Pallez [1].
-
-Refs:
-[1] Herrmann, Pallez, "H-Revolve: A Framework for
-Adjoint Computation on Synchronous Hierarchical
-Platforms", ACM Transactions on Mathematical
-Software  46(2), 2020.
+"""Rotine of the Revolve-1D schedules.
 """
 from .basic_functions import (Operation as Op, Sequence, Function, Table, argmin)
 from .revolve import revolve, get_opt_0_table
@@ -95,6 +87,8 @@ def revolve_1d(l, cm, opt_0=None, opt_1d=None, **params):
     parameters = dict(params)
     rd = parameters["rd"]
     uf = parameters["uf"]
+    wd = parameters["wd"]
+    ub = parameters["ub"]
     one_read_disk = parameters["one_read_disk"]
     if opt_0 is None:
         opt_0 = get_opt_0_table(l, cm, **parameters)
@@ -157,5 +151,5 @@ def revolve_1d(l, cm, opt_0=None, opt_1d=None, **params):
             )
         return sequence
     else:
-        sequence.insert_sequence(revolve(l, cm, opt_0=opt_0, **parameters))
+        sequence.insert_sequence(revolve(l, cm, rd, wd, uf, ub, opt_0=opt_0))
         return sequence

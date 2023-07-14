@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 from abc import ABC, abstractmethod
 import functools
-from enum import Enum
+from enum import Enum, IntEnum
+
 __all__ = \
     [
+        "StorageType",
         "CheckpointAction",
         "Forward",
         "Reverse",
@@ -16,8 +17,45 @@ __all__ = \
     ]
 
 
+class StorageType(Enum):
+    """
+    RAM : It is the first level of checkpoint storage.
+
+    DISK : It is the second level of checkpoint storage.
+
+    NONE : Indicate that there is no specific storage location defined 
+    for the checkpoint data.
+    """
+    RAM = 0
+    DISK = 1
+    NONE = None
+
+
+class StepType(IntEnum):
+    """Step type cost.
+    """
+    NONE = 0
+    FORWARD = 1
+    FORWARD_REVERSE = 2
+    WRITE_DATA = 3
+    WRITE_ICS = 4
+    READ_DATA = 5
+    READ_ICS = 6
+
+
 class CheckpointAction:
-    """Checkpoint action object.
+    """A checkpoint action.
+    
+    Attributes
+    ----------
+    *args : Any
+        The *args correspond to the arguments of the checkpoint scheduled actions: 
+        `Forward`, `Reverse`, `Copy`, `EndForward`, `EndReverse`.
+    
+    See Also
+    --------
+    :class:`Forward`, :class:`Reverse`, :class:`Copy`, :class:`EndForward`,
+    :class:`EndReverse`.
     
     """
     def __init__(self, *args):
@@ -27,31 +65,44 @@ class CheckpointAction:
         return f"{type(self).__name__}{self.args!r}"
 
     def __eq__(self, other):
-        return type(self) == type(other) and self.args == other.args
+        return isinstance(self, other) and self.args == other.args
 
 
 class Forward(CheckpointAction):
-    """Abstract forward action.
+    """This action indicates the advancement of the forward solver 
+    and configures the intermediate storage.
 
-    Args
-    ----
+    Attributes
+    ----------
     n0 : int
-        Initial step.
+        Initial step of the forward computation.
     n1 : int
-        Final step.
+        Final step of the forward computation.
     write_ics : bool
-        This variable determine if the checkpont used to restart the forward
-        solver will be written. If "True", the checkpoint at the time 'n0' is
-        written.
-    adj_deps : bool
-        This variable determine if the checkpont used in the reverse 
-        computation will be written. If "True", the checkpoint at the time 'n1' is
-        written.
+        Indicate whether to store the checkpoint data used 
+        to restart the forward solver.
+    write_adj_deps : bool
+        Indicate whether to store the checkpont data used in 
+        the reverse computation.
     storage : str
-        Level of the checkpoint storage, either "RAM" or "disk".
+        Indicate the level to store the checkpoint data, which can be either `RAM` or `DISK`.
+
+    
+    Notes
+    -----
+    The Forward action also indicates wheter to store the forward checkpoint data 
+    used either to restart the forward solver or used in the adjoint computator.
+    To exemplify, let us consider a particular case:
+    Forward(0, 3, True, False, 'RAM'):
+    This action is read as:
+    - Execute the forward solver from step 0 to step 3.
+    - Write the forward data (*write_ics*) of step 0 to RAM (storage).
+    - It is not required to store the forward data for the adjoint 
+    computation since *write_adj_deps* is False.
+
     """
-    def __init__(self, n0, n1, write_ics, adj_deps, storage):
-        super().__init__(n0, n1, write_ics, adj_deps, storage)
+    def __init__(self, n0, n1, write_ics, write_adj_deps, storage):
+        super().__init__(n0, n1, write_ics, write_adj_deps, storage)
 
     def __iter__(self):
         yield from range(self.n0, self.n1)
@@ -64,85 +115,81 @@ class Forward(CheckpointAction):
 
     @property
     def n0(self):
-        """Initial step of the forward solver.
+        """Initial step of the forward computation.
 
         Returns
         -------
         int
-            Initial step.
+            The initial step.
         """
         return self.args[0]
 
     @property
     def n1(self):
-        """Final step of the forward solver.
+        """Final step of the forward computation.
 
         Returns
         -------
         int
-            Final step.
+            The final step.
         """
         return self.args[1]
 
     @property
     def write_ics(self):
-        """Inform if the checkpoint at the step 'self.args[1]' is going
-        to be saved.
+        """Indicate whether to store the checkpoint data.
 
         Returns
         -------
         bool
-            If 'True', the checkpoint at the step 'self.args[1]' is going to be saved.
+            Write the forward data of step n0 if ``True``.
         """
         return self.args[2]
     
     @property
-    def adj_deps(self):
-        """Inform if the forward data at the step 'self.args[1]' is going
-        to be saved.
+    def write_adj_deps(self):
+        """Indicate wheter to store the forward data at step `n1`.
 
         Returns
         -------
         bool
-            If 'True', the forward data at the step 'self.args[1]' is going to be saved.
+            The forward data at the step `n1` is going to be saved if ``True``.
         """
         return self.args[3]
     
     @property
     def storage(self):
-        """Level where the checkpoint is saved.
+        """Level to store the checkpoint data.
+
+        Notes
+        -----
+        The storage location list are available at `StorageLevel`.
+
+        See Also
+        --------
+        :class:`StorageLevel`.
 
         Returns
         -------
         str
-            Either "RAM" or "disk".
+            Either :class:`StorageLevel.RAM.name` or :class:`StorageLevel.DISK.name`.
         """
         return self.args[4]
-    
-    def info(self):
-        """_summary_
 
-        Returns:
-            _type_: _description_
-        """
-        f_info = ("Forward(n0: " + str(self.n0) + ", n1: " + str(self.n1)
-                  + ", write_ics: " + str(self.write_ics) + ", adj_deps: " + str(self.adj_deps)
-                  + ", storage: " + str(self.storage) + ")")
-        return f_info
-    
 
 class Reverse(CheckpointAction):
-    """Reverse action.
+    """This checkpoint action indicates the adjoint advancement.
 
     Attributes
     ----------
     n1 : int
-        Initial step of reverse solver.
+        Initial step of adjoint solver.
     n0 : int
-        Final step of reverse solver.  
+        Final step of adjoint solver.  
     clear_adj_deps : bool
-        Determine if the forward data used in the reverse computation will be 
-        cleaned. If "True", the intermediate forward data is cleaned.
+        Indicate whether to clear the forward data used in the adjoint
+        computation. 
+    
     """
     def __init__(self, n1, n0, clear_adj_deps):
 
@@ -159,178 +206,170 @@ class Reverse(CheckpointAction):
 
     @property
     def n0(self):
-        """Final step of the reverse mode.
+        """Final step of the adjoint computation.
 
         Returns
         -------
-        float
-            Final step.
+        int
+            The final step.
         """
         return self.args[1]
 
     @property
     def n1(self):
-        """Initial step of the reverse mode.
-
-        Returns
-        -------
-        float
-            Initial step.
-        """
-        return self.args[0]
-
-    def clear_adj_deps(self):
-        return self.args[2]
-    
-    def info(self):
-        """_summary_
-
-        Returns:
-            _type_: _description_
-        """
-        f_info = ("Reverse(n1: " + str(self.n1) + ", n0: " + str(self.n0)
-                  + ", clear_adj_deps: " + str(self.clear_adj_deps()) + ")")
-        return f_info
-
-class Copy(CheckpointAction):
-    """Copy from the snapshot to a space.
-    """
-    def __init__(self, n, from_storage, to_storage, delete=False):
-        super().__init__(n, from_storage, to_storage, delete)
-
-    @property
-    def n(self):
-        """Return the Write step.
+        """Initial step of the adjoint computation.
 
         Returns
         -------
         int
-            Write step.
+            The initial step.
+        """
+        return self.args[0]
+
+    def clear_adj_deps(self):
+        """Indicate whether to clear the forward data used in the reverse
+        solver.
+
+        Returns
+        -------
+        bool
+            Clear the forward data used in the reverse computation if ``True``.
+        """
+        return self.args[2]
+
+
+class Copy(CheckpointAction):
+    """Indicate the action of copying from a storage level. 
+
+    
+    Attributes
+    ----------
+    n : int
+        The step with which the copied data is associated.
+    from_storage : str
+        The storage level from which the data should be copied. Either
+        `StorageLevel.RAM.name` or `StorageLevel.DISK.name`. 
+    delete : bool
+        Whether the data should be deleted from the indicated storage level
+        after it has been copied.
+    
+    See Also
+    --------
+    :class:`StorageLevel` 
+
+    """
+    def __init__(self, n, from_storage, delete=False):
+        super().__init__(n, from_storage, delete)
+
+    @property
+    def n(self):
+        """The step to copy the forward checkpoint data.
+
+        Returns
+        -------
+        int
+            The copy step.
         """
         return self.args[0]
     
     @property
     def from_storage(self):
-        """Level where the checkpoint is saved.
+        """The storage level to copy the checkpoint data.
 
+        Notes
+        -----
+        Storage location are available in `StorageLevel`.
+
+        
+        See Also
+        --------
+        :class:`StorageLevel`
+
+        
         Returns
         -------
         str
-            Either "RAM" or "disk".
+            Either `RAM` or `DISK`.
         """
         return self.args[1]
     
     @property
-    def to_storage(self):
-        """Level where the checkpoint is saved.
-
-        Returns
-        -------
-        str
-            Either "RAM" or "disk".
-        """
-        return self.args[2]
-    
-    @property
     def delete(self):
-        """Delete the checkpoint data saved in the snapshot.
+        """Delete the checkpoint stored in a storage level. 
+        
+
+        Notes
+        -----
+        The storage level is given by `from_storage` property.
 
         Returns
         -------
         bool
-            Inform if the snapshot data will be deleted.
+            Delete the checkpoint data if ``True``.
         """
-        return self.args[3]
-    
-    def info(self):
-        """_summary_
-
-        Returns:
-            _type_: _description_
-        """
-        f_info = ("Copy(n: " + str(self.n) + ", from_storage: " + str(self.from_storage) 
-                  + ", to_storage: " + str(self.to_storage) + ", delete: " + str(self.delete) + ")")
-        return f_info
+        return self.args[2]
 
 
 class EndForward(CheckpointAction):
-    """Action used if the Forward solver is ended.
+    """Indicate that the forward solver is finalised.
     """
-    def info(self):
-        """_summary_
-
-        Returns:
-            _type_: _description_
-        """
-        f_info = "EndForward"
-        return f_info
-
 
 
 class EndReverse(CheckpointAction):
-    """Action used if the Reverse solver is ended.
+    """A checkpointing action which indicates the end of an adjoint
+    calculation.
+
+    Attributes
+    ----------
+    exhausted : bool
+        Indicate whether the schedule has concluded.
+        If ``True`` then this action should be the last action in the schedule.
     """
     def __init__(self, exhausted):
+        # delete exhausted
         super().__init__(exhausted)
 
     @property
     def exhausted(self):
-        """_summary_
+        """Indicates whether the schedule has concluded.
 
         Returns
         -------
-        _type_
-            _description_
+        bool
+            If ``True`` then this action should be the last action in the schedule.
         """
         return self.args[0]
     
-    def info(self):
-        """_summary_
-
-        Returns:
-            _type_: _description_
-        """
-        f_info = "EndReverse"
-        return f_info
 
 class CheckpointSchedule(ABC):
     """A checkpointing schedule.
 
-    The schedule is defined by iter, which yields actions in a similar manner
-    to the approach used in
-        A. Griewank and A. Walther, "Algorithm 799: Revolve: An implementation
-        of checkpointing for the reverse or adjoint mode of computational
-        differentiation", ACM Transactions on Mathematical Software, 26(1), pp.
-        19--45, 2000
-    e.g. 'forward', 'read', and 'write' correspond to ADVANCE, RESTORE, and
-    TAKESHOT respectively in Griewank and Walther 2000 (although here 'write'
-    actions occur *after* forward advancement from snapshots).
-
-    The iter method yields (action, data), with:
-    Forward(n0, n1)
-    Run the forward from the start of block n0 to the start of block n1.
-
-    Reverse(n1, n0)
-    Run the adjoint from the start of block n1 to the start of block n0.
-
-    Read(n, storage, delete)
-    Read checkpoint data associated with block n from the indicated storage.
-    delete indicates whether the checkpoint data should be deleted.
-
-    Write(n, storage)
-    Write checkpoint data associated with block n to the indicated storage.
-
-    EndForward()
-    End the forward calculation.
-
-    EndReverse(exhausted)
-    End a reverse calculation. If exhausted is False then a further reverse
-    calculation can be performed.
-
-    Atributes
+    Attributes
     ----------
     max_n : int
-        Maximal steps of a forward solver.
+        The number of forward steps in the initial forward calculation.
+
+    Notes
+    -----
+    Actions in the schedule are accessed by iterating over elements, and
+    actions may be implemented using single-dispatch functions. e.g.
+
+    .. code-block:: python
+
+        @functools.singledispatch
+        def action(cp_action):
+            raise TypeError(f"Unexpected checkpointing action: {cp_action}")
+
+        @action.register(Forward)
+        def action_forward(cp_action):
+            logger.debug(f"forward: forward advance to {cp_action.n1:d}")
+
+        # ...
+
+        for cp_action in cp_schedule:
+            action(cp_action)
+            if isinstance(cp_action, EndReverse):
+                break
     """
 
     def __init__(self, max_n=None):
@@ -344,64 +383,80 @@ class CheckpointSchedule(ABC):
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
 
-        cls_iter = cls.iter
+        cls_iter = cls._iterator
 
         @functools.wraps(cls_iter)
-        def iter(self):
-            """Checkpoint schedule Iterator.
+        def _iterator(self):
+            """Abstract checkpoint schedule iterator.
 
             Returns
             -------
-            object
-                Iterator.
+            self._iter : generator
+                Return an iterator object used to iterate the action that is 
+                given by the revolve schedule.
             """
             if not hasattr(self, "_iter"):
                 self._iter = cls_iter(self)
             return self._iter
 
-        cls.iter = iter
+        cls._iterator = _iterator
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        return next(self.iter())
+        return next(self._iterator())
 
     @abstractmethod
-    def iter(self):
-        """Abstract iterator.
+    def _iterator(self):
+        """A generator which should be overridden in derived classes in order
+        to define a checkpointing schedule.
         """
         raise NotImplementedError
 
-    @abstractmethod
+    @property
     def is_exhausted(self):
-        """_summary_
+        """Return whether the schedule has concluded. 
+        
+        Notes
+        -----
+        Note that some schedules permit multiple adjoint calculation, 
+        and may never conclude.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def uses_disk_storage(self):
-        """_summary_
+    def uses_storage_type(self):
+        """Return whether the schedule may use disk storage. 
         """
         raise NotImplementedError
 
     def n(self):
-        """Forward step.
+        """Return the forward step location. 
+        
+        Notes
+        -----
+        After executing all actions defined so far in the schedule the forward 
+        is at the start of this step.
 
         Returns
         -------
         int 
-            Forward step.
+            The forward step location.
         """
         return self._n
 
     def r(self):
-        """Reverse step.
+        """Return the reverse step.
+
+        Notes
+        -----
+        The reverse step means the number of adjoint steps advancement.
 
         Returns
         -------
-        int 
-            Reverse step.
+        self._r : int 
+            The reverse step.
         """
         return self._r
 
@@ -410,21 +465,31 @@ class CheckpointSchedule(ABC):
 
         Returns
         -------
-        int
+        self._max_n : int
             The number of forward steps.
         """
         return self._max_n
-
+    
+    @property
     def is_running(self):
+        """Return whether the schedule is `running`.
+
+        Returns
+        -------
+        bool
+            Indicate whether the :class:`CheckpointSchedule` schedule has an 
+            iterator object. Do not finalise the checkpoint schedule if ``True``.
+        """
         return hasattr(self, "_iter")
 
     def finalize(self, n):
-        """Verify if the solver is finalized.
+        """Indicate the number of forward steps in the initial forward
+        calculation.
 
         Parameters
         ----------
         n : int
-            Current solver step.
+            The number of steps in the initial forward calculation.
         """
         if n < 1:
             raise ValueError("n must be positive")
@@ -438,10 +503,3 @@ class CheckpointSchedule(ABC):
             raise RuntimeError("Invalid checkpointing state")
 
 
-class StorageLocation(Enum):
-    """List of storage level.
-    """
-    RAM = 0
-    DISK = 1
-    TAPE = -1
-    NONE = None

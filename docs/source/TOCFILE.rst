@@ -1,3 +1,4 @@
+.. _checkpoint_schedules-api-reference:
 checkpoint_schedules
 ====================
 
