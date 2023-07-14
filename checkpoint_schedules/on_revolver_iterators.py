@@ -20,7 +20,11 @@ class SingleStorageSchedule(CheckpointSchedule):
     Online, unlimited adjoint calculations permitted.
     """
 
-    def _iterator(self, storage):
+    def __init__(self, storage):
+        self._storage = storage
+        super().__init__()
+    
+    def _iterator(self):
         # Forward
 
         if self._max_n is not None:
@@ -31,7 +35,7 @@ class SingleStorageSchedule(CheckpointSchedule):
             n0 = self._n
             n1 = n0 + sys.maxsize
             self._n = n1
-            yield Forward(n0, n1, True, True, storage)
+            yield Forward(n0, n1, True, True, self._storage)
 
         yield EndForward()
 
