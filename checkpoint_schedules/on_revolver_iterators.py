@@ -20,7 +20,7 @@ class SingleStorageSchedule(CheckpointSchedule):
     Online, unlimited adjoint calculations permitted.
     """
 
-    def _iter(self, storage):
+    def _iterator(self, storage):
         # Forward
 
         if self._max_n is not None:
@@ -102,7 +102,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
         self._binomial_storage = binomial_storage
         self._trajectory = binomial_trajectory
 
-    def _iter(self):
+    def _iterator(self):
         # Forward
 
         while self._max_n is None:
@@ -211,7 +211,7 @@ class NoneCheckpointSchedule(CheckpointSchedule):
         super().__init__()
         self._exhausted = False
 
-    def _iter(self):
+    def _iterator(self):
         # Forward
 
         if self._max_n is not None:
