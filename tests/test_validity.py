@@ -153,7 +153,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
         # Start at the current location of the forward
         assert model_n is not None and model_n == cp_action.n0
 
-        if cp_schedule.max_n() is not None:
+        if cp_schedule.max_n is not None:
             # Do not advance further than the current location of the adjoint
             assert cp_action.n1 <= n - model_r
         n1 = min(cp_action.n1, n)
@@ -255,15 +255,15 @@ def test_validity(schedule, schedule_kwargs, n, S):
         cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs) 
         if cp_schedule is None:
             raise TypeError("Incompatible with schedule type.")
-        assert cp_schedule.n() == 0
-        assert cp_schedule.r() == 0
-        assert cp_schedule.max_n() is None or cp_schedule.max_n() == n
+        assert cp_schedule.n == 0
+        assert cp_schedule.r == 0
+        assert cp_schedule.max_n is None or cp_schedule.max_n == n
         while True:
             cp_action = next(cp_schedule)
             
             action(cp_action)
-            assert model_n is None or model_n == cp_schedule.n()
-            assert model_r == cp_schedule.r()
+            assert model_n is None or model_n == cp_schedule.n
+            assert model_r == cp_schedule.r
 
             # Checkpoint storage limits are not exceeded
             for storage_type, storage_limit in storage_limits.items():
