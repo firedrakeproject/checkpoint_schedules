@@ -406,11 +406,12 @@ class CheckpointSchedule(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def uses_storage_type(self):
+    def uses_storage_type(self, storage):
         """Return whether the schedule may use disk storage. 
         """
         raise NotImplementedError
 
+    @property
     def n(self):
         """Return the forward step location. 
         
@@ -426,6 +427,7 @@ class CheckpointSchedule(ABC):
         """
         return self._n
 
+    @property
     def r(self):
         """Return the reverse step.
 
@@ -439,7 +441,8 @@ class CheckpointSchedule(ABC):
             The reverse step.
         """
         return self._r
-
+    
+    @property
     def max_n(self):
         """The number of forward steps in the initial forward calculation.
 
