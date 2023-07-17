@@ -1,8 +1,8 @@
 from checkpoint_schedules import Forward, EndForward, Reverse, Copy, EndReverse
 from checkpoint_schedules import Revolve
 import functools
-
  
+
 class CheckpointingManager():
     """Manage the forward and adjoint solvers.
 

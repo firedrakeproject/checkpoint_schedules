@@ -96,7 +96,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                  binomial_trajectory="maximum"):
         if period < 1:
             raise ValueError("period must be positive")
-        if binomial_storage not in [StorageType(0).name, StorageType(1).name]:
+        if binomial_storage not in [StorageType.RAM, StorageType.DISK]:
             raise ValueError("Invalid storage")
 
         super().__init__()
@@ -116,7 +116,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
             n0 = self._n
             n1 = n0 + self._period
             self._n = n1
-            yield Forward(n0, n1, True, False, StorageType(1).name)
+            yield Forward(n0, n1, True, False, StorageType.DISK)
 
         yield EndForward()
 
@@ -139,13 +139,13 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                         snapshots.pop()
                         self._n = cp_n
                         if cp_n == n0s:
-                            yield Copy(cp_n, StorageType(1).name, False)
+                            yield Copy(cp_n, StorageType.DISK, False)
                         else:
                             yield Copy(cp_n, self._binomial_storage, True)
                     else:
                         self._n = cp_n
                         if cp_n == n0s:
-                            yield Copy(cp_n, StorageType(1).name, False)
+                            yield Copy(cp_n, StorageType.DISK, False)
                         else:
                             yield Copy(cp_n, self._binomial_storage, False)
 
@@ -157,7 +157,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                                             trajectory=self._trajectory)
                         assert n1 > n0
                         self._n = n1
-                        yield Forward(n0, n1, False, False, StorageType(None).name)
+                        yield Forward(n0, n1, False, False, StorageType.NONE)
 
                         while self._n < self._max_n - self._r - 1:
                             n_snapshots = (self._binomial_snapshots + 1
@@ -179,7 +179,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                             raise RuntimeError("Invalid checkpointing state")
 
                     self._n += 1
-                    yield Forward(self._n - 1, self._n, False, True, StorageType(0).name)
+                    yield Forward(self._n - 1, self._n, False, True, StorageType.RAM)
 
                     self._r += 1
                     yield Reverse(self._n, self._n - 1, True)
@@ -226,7 +226,7 @@ class NoneCheckpointSchedule(CheckpointSchedule):
             n0 = self._n
             n1 = n0 + sys.maxsize
             self._n = n1
-            yield Forward(n0, n1, False, False, StorageType(None).name)
+            yield Forward(n0, n1, False, False, StorageType.NONE)
 
         self._exhausted = True
         yield EndForward()

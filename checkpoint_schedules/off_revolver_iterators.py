@@ -87,7 +87,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 else:
                     write_ics = False
                     adj_deps = False
-                    w_storage = StorageType(None).name
+                    w_storage = StorageType(None)
                 yield Forward(n_0, n_1, write_ics, adj_deps, w_storage)
                 if self._n == self._max_n:
                     if self._r != 0:
@@ -214,8 +214,8 @@ class DiskRevolve(RevolveCheckpointSchedule):
         """
         
         self._schedule = list(disk_revolve(self._max_n - 1,
-                                         self._snapshots_in_ram,
-                                         w_cost, r_cost, fwd_cost, bwd_cost))
+                                           self._snapshots_in_ram,
+                                           w_cost, r_cost, fwd_cost, bwd_cost))
 
 
 class PeriodicDiskRevolve(RevolveCheckpointSchedule):
@@ -290,8 +290,7 @@ def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
     delete_weight : float, optional
         The weight of a delete of a checkpoint.
     trajectory : str, optional
-        The trajectory to use for allocating checkpoints. See the `trajectory`.
-      
+        The trajectory to use for allocating checkpoints. See the `trajectory`.  
     """
     snapshots_in_ram = min(snapshots_in_ram, max_n - 1)
     snapshots_on_disk = min(snapshots_on_disk, max_n - 1)
@@ -354,10 +353,10 @@ def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
     #   offline checkpointing', SIAM Journal on Scientific Computing, 31(3),
     #   pp. 1946--1967, 2009, doi: 10.1137/080718036
 
-    allocation = [StorageType(1).name for _ in range(snapshots)]
+    allocation = [StorageType.DISK.name for _ in range(snapshots)]
     for i, _ in sorted(enumerate(weights), key=itemgetter(1),
                        reverse=True)[:snapshots_in_ram]:
-        allocation[i] = StorageType(0).name
+        allocation[i] = StorageType.RAM.name
 
     return tuple(weights), tuple(allocation)
 
@@ -411,16 +410,16 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
         snapshots_in_ram = min(snapshots_in_ram, max_n - 1)
         snapshots_on_disk = min(snapshots_on_disk, max_n - 1)
         if snapshots_in_ram == 0:
-            storage = tuple(StorageType(1).name for _ in range(snapshots_on_disk))
+            storage = tuple(StorageType.DISK.name for _ in range(snapshots_on_disk))
         elif snapshots_on_disk == 0:
-            storage = tuple(StorageType(0).name for _ in range(snapshots_in_ram))
+            storage = tuple(StorageType.RAM.name for _ in range(snapshots_in_ram))
         else:
             _, storage = allocate_snapshots(
                 max_n, snapshots_in_ram, snapshots_on_disk,
                 trajectory=trajectory)
 
-        snapshots_in_ram = storage.count(StorageType(0).name)
-        snapshots_on_disk = storage.count(StorageType(1).name)
+        snapshots_in_ram = storage.count(StorageType.RAM.name)
+        snapshots_on_disk = storage.count(StorageType.DISK.name)
 
         super().__init__(max_n=max_n)
         self._snapshots_in_ram = snapshots_in_ram
@@ -458,7 +457,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
 
         # Forward -> reverse
         self._n += 1
-        yield Forward(self._n - 1, self._n, False, True, StorageType(0).name)
+        yield Forward(self._n - 1, self._n, False, True, StorageType.RAM.name)
 
         yield EndForward()
 
@@ -506,7 +505,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
                     raise RuntimeError("Invalid checkpointing state")
                 
             self._n += 1
-            yield Forward(self._n - 1, self._n, False, True, StorageType(0).name)
+            yield Forward(self._n - 1, self._n, False, True, StorageType.RAM.name)
             self._r += 1
             yield Reverse(self._n, self._n - 1, True)
         if self._r != self._max_n:
@@ -548,7 +547,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
     def __init__(self, max_n, snapshots, *, storage="disk"):
         if snapshots < min(1, max_n - 1):
             raise ValueError("Invalid number of snapshots")
-        if storage not in [StorageType(0).name, StorageType(1).name]:
+        if storage not in [StorageType.RAM.name, StorageType.DISK.name]:
             raise ValueError("Invalid storage")
 
         super().__init__(max_n)
@@ -603,7 +602,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                     elif n1 <= n0:
                         raise InvalidForwardStep
                     self._n += 1
-                    yield Forward(n1 - 1, n1, False, True, StorageType(0).name)
+                    yield Forward(n1 - 1, n1, False, True, StorageType.RAM.name)
                 elif step_type == StepType.FORWARD:
                     if n1 <= n0:
                         raise InvalidForwardStep

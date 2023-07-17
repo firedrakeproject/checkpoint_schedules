@@ -28,6 +28,7 @@ class StorageType(Enum):
     """
     RAM = 0
     DISK = 1
+    TAPE = -1
     NONE = None
 
 
@@ -174,7 +175,7 @@ class Forward(CheckpointAction):
         Returns
         -------
         str
-            Either :class:`StorageType.RAM.name` or :class:`StorageType.DISK.name`.
+            Either :class:`StorageType.RAM` or :class:`StorageType.DISK`.
         """
         return self.args[4]
 
@@ -251,7 +252,7 @@ class Copy(CheckpointAction):
         The step with which the copied data is associated.
     from_storage : str
         The storage level from which the data should be copied. Either
-        `StorageType.RAM.name` or `StorageType.DISK.name`. 
+        `StorageType.RAM` or `StorageType.DISK`. 
     delete : bool
         Whether the data should be deleted from the indicated storage level
         after it has been copied.
@@ -261,7 +262,7 @@ class Copy(CheckpointAction):
     :class:`StorageType` 
 
     """
-    def __init__(self, n, from_storage, delete=False):
+    def __init__(self, n, from_storage, delete):
         super().__init__(n, from_storage, delete)
 
     @property
@@ -277,11 +278,11 @@ class Copy(CheckpointAction):
     
     @property
     def from_storage(self):
-        """The storage level to copy the checkpoint data.
+        """The storage type to copy the checkpoint data.
 
         Notes
         -----
-        Storage location are available in `StorageType`.
+        Storage type are available in `StorageType`.
 
         
         See Also
@@ -292,13 +293,13 @@ class Copy(CheckpointAction):
         Returns
         -------
         str
-            Either `RAM` or `DISK`.
+            Either :class:`StorageType.RAM` or `StorageType.RAM`.
         """
         return self.args[1]
     
     @property
     def delete(self):
-        """Delete the checkpoint stored in a storage level. 
+        """Delete the checkpoint stored in a storage type. 
         
 
         Notes
