@@ -193,7 +193,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                             raise RuntimeError("Invalid checkpointing state")
 
                     self._n += 1
-                    yield Forward(self._n - 1, self._n, False, True, StorageType.RAM)
+                    yield Forward(self._n - 1, self._n, False, True, StorageType.TAPE)
 
                     self._r += 1
                     yield Reverse(self._n, self._n - 1, True)

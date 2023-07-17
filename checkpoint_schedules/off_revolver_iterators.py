@@ -87,7 +87,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 else:
                     write_ics = False
                     adj_deps = False
-                    w_storage = StorageType(None)
+                    w_storage = StorageType.NONE
                 yield Forward(n_0, n_1, write_ics, adj_deps, w_storage)
                 if self._n == self._max_n:
                     if self._r != 0:
@@ -463,7 +463,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
 
         # Forward -> reverse
         self._n += 1
-        yield Forward(self._n - 1, self._n, False, True, StorageType.RAM)
+        yield Forward(self._n - 1, self._n, False, True, StorageType.TAPE)
 
         yield EndForward()
 
@@ -511,7 +511,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
                     raise RuntimeError("Invalid checkpointing state")
                 
             self._n += 1
-            yield Forward(self._n - 1, self._n, False, True, StorageType.RAM)
+            yield Forward(self._n - 1, self._n, False, True, StorageType.TAPE)
             self._r += 1
             yield Reverse(self._n, self._n - 1, True)
         if self._r != self._max_n:
@@ -620,7 +620,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                     elif n1 <= n0:
                         raise InvalidForwardStep
                     self._n += 1
-                    yield Forward(n1 - 1, n1, False, True, StorageType.RAM)
+                    yield Forward(n1 - 1, n1, False, True, StorageType.TAPE)
                 elif step_type == StepType.FORWARD:
                     if n1 <= n0:
                         raise InvalidForwardStep
