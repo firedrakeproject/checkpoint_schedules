@@ -15,7 +15,7 @@ __all__ = \
 
 class SingleStorageSchedule(CheckpointSchedule):
     """A checkpointing schedule where all forward restart and non-linear
-    dependency data are stored in memory.
+    dependency data are stored.
 
     Online, unlimited adjoint calculations permitted.
     """
@@ -57,8 +57,22 @@ class SingleStorageSchedule(CheckpointSchedule):
     def is_exhausted(self):
         return False
 
-    def uses_storage_type(self):
-        return False
+    def uses_storage_type(self, storage_type):
+        """Check if a given storage type is used in this schedule.
+
+        Parameters
+        ----------
+        storage_type : StorageType.RAM or StorageType.DISK
+            Given storage type. Either :class:`StorageType.RAM` or
+            :class:`StorageType.DISK`.
+
+        Returns
+        -------
+        bool
+            Whether this schedule uses the given storage type.
+        """
+
+        return storage_type == self._storage
 
 
 class TwoLevelCheckpointSchedule(CheckpointSchedule):
@@ -92,7 +106,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
     """
 
     def __init__(self, period, binomial_snapshots, *,
-                 binomial_storage="disk",
+                 binomial_storage=StorageType.DISK,
                  binomial_trajectory="maximum"):
         if period < 1:
             raise ValueError("period must be positive")
@@ -200,8 +214,22 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
     def is_exhausted(self):
         return False
 
-    def uses_storage_type(self):
-        return True
+    def uses_storage_type(self, storage_type):
+        """Check if a given storage type is used in this schedule.
+
+        Parameters
+        ----------
+        storage_type : StorageType.RAM or StorageType.DISK
+            Given storage type. Either :class:`StorageType.RAM` or
+            :class:`StorageType.DISK`.
+
+        Returns
+        -------
+        bool
+            Whether this schedule uses the given storage type.
+        """
+        assert storage_type in StorageType
+        return storage_type == self._binomial_storage
 
 
 class NoneCheckpointSchedule(CheckpointSchedule):
@@ -235,6 +263,19 @@ class NoneCheckpointSchedule(CheckpointSchedule):
     def is_exhausted(self):
         return self._exhausted
 
-    def uses_storage_type(self):
-        return False
+    def uses_storage_type(self, storage_type):
+        """Check the storage type.
+
+        Parameters
+        ----------
+        storage_type : StorageType.RAM, StorageType.DISK or StorageType.NONE
+            Given storage type.
+
+        Returns
+        -------
+        bool
+            Whether this schedule uses the given storage type.
+        """
+        assert storage_type in StorageType
+        return storage_type == StorageType.NONE
 

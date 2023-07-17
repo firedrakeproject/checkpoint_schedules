@@ -158,15 +158,21 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         """
         return self._exhausted
     
-    def uses_storage_type(self):
-        """Indicate whether the `disk` storage level is used.
+    def uses_storage_type(self, storage_type):
+        """Check if a given storage type is used in this schedule.
 
         Returns
         -------
         bool
-            `disk` storage is used to store the checkpoint data if ``True``.
+            Whether this schedule uses the given storage type.
         """
-        return self._snapshots_on_disk > 0
+        assert storage_type in StorageType
+
+        if storage_type == StorageType.DISK:
+            return self._snapshots_on_disk > 0
+        elif storage_type == StorageType.RAM:
+            return self._snapshots_in_ram > 0
+        
 
 
 class HRevolve(RevolveCheckpointSchedule):
@@ -353,10 +359,10 @@ def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
     #   offline checkpointing', SIAM Journal on Scientific Computing, 31(3),
     #   pp. 1946--1967, 2009, doi: 10.1137/080718036
 
-    allocation = [StorageType.DISK.name for _ in range(snapshots)]
+    allocation = [StorageType.DISK for _ in range(snapshots)]
     for i, _ in sorted(enumerate(weights), key=itemgetter(1),
                        reverse=True)[:snapshots_in_ram]:
-        allocation[i] = StorageType.RAM.name
+        allocation[i] = StorageType.RAM
 
     return tuple(weights), tuple(allocation)
 
@@ -410,16 +416,16 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
         snapshots_in_ram = min(snapshots_in_ram, max_n - 1)
         snapshots_on_disk = min(snapshots_on_disk, max_n - 1)
         if snapshots_in_ram == 0:
-            storage = tuple(StorageType.DISK.name for _ in range(snapshots_on_disk))
+            storage = tuple(StorageType.DISK for _ in range(snapshots_on_disk))
         elif snapshots_on_disk == 0:
-            storage = tuple(StorageType.RAM.name for _ in range(snapshots_in_ram))
+            storage = tuple(StorageType.RAM for _ in range(snapshots_in_ram))
         else:
             _, storage = allocate_snapshots(
                 max_n, snapshots_in_ram, snapshots_on_disk,
                 trajectory=trajectory)
 
-        snapshots_in_ram = storage.count(StorageType.RAM.name)
-        snapshots_on_disk = storage.count(StorageType.DISK.name)
+        snapshots_in_ram = storage.count(StorageType.RAM)
+        snapshots_on_disk = storage.count(StorageType.DISK)
 
         super().__init__(max_n=max_n)
         self._snapshots_in_ram = snapshots_in_ram
@@ -457,7 +463,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
 
         # Forward -> reverse
         self._n += 1
-        yield Forward(self._n - 1, self._n, False, True, StorageType.RAM.name)
+        yield Forward(self._n - 1, self._n, False, True, StorageType.RAM)
 
         yield EndForward()
 
@@ -486,7 +492,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
                                     trajectory=self._trajectory)
                 assert n1 > n0
                 self._n = n1
-                yield Forward(n0, n1, False, False, StorageType(None).name)
+                yield Forward(n0, n1, False, False, StorageType.NONE)
 
                 while self._n < self._max_n - self._r - 1:
                     n_snapshots = (self._snapshots_in_ram
@@ -505,7 +511,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
                     raise RuntimeError("Invalid checkpointing state")
                 
             self._n += 1
-            yield Forward(self._n - 1, self._n, False, True, StorageType.RAM.name)
+            yield Forward(self._n - 1, self._n, False, True, StorageType.RAM)
             self._r += 1
             yield Reverse(self._n, self._n - 1, True)
         if self._r != self._max_n:
@@ -520,8 +526,20 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
     def is_exhausted(self):
         return self._exhausted
 
-    def uses_storage_type(self):
-        return self._snapshots_on_disk > 0
+    def uses_storage_type(self, storage_type):
+        """Check if a given storage type is used in this schedule.
+
+        Returns
+        -------
+        bool
+            Whether this schedule uses the given storage type.
+        """
+        assert storage_type in StorageType
+
+        if storage_type == StorageType.DISK:
+            return self._snapshots_on_disk > 0
+        elif storage_type == StorageType.RAM:
+            return self._snapshots_in_ram > 0
  
 
 class MixedCheckpointSchedule(CheckpointSchedule):
@@ -544,10 +562,10 @@ class MixedCheckpointSchedule(CheckpointSchedule):
         `'disk'`.
     """
 
-    def __init__(self, max_n, snapshots, *, storage="disk"):
+    def __init__(self, max_n, snapshots, *, storage=StorageType.DISK):
         if snapshots < min(1, max_n - 1):
             raise ValueError("Invalid number of snapshots")
-        if storage not in [StorageType.RAM.name, StorageType.DISK.name]:
+        if storage not in [StorageType.RAM, StorageType.DISK]:
             raise ValueError("Invalid storage")
 
         super().__init__(max_n)
@@ -598,16 +616,16 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                 if step_type == StepType.FORWARD_REVERSE:
                     if n1 > n0 + 1:
                         self._n = n1 - 1
-                        yield Forward(n0, n1 - 1, False, False, StorageType(None).name)
+                        yield Forward(n0, n1 - 1, False, False, StorageType.NONE)
                     elif n1 <= n0:
                         raise InvalidForwardStep
                     self._n += 1
-                    yield Forward(n1 - 1, n1, False, True, StorageType.RAM.name)
+                    yield Forward(n1 - 1, n1, False, True, StorageType.RAM)
                 elif step_type == StepType.FORWARD:
                     if n1 <= n0:
                         raise InvalidForwardStep
                     self._n = n1
-                    yield Forward(n0, n1, False, False, StorageType(None).name)
+                    yield Forward(n0, n1, False, False, StorageType.NONE)
                 elif step_type == StepType.WRITE_DATA:
                     if n1 != n0 + 1:
                         raise InvalidForwardStep
@@ -679,9 +697,21 @@ class MixedCheckpointSchedule(CheckpointSchedule):
     def is_exhausted(self):
         return self._exhausted
 
-    def uses_storage_type(self):
-        return self._max_n > 1 and self._storage == "disk"
+    def uses_storage_type(self, storage_type):
+        """Check if a given storage type is used in this schedule.
 
+        Parameters
+        ----------
+        storage_type : StorageType.RAM or StorageType.DISK
+            Given storage type.
+
+        Returns
+        -------
+        bool
+            Whether this schedule uses the given storage type.
+        """
+        assert storage_type in StorageType
+        return self._storage == storage_type
 
 class InvalidForwardStep(IndexError):
     "The forward step is not correct."

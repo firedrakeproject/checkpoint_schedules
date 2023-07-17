@@ -410,8 +410,14 @@ class CheckpointSchedule(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def uses_storage_type(self):
-        """Return whether the schedule may use disk storage. 
+    def uses_storage_type(self, storage_type):
+        """Return whether the schedule may use a type storage. 
+
+        Parameters
+        ----------
+        storage_type : str
+            The storage type to check. Either `StorageType.RAM` or
+            `StorageType.DISK`.
         """
         raise NotImplementedError
 
