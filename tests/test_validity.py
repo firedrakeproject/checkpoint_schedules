@@ -43,13 +43,13 @@ def h_revolve(n, s):
    
     if s < 1:
         return (None,
-                {StorageType(0).name: 0, StorageType(1).name: 0}, 0)
+                {StorageType.RAM: 0, StorageType.DISK: 0}, 0)
     else:
         revolver = HRevolve(n, s//3, s - s//3)
         revolver.sequence(w_cost=(0, 5.0), r_cost=(0, 5.0))
         print(s//3, s - s//3)
         return (revolver,
-                {StorageType(0).name: s//3, StorageType(1).name: s - s//3}, 1)
+                {StorageType.RAM: s//3, StorageType.DISK: s - s//3}, 1)
 
 
 def disk_revolve(n, s):
@@ -69,12 +69,12 @@ def disk_revolve(n, s):
     """
     if s <= 1:
         return (None,
-                {StorageType(0).name: 0, StorageType(1).name: 0}, 0)
+                {StorageType.RAM: 0, StorageType.DISK: 0}, 0)
     else:
         revolver = DiskRevolve(n, s, n - s)
         revolver.sequence()
         return (revolver,
-                {StorageType(0).name: s, StorageType(1).name: n - s}, 1)
+                {StorageType.RAM: s, StorageType.DISK: n - s}, 1)
 
 
 def periodic_disk(n, s, period):
@@ -94,14 +94,14 @@ def periodic_disk(n, s, period):
     """
     if s < 1:
         return (None,
-                {StorageType(0).name: 0, StorageType(1).name: 0}, 0)
+                {StorageType.RAM: 0, StorageType.DISK: 0}, 0)
     else:
         print(n, s)
         revolver = PeriodicDiskRevolve(n, s, n)
         revolver.sequence(period=period)
         
         return (revolver,
-                {StorageType(0).name:  s, StorageType(1).name: n - s}, 1)
+                {StorageType.RAM:  s, StorageType.DISK: n - s}, 1)
 
 @pytest.mark.parametrize(
     "schedule, schedule_kwargs",
@@ -251,7 +251,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
         ics = set()
         data = set()
 
-        snapshots = {StorageType(0).name: {}, StorageType(1).name: {}}
+        snapshots = {StorageType.RAM: {}, StorageType.DISK: {}}
         cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs) 
         if cp_schedule is None:
             raise TypeError("Incompatible with schedule type.")
