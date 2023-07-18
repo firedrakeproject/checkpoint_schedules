@@ -6,7 +6,8 @@ import warnings
 from operator import itemgetter
 from .schedule import CheckpointSchedule, Forward, Reverse, Copy,\
     EndForward, EndReverse, StorageType, StepType
-from .revolve_sequences import hrevolve, disk_revolve, periodic_disk_revolve, revolve
+from .hrevolve_sequences import hrevolve, disk_revolve, periodic_disk_revolve,\
+      revolve
 from .utils import convert_action, mixed_step_memoization,\
     mixed_step_memoization_0, mixed_steps_tabulation, mixed_steps_tabulation_0,\
     n_advance

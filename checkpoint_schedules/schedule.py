@@ -415,9 +415,8 @@ class CheckpointSchedule(ABC):
 
         Parameters
         ----------
-        storage_type : str
-            The storage type to check. Either `StorageType.RAM` or
-            `StorageType.DISK`.
+        storage_type : StorageType.RAM, StorageType.DISK, or StorageType.NONE 
+            The storage type to check.
         """
         raise NotImplementedError
 
