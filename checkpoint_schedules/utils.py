@@ -53,22 +53,22 @@ def convert_action(action):
                        "Write_Forward", "Discard_Forward"]:
         storage, n_0 = action.index
         n_1 = None
-        storage = {0: StorageType(0).name, 1: StorageType(1).name}[storage]
+        storage = {0: StorageType.RAM, 1: StorageType.DISK}[storage]
     elif cp_action in ["Write_Forward_memory",
                        "Discard_Forward_memory"]:
         n_0 = action.index
         n_1 = None
-        storage = {0: StorageType(0).name}[0]
+        storage = {0: StorageType.TAPE}[0]
     elif cp_action in ["Read_disk", "Write_disk", "Discard_disk"]:
         n_0 = action.index
         n_1 = None
         storage = 1
-        storage = {1: StorageType(1).name}[storage]
+        storage = {1: StorageType.DISK}[storage]
     elif cp_action in ["Read_memory", "Write_memory", "Discard_memory"]:
         n_0 = action.index
         n_1 = None
         storage = 0
-        storage = {0: StorageType(0).name}[storage]
+        storage = {0: StorageType.RAM}[storage]
     else:
         raise InvalidRevolverAction
     return cp_action, (n_0, n_1, storage)
