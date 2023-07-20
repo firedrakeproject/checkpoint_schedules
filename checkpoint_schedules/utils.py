@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import functools
 import numpy as np
-from .schedule import StorageType, StepType
+from .schedule import StepType
 
 try:
     import numba
@@ -15,63 +15,6 @@ except ImportError:
         def wrapped_fn(*args, **kwargs):
             return fn(*args, **kwargs)
         return wrapped_fn
-
-
-def convert_action(action):
-    """Convert an revolver operation to the `checkpoint_schedules` actions.
-
-    Parameters
-    ----------
-    action_n : h_revolve.operation
-        An operation from the H-revolve sequence.
-    
-    Notes
-    -----
-    The H-Revolve operation has type and index attributes used to interpret the next action.
-    For instance, if operation type is `Forward`, the operation index that is a tuple `(n0, n1)`, 
-    which it read as the next action aims to execute the forward solver from the step n0 to step n1.
-    Write is another H-Revolve operation type 
-
-    Returns
-    -------
-    str, tuple(int, int , str)
-        Return the operation name, steps `n_0`, step `n_1` and the storage level (either RAM or disk).
-
-    """
-    cp_action = action.type
-    if cp_action == "Forward":
-        n_0, n_1 = action.index
-        if n_1 <= n_0:
-            raise RuntimeError("Invalid forward indexes.")
-        storage = None
-    elif cp_action == "Backward":
-        n_0, n_1 = action.index
-        if n_0 <= n_1:
-            raise RuntimeError("Invalid backward indexes.")
-        storage = None
-    elif cp_action in ["Read", "Write", "Discard",
-                       "Write_Forward", "Discard_Forward"]:
-        storage, n_0 = action.index
-        n_1 = None
-        storage = {0: StorageType.RAM, 1: StorageType.DISK}[storage]
-    elif cp_action in ["Write_Forward_memory",
-                       "Discard_Forward_memory"]:
-        n_0 = action.index
-        n_1 = None
-        storage = {0: StorageType.TAPE}[0]
-    elif cp_action in ["Read_disk", "Write_disk", "Discard_disk"]:
-        n_0 = action.index
-        n_1 = None
-        storage = 1
-        storage = {1: StorageType.DISK}[storage]
-    elif cp_action in ["Read_memory", "Write_memory", "Discard_memory"]:
-        n_0 = action.index
-        n_1 = None
-        storage = 0
-        storage = {0: StorageType.RAM}[storage]
-    else:
-        raise InvalidRevolverAction
-    return cp_action, (n_0, n_1, storage)
 
 
 class InvalidRevolverAction(Exception):
