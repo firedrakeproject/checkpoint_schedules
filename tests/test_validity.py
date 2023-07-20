@@ -22,115 +22,132 @@ import functools
 import pytest
 from checkpoint_schedules.schedule import \
     Forward, Reverse, Copy, EndForward, EndReverse, StorageType
-from checkpoint_schedules import HRevolve, DiskRevolve, PeriodicDiskRevolve
+from checkpoint_schedules import HRevolve, DiskRevolve, PeriodicDiskRevolve, Revolve
 
 
 def h_revolve(n, s):
-    """_summary_
+    """H-revolver.
 
     Parameters
     ----------
-    n : _type_
-        _description_
-    s : _type_
-        _description_
+    n : int
+        Total forward steps.
+    s : int
+        Snapshots to store in RAM.
 
     Returns
     -------
-    _type_
-        _description_
+    (HRevolve, dict, int)
+        H-revolver, checkpoint storage limits, data limit.
     """
-   
-    if s < 1:
+    snap_ram = s//3
+    snap_disk = s - s//3
+    if s//3 < 1:
+        pytest.skip("H-Revolve accepts snapshots in RAM > 1")
         return (None,
                 {StorageType.RAM: 0, StorageType.DISK: 0}, 0)
     else:
-        revolver = HRevolve(n, s//3, s - s//3)
-        revolver.sequence(w_cost=(0, 5.0), r_cost=(0, 5.0))
-        print(s//3, s - s//3)
+        revolver = HRevolve(n, snap_ram, snap_disk)
         return (revolver,
-                {StorageType.RAM: s//3, StorageType.DISK: s - s//3}, 1)
+                {StorageType.RAM: snap_ram, StorageType.DISK: snap_disk}, 1)
 
 
 def disk_revolve(n, s):
-    """_summary_
+    """Disk revolver.
 
     Parameters
     ----------
-    n : _type_
-        _description_
-    s : _type_
-        _description_
+    n : int
+        Total forward steps.
+    s : int
+        Snapshots to store in RAM.
 
     Returns
     -------
-    _type_
-        _description_
+    (DiskRevolve, dict, int)
+        Disk revolver, checkpoint storage limits, data limit.
     """
-    if s <= 1:
+    if s < 1:
         return (None,
                 {StorageType.RAM: 0, StorageType.DISK: 0}, 0)
     else:
         revolver = DiskRevolve(n, s, n - s)
-        revolver.sequence()
         return (revolver,
                 {StorageType.RAM: s, StorageType.DISK: n - s}, 1)
 
 
-def periodic_disk(n, s, period):
-    """_summary_
+def periodic_disk(n, s):
+    """Periodic disk revolver.
 
     Parameters
     ----------
-    n : _type_
-        _description_
-    s : _type_
-        _description_
+    n : int
+        Total forward steps.
+    s : int
+        Snapshots to save in RAM.
 
     Returns
     -------
-    _type_
-        _description_
+    (PeriodicDiskRevolve, dict, int)
+        Periodic disk revolver, checkpoint storage limits, data limit.
     """
     if s < 1:
         return (None,
                 {StorageType.RAM: 0, StorageType.DISK: 0}, 0)
     else:
-        print(n, s)
-        revolver = PeriodicDiskRevolve(n, s, n)
-        revolver.sequence(period=period)
+        revolver = PeriodicDiskRevolve(n, s)
         
         return (revolver,
                 {StorageType.RAM:  s, StorageType.DISK: n - s}, 1)
 
+def revolve(n, s):
+    """Periodic disk revolver.
+
+    Parameters
+    ----------
+    n : int
+        Total forward steps.
+    s : int
+        Snapshots to save in RAM.
+
+    Returns
+    -------
+    (PeriodicDiskRevolve, dict, int)
+        Periodic disk revolver, checkpoint storage limits, data limit.
+    """
+    if s < 1:
+        return (None,
+                {StorageType.RAM: 0, StorageType.DISK: 0}, 0)
+    else:
+        revolver = Revolve(n, s)
+        
+        return (revolver,
+                {StorageType.RAM:  s, StorageType.DISK: 0}, 1)
+
+
 @pytest.mark.parametrize(
-    "schedule, schedule_kwargs",
+    "schedule",
     [
-    #  (periodic_disk, {"period": 2}),
-    #  (periodic_disk, {"period": 4}),
-    #  (periodic_disk, {"period": 8}),
-    #  (periodic_disk, {"period": 16}),
-     (disk_revolve, {}),
-     (h_revolve, {})
+     revolve,
+     periodic_disk,
+     disk_revolve,
+     h_revolve
      ]
      )
 @pytest.mark.parametrize("n, S", [
-                                #   (1, (0,)),
-                                #   (5, (2,)),
-                                #   (3, (1, 2)),
-                                #   (10, tuple(range(1, 10))),
-                                #   (100, tuple(range(1, 100))),
-                                  (250, tuple(range(20, 250, 20)))
+                                  (5, (2,)),
+                                  (3, (1, 2)),
+                                  (10, tuple(range(2, 10))),
+                                  (100, tuple(range(10, 100))),
+                                  (250, tuple(range(25, 250, 25)))
                                   ])
-def test_validity(schedule, schedule_kwargs, n, S):
+def test_validity(schedule, n, S):
     """Test the checkpoint revolvers.
 
     Parameters
     ----------
     schedule : object
         Revolver schedule.
-    schedule_kwargs : _type_
-        _description_
     n : int
         Total forward steps.
     S : int
@@ -142,13 +159,6 @@ def test_validity(schedule, schedule_kwargs, n, S):
 
     @action.register(Forward)
     def action_forward(cp_action):
-        """_summary_
-
-        Parameters
-        ----------
-        cp_action : _type_
-            _description_
-        """
         nonlocal model_n
         # Start at the current location of the forward
         assert model_n is not None and model_n == cp_action.n0
@@ -189,13 +199,6 @@ def test_validity(schedule, schedule_kwargs, n, S):
 
     @action.register(Reverse)
     def action_reverse(cp_action):
-        """_summary_
-
-        Parameters
-        ----------
-        cp_action : _type_
-            _description_
-        """
         nonlocal model_r
 
         # Start at the current location of the adjoint
@@ -252,7 +255,7 @@ def test_validity(schedule, schedule_kwargs, n, S):
         data = set()
 
         snapshots = {StorageType.RAM: {}, StorageType.DISK: {}}
-        cp_schedule, storage_limits, data_limit = schedule(n, s, **schedule_kwargs) 
+        cp_schedule, storage_limits, data_limit = schedule(n, s)
         if cp_schedule is None:
             raise TypeError("Incompatible with schedule type.")
         assert cp_schedule.n == 0

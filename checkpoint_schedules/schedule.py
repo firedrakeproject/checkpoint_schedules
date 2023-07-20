@@ -245,25 +245,30 @@ class Reverse(CheckpointAction):
 class Copy(CheckpointAction):
     """Indicate the action of copying from a storage level. 
 
-    
+
     Attributes
     ----------
     n : int
         The step with which the copied data is associated.
-    from_storage : str
+    from_storage : StorageType.RAM or StorageType.DISK
         The storage level from which the data should be copied. Either
         `StorageType.RAM` or `StorageType.DISK`. 
+    to_storage : StorageType.TAPE
     delete : bool
         Whether the data should be deleted from the indicated storage level
         after it has been copied.
+    
+    Notes
+    -----
+    Storage types are available in `StorageType`.
     
     See Also
     --------
     :class:`StorageType` 
 
     """
-    def __init__(self, n, from_storage, delete):
-        super().__init__(n, from_storage, delete)
+    def __init__(self, n, from_storage, to_storage, delete):
+        super().__init__(n, from_storage, to_storage, delete)
 
     @property
     def n(self):
@@ -278,11 +283,23 @@ class Copy(CheckpointAction):
     
     @property
     def from_storage(self):
-        """The storage type to copy the checkpoint data.
+        """The storage type from which the forward data is copied.
 
         Notes
         -----
-        Storage type are available in `StorageType`.
+        The copied forward data is used to restart the forward solver.
+
+        
+        Returns
+        -------
+        StorageType.RAM|StorageType.DISK
+            Either :class:`StorageType.RAM` or `StorageType.RAM`.
+        """
+        return self.args[1]
+
+    @property
+    def to_storage(self):
+        """The storage type to which the foward checkpoint data is copied.
 
         
         See Also
