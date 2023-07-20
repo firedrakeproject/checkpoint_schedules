@@ -155,7 +155,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                 self._n += 1
             elif step_type != StepType.READ_ICS:
                 raise RuntimeError("Invalid checkpointing state")
-            yield Copy(cp_n, self._storage, cp_delete)
+            yield Copy(cp_n, self._storage, StorageType.TAPE, cp_delete)
 
         if len(snapshot_n) > 0 or len(snapshots) > 0:
             raise RuntimeError("Invalid checkpointing state")
