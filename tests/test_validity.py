@@ -22,7 +22,8 @@ import functools
 import pytest
 from checkpoint_schedules.schedule import \
     Forward, Reverse, Copy, EndForward, EndReverse, StorageType
-from checkpoint_schedules import HRevolve, DiskRevolve, PeriodicDiskRevolve, Revolve
+from checkpoint_schedules import HRevolve, DiskRevolve, PeriodicDiskRevolve,\
+    Revolve, MultistageCheckpointSchedule
 
 
 def h_revolve(n, s):
@@ -74,6 +75,29 @@ def disk_revolve(n, s):
         revolver = DiskRevolve(n, s, n - s)
         return (revolver,
                 {StorageType.RAM: s, StorageType.DISK: n - s}, 1)
+
+def multistage(n, s):
+    """Disk revolver.
+
+    Parameters
+    ----------
+    n : int
+        Total forward steps.
+    s : int
+        Snapshots to store in RAM.
+
+    Returns
+    -------
+    (DiskRevolve, dict, int)
+        Disk revolver, checkpoint storage limits, data limit.
+    """
+    if s < 1:
+        return (None,
+                {StorageType.RAM: 0, StorageType.DISK: 0}, 0)
+    else:
+        revolver = MultistageCheckpointSchedule(n, s//3, s - s//3)
+        return (revolver,
+                {StorageType.RAM: s//3, StorageType.DISK: s - s//3}, 1)
 
 
 def periodic_disk(n, s):
@@ -131,14 +155,15 @@ def revolve(n, s):
      revolve,
      periodic_disk,
      disk_revolve,
-     h_revolve
+     h_revolve,
+     multistage
      ]
      )
 @pytest.mark.parametrize("n, S", [
                                   (5, (2,)),
                                   (3, (1, 2)),
                                   (10, tuple(range(2, 10))),
-                                  (100, tuple(range(10, 100))),
+                                  (100, tuple(range(1, 100))),
                                   (250, tuple(range(25, 250, 25)))
                                   ])
 def test_validity(schedule, n, S):
