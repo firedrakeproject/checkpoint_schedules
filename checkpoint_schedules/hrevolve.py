@@ -107,7 +107,6 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                     raise InvalidActionIndex
             elif cp_action == "Write_Forward":
                 if n_0 != self._n + 1:
-                    print(n_0)
                     raise InvalidActionIndex
                 d_cp_action, (d_n0, _, w_storage) = _convert_action(self._schedule[i + 3])
                 if (d_cp_action != "Discard_Forward"

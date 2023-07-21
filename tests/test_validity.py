@@ -48,7 +48,7 @@ def h_revolve(n, s):
         return (None,
                 {StorageType.RAM: 0, StorageType.DISK: 0}, 0)
     else:
-        revolver = HRevolve(n, snap_ram, snap_disk, w_cost=0.5, r_cost=0.5)
+        revolver = HRevolve(n, snap_ram, snap_disk)
         return (revolver,
                 {StorageType.RAM: snap_ram, StorageType.DISK: snap_disk}, 1)
 
