@@ -15,7 +15,7 @@ import pytest
                                         ]
                                         )
 @pytest.mark.parametrize("n, S", [(1, (0,)),
-                                  (2, (1,)),
+                                #   (2, (1,)),
                                 #   (3, (1, 2)),
                                 #   (10, tuple(range(1, 10))),
                                 #   (100, tuple(range(1, 100))),

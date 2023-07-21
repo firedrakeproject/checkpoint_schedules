@@ -48,7 +48,7 @@ def h_revolve(n, s):
         return (None,
                 {StorageType.RAM: 0, StorageType.DISK: 0}, 0)
     else:
-        revolver = HRevolve(n, snap_ram, snap_disk)
+        revolver = HRevolve(n, snap_ram, snap_disk, w_cost=0.5, r_cost=0.5)
         return (revolver,
                 {StorageType.RAM: snap_ram, StorageType.DISK: snap_disk}, 1)
 
@@ -200,6 +200,7 @@ def test_validity(schedule, n, S):
             # len(ics.intersection(range(cp_action.n0, n1))) == 0
 
         if cp_action.write_adj_deps:
+            assert cp_action.storage == StorageType.TAPE
             # No non-linear dependency data for these steps is stored
             assert len(data.intersection(range(cp_action.n0, n1))) == 0
 

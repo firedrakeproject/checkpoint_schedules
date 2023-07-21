@@ -107,6 +107,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                     raise InvalidActionIndex
             elif cp_action == "Write_Forward":
                 if n_0 != self._n + 1:
+                    print(n_0)
                     raise InvalidActionIndex
                 d_cp_action, (d_n0, _, w_storage) = _convert_action(self._schedule[i + 3])
                 if (d_cp_action != "Discard_Forward"
@@ -232,11 +233,14 @@ def _convert_action(action):
         if n_0 <= n_1:
             raise RuntimeError("Invalid backward indexes.")
         storage = None
-    elif cp_action in ["Read", "Write", "Discard",
-                       "Write_Forward", "Discard_Forward"]:
+    elif cp_action in ["Read", "Write", "Discard"]:
         storage, n_0 = action.index
         n_1 = None
         storage = {0: StorageType.RAM, 1: StorageType.DISK}[storage]
+    elif cp_action in ["Write_Forward", "Discard_Forward"]:
+        _, n_0 = action.index
+        n_1 = None
+        storage = {0: StorageType.TAPE}[0]
     elif cp_action in ["Write_Forward_memory",
                        "Discard_Forward_memory"]:
         n_0 = action.index
