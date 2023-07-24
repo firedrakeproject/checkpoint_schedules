@@ -273,8 +273,8 @@ class Copy(CheckpointAction):
     :class:`StorageLocation` 
 
     """
-    def __init__(self, n, from_storage, to_storage, delete=False):
-        super().__init__(n, from_storage, to_storage, delete)
+    def __init__(self, n, from_storage, to_storage):
+        super().__init__(n, from_storage, to_storage)
 
     @property
     def n(self):
@@ -319,21 +319,21 @@ class Copy(CheckpointAction):
         """
         return self.args[2]
     
-    @property
-    def delete(self):
-        """Delete the checkpoint stored in a storage level. 
+    # @property
+    # def delete(self):
+    #     """Delete the checkpoint stored in a storage level. 
         
 
-        Notes
-        -----
-        The storage level is given by `from_storage` property.
+    #     Notes
+    #     -----
+    #     The storage level is given by `from_storage` property.
 
-        Returns
-        -------
-        bool
-            Delete the checkpoint data if ``True``.
-        """
-        return self.args[3]
+    #     Returns
+    #     -------
+    #     bool
+    #         Delete the checkpoint data if ``True``.
+    #     """
+    #     return self.args[3]
 
 
 

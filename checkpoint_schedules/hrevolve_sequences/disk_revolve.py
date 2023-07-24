@@ -7,6 +7,7 @@ from .revolve import get_opt_0_table, revolve
 from .revolve_1d import revolve_1d, get_opt_1d_table
 from .utils import revolver_parameters
 
+
 def get_opt_inf_table(lmax, cm, uf, ub, rd, wd, one_read_disk, print_table=None,
                       opt_0=None, opt_1d=None, **params):
     """Compute the opt_inf table for architecture and l=0...lmax.

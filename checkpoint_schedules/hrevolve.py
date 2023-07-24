@@ -53,7 +53,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         w_storage = None
         write_ics = False
         adj_deps = False
-        
+        delete = False
         i = 0
         while i < len(self._schedule):
             cp_action, (n_0, n_1, storage) = _convert_action(self._schedule[i])
@@ -96,11 +96,12 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                   or cp_action == "Read_memory"
                   or cp_action == "Read_disk"):
                 self._n = n_0
-                if n_0 == self._max_n - self._r - 1:
-                    delete = True
-                else:
-                    delete = False
-                yield Copy(n_0, storage, StorageType.TAPE, delete=delete)
+                # if n_0 == self._max_n - self._r - 1:
+                #     delete = True
+                # else:
+                #     delete = False
+                yield Copy(n_0, storage, StorageType.TAPE)
+                # delete = False
             elif (cp_action == "Write" or cp_action == "Write_disk"
                   or cp_action == "Write_memory"):
                 if n_0 != self._n:
@@ -127,13 +128,14 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 if i < 2:
                     raise InvalidRevolverAction
                 snapshots.remove(n_0)
+                yield Copy(n_0, storage, StorageType.NONE)
             elif cp_action == "Discard_Forward" or cp_action == "Discard_Forward_memory":
                 if n_0 != self._n:
                     raise InvalidActionIndex
             else:
                 raise InvalidRevolverAction
             i += 1
-        if len(snapshots) > self._snapshots_on_disk:
+        if len(snapshots) > self._snapshots_on_disk + self._snapshots_in_ram:
             raise RuntimeError("Unexpected snapshot number.")
         
         self._exhausted = True
@@ -166,10 +168,9 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             return self._snapshots_in_ram > 0
         
 
-
 class HRevolve(RevolveCheckpointSchedule):
     """H-Revolve checkpointing schedule."""
-    def __init__(self, max_n, snap_in_ram, snap_on_disk, fwd_cost=1, bwd_cost=1, w_cost=2, r_cost=2):
+    def __init__(self, max_n, snap_in_ram, snap_on_disk, fwd_cost=1, bwd_cost=1, w_cost=0.1, r_cost=0.1):
         cvec = (snap_in_ram, snap_on_disk)
         wc = [0, w_cost]
         rc = [0, r_cost]
@@ -181,9 +182,11 @@ class DiskRevolve(RevolveCheckpointSchedule):
     """Disk Revolve checkpointing schedule.
     """
 
-    def __init__(self, max_n, snap_in_ram, fwd_cost=1, bwd_cost=1, w_cost=2, r_cost=2):
-        schedule = list(disk_revolve(max_n - 1, snap_in_ram, w_cost, r_cost, fwd_cost, bwd_cost))
-        super().__init__(max_n, snap_in_ram, max_n - snap_in_ram, schedule)
+    def __init__(self, max_n, snap_in_ram, snap_on_disk,
+                 fwd_cost=1, bwd_cost=1, w_cost=2, r_cost=2):
+        schedule = list(disk_revolve(max_n - 1, snap_in_ram, w_cost, r_cost, 
+                                     fwd_cost, bwd_cost))
+        super().__init__(max_n, snap_in_ram, snap_on_disk, schedule)
 
 
 class PeriodicDiskRevolve(RevolveCheckpointSchedule):
@@ -193,13 +196,15 @@ class PeriodicDiskRevolve(RevolveCheckpointSchedule):
         schedule = list(periodic_disk_revolve(max_n - 1, snap_in_ram, w_cost, r_cost, fwd_cost, bwd_cost))
         super().__init__(max_n, snap_in_ram, max_n - snap_in_ram, schedule)
 
+
 class Revolve(RevolveCheckpointSchedule):
     """Revolve checkpointing schedule."""
 
     def __init__(self, max_n, snap_in_ram, fwd_cost=1, bwd_cost=1, w_cost=2, r_cost=2):
         schedule = list(revolve(max_n - 1, snap_in_ram, w_cost, r_cost, fwd_cost, bwd_cost))
         super().__init__(max_n, snap_in_ram, max_n - snap_in_ram, schedule)
-        
+
+
 def _convert_action(action):
     """Convert an revolver operation to the `checkpoint_schedules` actions.
 

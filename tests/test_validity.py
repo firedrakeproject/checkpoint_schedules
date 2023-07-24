@@ -241,23 +241,24 @@ def test_validity(schedule, n, S):
     @action.register(Copy)
     def action_copy(cp_action):
         nonlocal model_n
-        model_n = None
         assert cp_action.n in snapshots[cp_action.from_storage]
-        cp = snapshots[cp_action.from_storage][cp_action.n]
-        assert cp_action.n not in ics
-        assert cp_action.n not in data
-        # The checkpoint contains forward restart or non-linear dependency data
-        assert len(cp[0]) > 0 or len(cp[1]) > 0
-        assert cp_action.n < n - model_r
-        if len(cp[0]) > 0:
-            ics.clear()
-            ics.update(cp[0])
-            model_n = cp_action.n
+        if cp_action.to_storage == StorageType.TAPE:
+            model_n = None
+            cp = snapshots[cp_action.from_storage][cp_action.n]
+            assert cp_action.n not in ics
+            assert cp_action.n not in data
+            # The checkpoint contains forward restart or non-linear dependency data
+            assert len(cp[0]) > 0 or len(cp[1]) > 0
+            assert cp_action.n < n - model_r
+            if len(cp[0]) > 0:
+                ics.clear()
+                ics.update(cp[0])
+                model_n = cp_action.n
 
-        if len(cp[1]) > 0:
-            data.clear()
-            data.update(cp[1])
-        if cp_action.delete:
+            if len(cp[1]) > 0:
+                data.clear()
+                data.update(cp[1])
+        if cp_action.to_storage == StorageType.NONE:
             del snapshots[cp_action.from_storage][cp_action.n]
 
     @action.register(EndForward)

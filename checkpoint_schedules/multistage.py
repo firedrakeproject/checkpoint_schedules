@@ -212,10 +212,13 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
             if cp_n == self._max_n - self._r - 1:
                 snapshots.pop()
                 self._n = cp_n
-                yield Copy(cp_n, cp_storage, StorageType.TAPE, True)
+                # yield Copy(cp_n, cp_storage, StorageType.TAPE, True)
+                yield Copy(cp_n, cp_storage, StorageType.TAPE)
+                yield Copy(cp_n, cp_storage, StorageType.NONE)
             else:
                 self._n = cp_n
-                yield Copy(cp_n, cp_storage, StorageType.TAPE, False)
+                # yield Copy(cp_n, cp_storage, StorageType.TAPE, False)
+                yield Copy(cp_n, cp_storage, StorageType.TAPE)
                 n_snapshots = (self._snapshots_in_ram
                                + self._snapshots_on_disk
                                - len(snapshots) + 1)
