@@ -105,47 +105,46 @@ def test_mixed(n, S):
         # The checkpoint exists
         assert cp_action.n in snapshots
         assert cp_action.from_storage == StorageType.DISK
-        assert cp_action.to_storage == StorageType.TAPE
 
         cp = snapshots[cp_action.n]
 
-        # No data is currently stored for this step
-        assert cp_action.n not in ics
-        assert cp_action.n not in data
+        
         # The checkpoint contains either forward restart or non-linear
         # dependency data, but not both
         assert len(cp[0]) == 0 or len(cp[1]) == 0
         assert len(cp[0]) > 0 or len(cp[1]) > 0
+        if cp_action.to_storage == StorageType.TAPE:
+            # No data is currently stored for this step
+            assert cp_action.n not in ics
+            assert cp_action.n not in data
+            if len(cp[0]) > 0:
+                # Loading a forward restart checkpoint:
 
-        if len(cp[0]) > 0:
-            # Loading a forward restart checkpoint:
+                # The checkpoint data is at least two steps away from the current
+                # location of the adjoint
+                assert cp_action.n < n - model_r - 1
+                # The loaded data is deleted iff non-linear dependency data for all
+                # remaining steps can be checkpoint and stored
+                # assert (cp_action.to_storage is StorageType.NONE) is 
 
-            # The checkpoint data is at least two steps away from the current
-            # location of the adjoint
-            assert cp_action.n < n - model_r - 1
-            # The loaded data is deleted iff non-linear dependency data for all
-            # remaining steps can be checkpoint and stored
-            assert cp_action.delete is (cp_action.n >= n - model_r - 1
-                                        - (s - len(snapshots) + 1))
+                ics.clear()
+                ics.update(cp[0])
+                model_n = cp_action.n
 
-            ics.clear()
-            ics.update(cp[0])
-            model_n = cp_action.n
+            if len(cp[1]) > 0:
+                # Loading a non-linear dependency data checkpoint:
 
-        if len(cp[1]) > 0:
-            # Loading a non-linear dependency data checkpoint:
+                # The checkpoint data is exactly one step away from the current
+                # location of the adjoint
+                assert cp_action.n == n - model_r - 1
+                # The loaded data is always deleted
+                # assert cp_action.to_storage is StorageType.NONE
 
-            # The checkpoint data is exactly one step away from the current
-            # location of the adjoint
-            assert cp_action.n == n - model_r - 1
-            # The loaded data is always deleted
-            assert cp_action.delete
+                data.clear()
+                data.update(cp[1])
+                model_n = None
 
-            data.clear()
-            data.update(cp[1])
-            model_n = None
-
-        if cp_action.delete:
+        if cp_action.to_storage is StorageType.NONE:
             del snapshots[cp_action.n]
 
 

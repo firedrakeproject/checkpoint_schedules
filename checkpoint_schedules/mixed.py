@@ -12,6 +12,7 @@ except ImportError:
 
 __all__ = ["MixedCheckpointSchedule"]
 
+
 class MixedCheckpointSchedule(CheckpointSchedule):
     """A checkpointing schedule which mixes storage of forward restart data and
     non-linear dependency data in checkpointing units. Assumes that the data
@@ -155,7 +156,11 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                 self._n += 1
             elif step_type != StepType.READ_ICS:
                 raise RuntimeError("Invalid checkpointing state")
-            yield Copy(cp_n, self._storage, StorageType.TAPE, cp_delete)
+            if cp_delete:
+                yield Copy(cp_n, self._storage, StorageType.TAPE)
+                yield Copy(cp_n, self._storage, StorageType.NONE)
+            else:
+                yield Copy(cp_n, self._storage, StorageType.TAPE)
 
         if len(snapshot_n) > 0 or len(snapshots) > 0:
             raise RuntimeError("Invalid checkpointing state")
