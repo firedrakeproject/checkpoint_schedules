@@ -3,23 +3,20 @@
 
 from checkpoint_schedules import MultistageCheckpointSchedule, \
     Copy, Forward, Reverse, EndForward, EndReverse, StorageType
-from checkpoint_schedules.utils import optimal_steps
+from checkpoint_schedules.utils import optimal_steps_binomial
 
 import functools
 import pytest
 
 
-@pytest.mark.parametrize("trajectory", [
-                                        "revolve"
-                                        # "maximum"
-                                        ]
-                                        )
+@pytest.mark.parametrize("trajectory", ["revolve",
+                                        "maximum"])
 @pytest.mark.parametrize("n, S", [(1, (0,)),
-                                #   (2, (1,)),
-                                #   (3, (1, 2)),
-                                #   (10, tuple(range(1, 10))),
-                                #   (100, tuple(range(1, 100))),
-                                #   (250, tuple(range(25, 250, 25)))
+                                  (2, (1,)),
+                                  (3, (1, 2)),
+                                  (10, tuple(range(1, 10))),
+                                  (100, tuple(range(1, 100))),
+                                  (250, tuple(range(25, 250, 25)))
                                   ])
 def test_multistage(trajectory,
                                       n, S):
@@ -48,6 +45,8 @@ def test_multistage(trajectory,
         ics.clear()
         # Start at the current location of the forward
         assert model_n == cp_action.n0
+        # End at or before the end of the forward
+        assert cp_action.n1 <= n
 
         if store_ics:
             assert cp_action.storage == StorageType.DISK
@@ -60,17 +59,6 @@ def test_multistage(trajectory,
             # No data for these steps is stored
             assert len(ics.intersection(range(cp_action.n0, cp_action.n1))) == 0  # noqa: E501
 
-        if store_data:
-            # Advance exactly one step when storing non-linear dependency data
-            assert cp_action.n1 == cp_action.n0 + 1
-            # Start from one step before the current location of the adjoint
-            assert cp_action.n0 == n - model_r - 1
-            # No data for this step is stored
-            assert len(data.intersection(range(cp_action.n0, cp_action.n1))) == 0  # noqa: E501
-
-        model_n = cp_action.n1
-        model_steps += cp_action.n1 - cp_action.n0
-        if store_ics:
             ics.update(range(cp_action.n0, cp_action.n1))
             # Written data consists of forward restart data
             assert len(ics) > 0
@@ -78,13 +66,21 @@ def test_multistage(trajectory,
             # The checkpoint location is associated with the earliest step for
             # which data has been stored
             assert cp_action.n0 == min(ics)
-
             snapshots[cp_action.n0] = (set(ics), set(data))
 
+
         if store_data:
+            # Advance exactly one step when storing non-linear dependency data
+            assert cp_action.n1 == cp_action.n0 + 1
+            # Start from one step before the current location of the adjoint
+            assert cp_action.n0 == n - model_r - 1
+            # No data for this step is stored
+            assert len(data.intersection(range(cp_action.n0, cp_action.n1))) == 0  # noqa: E501
             data.update(range(cp_action.n0, cp_action.n1))
 
-        
+
+        model_n = cp_action.n1
+        model_steps += cp_action.n1 - cp_action.n0
         
     @action.register(Reverse)
     def action_reverse(cp_action):
@@ -162,8 +158,7 @@ def test_multistage(trajectory,
         assert cp_schedule.r == 0
         assert cp_schedule.max_n == n
 
-        while True:
-            cp_action = next(cp_schedule)
+        for _, cp_action in enumerate(cp_schedule):
             action(cp_action)
 
             # The schedule state is consistent with both the forward and
@@ -180,11 +175,8 @@ def test_multistage(trajectory,
             # Checkpoint storage limits are not exceeded
             assert len(snapshots) <= s
 
-            if isinstance(cp_action, EndReverse):
-                break
-
         # The correct total number of forward steps has been taken
-        assert model_steps == optimal_steps(n, s)
+        assert model_steps == optimal_steps_binomial(n, s)
         # No data is stored
         assert len(ics) == 0 and len(data) == 0
         # No checkpoints are stored

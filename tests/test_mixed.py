@@ -4,7 +4,7 @@
 from checkpoint_schedules import MixedCheckpointSchedule, Copy,\
      Forward, Reverse, EndForward, EndReverse, StorageType
 from checkpoint_schedules.utils import mixed_step_memoization, \
-    optimal_steps
+    optimal_steps_mixed
 
 import functools
 import pytest
@@ -196,7 +196,7 @@ def test_mixed(n, S):
                 break
 
         # The correct total number of forward steps has been taken
-        assert model_steps == optimal_steps(n, s)
+        assert model_steps == optimal_steps_mixed(n, s)
         assert model_steps == mixed_step_memoization(n, s)[2]
         # No data is stored
         assert len(ics) == 0 and len(data) == 0
