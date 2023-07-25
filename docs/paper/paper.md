@@ -5,7 +5,7 @@ tags:
   - Python
   - Adjoint-based gradient
   - Checkpointing method
-  -Revolvers
+  - Revolvers
 # authors:
 #   - name: 
 #     affiliation: 1
