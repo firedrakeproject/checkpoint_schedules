@@ -81,9 +81,6 @@ def test_mixed(n, S):
         if len(data) > 0:
             assert cp_action.n0 == min(data)
 
-        
-
-
     @action.register(Reverse)
     def action_reverse(cp_action):
         nonlocal model_r
@@ -148,7 +145,6 @@ def test_mixed(n, S):
         if cp_action.delete:
             del snapshots[cp_action.n]
 
-
     @action.register(EndForward)
     def action_end_forward(cp_action):
         # The correct number of forward steps has been taken
@@ -179,8 +175,7 @@ def test_mixed(n, S):
         assert cp_schedule.r == 0
         assert cp_schedule.max_n == n
 
-        while True:
-            cp_action = next(cp_schedule)
+        for _, cp_action in enumerate(cp_schedule):
             action(cp_action)
 
             # The schedule state is consistent with both the forward and

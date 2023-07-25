@@ -9,6 +9,7 @@ __all__ = \
         "MultistageCheckpointSchedule"
     ]
 
+
 def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
                        write_weight=1.0, read_weight=1.0, delete_weight=0.0,
                        trajectory="maximum"):
@@ -212,10 +213,10 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
             if cp_n == self._max_n - self._r - 1:
                 snapshots.pop()
                 self._n = cp_n
-                yield Copy(cp_n, cp_storage, StorageType.TAPE, True)
+                yield Copy(cp_n, cp_storage, StorageType.TAPE, delete=True)
             else:
                 self._n = cp_n
-                yield Copy(cp_n, cp_storage, StorageType.TAPE, False)
+                yield Copy(cp_n, cp_storage, StorageType.TAPE, delete=False)
                 n_snapshots = (self._snapshots_in_ram
                                + self._snapshots_on_disk
                                - len(snapshots) + 1)

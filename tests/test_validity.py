@@ -23,7 +23,8 @@ import pytest
 from checkpoint_schedules.schedule import \
     Forward, Reverse, Copy, EndForward, EndReverse, StorageType
 from checkpoint_schedules import HRevolve, DiskRevolve, PeriodicDiskRevolve,\
-    Revolve, MultistageCheckpointSchedule
+    Revolve, MultistageCheckpointSchedule, TwoLevelCheckpointSchedule,\
+    MixedCheckpointSchedule
 
 
 def h_revolve(n, s):
@@ -76,6 +77,7 @@ def disk_revolve(n, s):
         return (revolver,
                 {StorageType.RAM: s, StorageType.DISK: n - s}, 1)
 
+
 def multistage(n, s):
     """Disk revolver.
 
@@ -98,6 +100,26 @@ def multistage(n, s):
         revolver = MultistageCheckpointSchedule(n, s//3, s - s//3)
         return (revolver,
                 {StorageType.RAM: s//3, StorageType.DISK: s - s//3}, 1)
+
+
+def twolevel_binomial(n, s):
+    """Disk revolver.
+
+    Parameters
+    ----------
+    n : int
+        Total forward steps.
+    s : int
+        Snapshots to store in RAM.
+
+    Returns
+    -------
+    (DiskRevolve, dict, int)
+        Disk revolver, checkpoint storage limits, data limit.
+    """
+
+    return (TwoLevelCheckpointSchedule(2, s, binomial_storage=StorageType.RAM),
+            {StorageType.RAM: s, StorageType.DISK: 1 + (n - 1) // 2}, 1)
 
 
 def periodic_disk(n, s):
@@ -124,6 +146,7 @@ def periodic_disk(n, s):
         return (revolver,
                 {StorageType.RAM:  s, StorageType.DISK: n - s}, 1)
 
+
 def revolve(n, s):
     """Periodic disk revolver.
 
@@ -149,6 +172,10 @@ def revolve(n, s):
                 {StorageType.RAM:  s, StorageType.DISK: 0}, 1)
 
 
+def mixed(n, s):
+    return (MixedCheckpointSchedule(n, s),
+            {StorageType.RAM: 0, StorageType.DISK: s}, 1)
+
 @pytest.mark.parametrize(
     "schedule",
     [
@@ -156,7 +183,9 @@ def revolve(n, s):
      periodic_disk,
      disk_revolve,
      h_revolve,
-     multistage
+     multistage,
+     twolevel_binomial,
+     mixed,
      ]
      )
 @pytest.mark.parametrize("n, S", [
@@ -188,30 +217,33 @@ def test_validity(schedule, n, S):
         # Start at the current location of the forward
         assert model_n is not None and model_n == cp_action.n0
 
+        # If the schedule has been finalized, end at or before the end of the
+        # forward
+        assert cp_schedule.max_n is None or cp_action.n1 <= n
         if cp_schedule.max_n is not None:
             # Do not advance further than the current location of the adjoint
             assert cp_action.n1 <= n - model_r
+
         n1 = min(cp_action.n1, n)
         
         model_n = n1
-        if cp_action.write_ics:
-            # No forward restart data for these steps is stored
-            assert cp_action.n0 not in snapshots[cp_action.storage]
-            # len(ics.intersection(range(cp_action.n0, n1))) == 0
-
-        if cp_action.write_adj_deps:
-            assert cp_action.storage == StorageType.TAPE
-            # No non-linear dependency data for these steps is stored
-            assert len(data.intersection(range(cp_action.n0, n1))) == 0
-
         ics.clear()
         data.clear()
         if cp_action.write_ics:
+            # No forward restart data for these steps is stored
+            assert cp_action.n0 not in snapshots[cp_action.storage]
+            # No forward restart data for these steps is stored
+            assert len(ics.intersection(range(cp_action.n0, n1))) == 0
             ics.update(range(cp_action.n0, n1))
             snapshots[cp_action.storage][cp_action.n0] = (set(ics), set(data))
+        
         if cp_action.write_adj_deps:
+            # No non-linear dependency data for these steps is stored
+            assert len(data.intersection(range(cp_action.n0, n1))) == 0
             data.update(range(cp_action.n0, n1))
-
+            if cp_action.storage == StorageType.DISK:
+                snapshots[cp_action.storage][cp_action.n0] = (set(ics), set(data))
+        
         if len(ics) > 0:
             if len(data) > 0:
                 assert cp_action.n0 == min(min(ics), min(data))
@@ -241,14 +273,22 @@ def test_validity(schedule, n, S):
     @action.register(Copy)
     def action_copy(cp_action):
         nonlocal model_n
-        model_n = None
+        assert cp_action.to_storage == StorageType.TAPE
+        # The checkpoint exists
         assert cp_action.n in snapshots[cp_action.from_storage]
         cp = snapshots[cp_action.from_storage][cp_action.n]
+        
+        # No data is currently stored for this step
         assert cp_action.n not in ics
         assert cp_action.n not in data
+
         # The checkpoint contains forward restart or non-linear dependency data
         assert len(cp[0]) > 0 or len(cp[1]) > 0
+
+        # The checkpoint data is before the current location of the adjoint
         assert cp_action.n < n - model_r
+        
+        model_n = None
         if len(cp[0]) > 0:
             ics.clear()
             ics.update(cp[0])
@@ -257,20 +297,25 @@ def test_validity(schedule, n, S):
         if len(cp[1]) > 0:
             data.clear()
             data.update(cp[1])
+        
         if cp_action.delete:
             del snapshots[cp_action.from_storage][cp_action.n]
 
     @action.register(EndForward)
     def action_end_forward(cp_action):
+        ics.clear()
         # The correct number of forward steps has been taken
         assert model_n is not None and model_n == n
 
     @action.register(EndReverse)
     def action_end_reverse(cp_action):
-        nonlocal model_r
+        nonlocal model_r, cp_schedule
 
         # The correct number of adjoint steps has been taken
         assert model_r == n
+        is_exhausted = cp_schedule.is_exhausted
+        if is_exhausted is False:
+            model_r = 0
 
     for s in S:
         print(f"{n=:d} {s=:d}")
@@ -287,9 +332,8 @@ def test_validity(schedule, n, S):
         assert cp_schedule.n == 0
         assert cp_schedule.r == 0
         assert cp_schedule.max_n is None or cp_schedule.max_n == n
-        while True:
-            cp_action = next(cp_schedule)
-            
+        
+        for _, cp_action in enumerate(cp_schedule):
             action(cp_action)
             assert model_n is None or model_n == cp_schedule.n
             assert model_r == cp_schedule.r
@@ -303,5 +347,6 @@ def test_validity(schedule, n, S):
 
             if isinstance(cp_action, EndReverse):
                 break
+            
 
 

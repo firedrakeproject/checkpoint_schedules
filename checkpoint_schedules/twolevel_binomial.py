@@ -4,6 +4,7 @@ from .utils import n_advance
 
 __all__ = ["TwoLevelCheckpointSchedule"]
 
+
 class TwoLevelCheckpointSchedule(CheckpointSchedule):
     """A two-level mixed periodic/binomial checkpointing schedule using the
     approach described in
@@ -82,15 +83,15 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                         snapshots.pop()
                         self._n = cp_n
                         if cp_n == n0s:
-                            yield Copy(cp_n, StorageType.DISK, False)
+                            yield Copy(cp_n, StorageType.DISK, StorageType.TAPE, delete=False)
                         else:
-                            yield Copy(cp_n, self._binomial_storage, True)
+                            yield Copy(cp_n, self._binomial_storage, StorageType.TAPE, delete=True)
                     else:
                         self._n = cp_n
                         if cp_n == n0s:
-                            yield Copy(cp_n, StorageType.DISK, False)
+                            yield Copy(cp_n, StorageType.DISK, StorageType.TAPE, delete=False)
                         else:
-                            yield Copy(cp_n, self._binomial_storage, False)
+                            yield Copy(cp_n, self._binomial_storage, StorageType.TAPE, delete=False)
 
                         n_snapshots = (self._binomial_snapshots + 1
                                        - len(snapshots) + 1)

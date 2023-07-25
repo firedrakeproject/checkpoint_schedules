@@ -10,8 +10,8 @@ import pytest
 
 
 @pytest.mark.parametrize("trajectory", [
-                                        # "revolve",
-                                        "maximum"
+                                        "revolve"
+                                        # "maximum"
                                         ]
                                         )
 @pytest.mark.parametrize("n, S", [(1, (0,)),
@@ -141,7 +141,6 @@ def test_multistage(trajectory,
         # The correct number of adjoint steps has been taken
         assert model_r == n
   
-
     for s in S:
         print(f"{n=:d} {s=:d}")
 
