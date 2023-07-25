@@ -1,32 +1,35 @@
 .. _introduction:
 
-Introduction
-============
-The time-dependent adjoint-based gradient is characterised by its backward progression in time and 
-its dependence on the solution of a forward system. Consequently, the time-dependent adjoint 
-requires either storing the forward data or recomputation of the forward problem to obtain essential 
-data for the adjoint computations.
+About checkpoint_schedules
+==========================
 
-Storing the forward data at every time step is impractical for large systems, as it can result in high
-memory usage for extensive time executions. This challenge can be overcome by employing the 
-checkpointing method, which is an efficient manages memory usage [3, 5]. In summary, checkpointing strategies 
-involve creating a sequence of schedules that coordinate the selective storage of forward data at specific time steps. 
-During the adjoint computation, these schedules provide instructions for restarting the forward solver from the nearest 
-time step where forward data was stored, in case the forward data is unavailable, until the step where the adjoint 
-needs to be computed. 
+*checkpoint_schedules* is a Python package has been developed offers a schedule with 
+a sequence of actions that provides functionalities of forward or adjoint advancement 
+over the entire interval of steps, forward and adjoint data storage and retrieval. 
+The schedule explicitly incorporates the buffering of data in an intermediate storage 
+of the forward data, ensuring that forward variables can be defined and computed by 
+the forward solver before the storage. Furthermore, the schedule can distingue between 
+the storage of forward restart data and forward data required in the adjoint computation. 
 
-In the adjoint-based gradient computation, the forward data used as initial conditions for the forward solver restarting can differ 
-from the forward data required for the adjoint computation, e. g., for non-linear problems. Thus, we propose the *checkpoint_schedules* 
-Python package the schedule distinguishes between the storage of forward restart data and the forward data required for the adjoint 
-computation. The *checkpoint_schedules* package offers schedules given by a sequence of actions that provides functionalities 
-of forward or adjoint advancement over the entire interval of steps. The *checkpoint_schedules* package explicitly incorporates data
-buffering in an intermediate storage, ensuring that forward variables can be defined and computed before storage in a checkpoint. 
-Furthermore, the *checkpoint_schedules* package is flexible to interpret and convert designs from various existing approaches, 
-including the revolve algorithm. It has already been successfully working with the multistage approach [2], the two-level mixed 
-periodic/binomial [6], and H-Revolve schedules [4]. 
+This package is designed to be flexible in interpreting and converting designs from various existing strategies. 
+It is already functioning with the following checkpoint approaches:
+* Revolve ; 
+* MultiStage checkpointing;
+* Disk revolve;
+* Periodic Disk Revolve;
+* H-Revolve;
+* two-level mixed periodic/binomial checkpointing 
+* Mixed storage of forward restart and non-linear dependency data;
 
-The *checkpoint_schedules* also provides a generator able to iterate over the schedules and return the next action to perform. To advance 
-in the basics of *checkpoint_schedules* employment and the generator usage, we recommend to read the following 
+In addition to the checkpointing schedules mentioned above, checkpoint_schedules also offers two additional 
+types of checkpointing schedules for the cases where no checkpointing strategy is used. 
+In this case, the forward data is stored every time step, either in RAM or on disk. 
+Also, there is a checkpointing schedule available for situations where no adjoint calculation is required.
+
+*checkpoint_schedules* provides generators, which enable easy iteration over the sequence of schedules for any 
+above mentioned checkpointing strategies. This allows users to efficiently access and utilize the desired 
+checkpointing schedule based on their specific needs and computational requirements. To advance in the basics 
+of *checkpoint_schedules* employment and the generator usage, we recommend to read the following 
 :ref:`section <example_checkpoint_schedules>`.
 
 
@@ -45,10 +48,6 @@ large-scale adjoints in the spectral-element solver Nek5000." Procedia Computer 
 
 [4] Herrmann, J. and Pallez (Aupy), G.. "H-Revolve: a framework for adjoint computation on synchronous hierarchical platforms." 
 ACM Transactions on Mathematical Software (TOMS) 46.2 (2020): 1-25. DOI: https://doi.org/10.1145/3378672.
-
-[5] Kukreja, N., Hückelheim, J., Louboutin, M., Washbourne, J., Kelly, P. H., and Gorman, G. J.. 
-"Lossy checkpoint compression in full waveform inversion: a case study with ZFPv0. 5.5 and the overthrust model." 
-Geoscientific Model Development 15.9 (2022): 3815-3829. DOI: https://doi.org/10.5194/gmd-15-3815-2022.
 
 [6] Aupy, Guillaume, and Julien Herrmann. "Periodicity in optimal hierarchical checkpointing schemes for adjoint computations." 
 Optimization Methods and Software 32.3 (2017): 594-624. DOI : https://doi.org/10.1080/10556788.2016.1230612.
