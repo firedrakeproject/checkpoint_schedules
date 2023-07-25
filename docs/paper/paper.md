@@ -41,7 +41,7 @@ This package is designed to be flexible in interpreting and converting designs f
 * Disk revolve [@aupy2016optimal];
 * Periodic Disk Revolve [@aupy2017periodicity];
 * H-Revolve [@herrmann2020h];
-* two-level mixed periodic/binomial checkpointing [goldberg2020bathymetric; @pringle2016providing]
+* two-level mixed periodic/binomial checkpointing [@goldberg2020bathymetric; @pringle2016providing]
 * Mixed storage of forward restart and non-linear dependency data [@maddison2023implementation];
 
 In addition to the checkpointing schedules mentioned above, checkpoint_schedules also offers two additional types of checkpointing schedules for the cases where no checkpointing strategy is used. In this case, the forward data is stored every time step, either in RAM or on disk. Also, there is a checkpointing schedule available for situations where no adjoint calculation is required.
