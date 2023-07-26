@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from checkpoint_schedules import MultistageCheckpointSchedule, \
-    Copy, Forward, Reverse, EndForward, EndReverse, StorageType
+    Copy, Move, Forward, Reverse, EndForward, EndReverse, StorageType
 from checkpoint_schedules.utils import optimal_steps_binomial
 
 import functools
@@ -97,13 +97,13 @@ def test_multistage(trajectory,
         model_r += 1
 
     @action.register(Copy)
-    def action_read(cp_action):
+    def action_copy(cp_action):
         nonlocal model_n
 
         # The checkpoint exists
         assert cp_action.n in snapshots
         assert cp_action.from_storage == StorageType.DISK
-        assert cp_action.to_storage == StorageType.TAPE
+        assert cp_action.to_storage == StorageType.WORK
         cp = snapshots[cp_action.n]
 
         # No data is currently stored for this step
@@ -116,16 +116,32 @@ def test_multistage(trajectory,
         # The checkpoint data is at least one step away from the current
         # location of the adjoint
         assert cp_action.n < n - model_r
-        # The loaded data is deleted iff it is exactly one step away from the
-        # current location of the adjoint
-        assert cp_action.delete is (cp_action.n == n - model_r - 1)
 
         ics.clear()
         ics.update(cp[0])
         model_n = cp_action.n
 
-        if cp_action.delete:
+
+    @action.register(Move)
+    def action_move(cp_action):
+        nonlocal model_n
+
+        # The checkpoint exists
+        assert cp_action.n in snapshots
+        assert cp_action.from_storage == StorageType.DISK
+        cp = snapshots[cp_action.n]
+
+        # The checkpoint contains forward restart data
+        assert len(cp[0]) > 0
+        assert len(cp[1]) == 0
+
+        # The loaded data is deleted if it is exactly one step away from the
+        # current location of the adjoint
+
+        if cp_action.to_storage == StorageType.NONE:
+            assert (cp_action.n == n - model_r - 1)
             del snapshots[cp_action.n]
+
 
     @action.register(EndForward)
     def action_end_forward(cp_action):

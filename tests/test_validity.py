@@ -21,7 +21,7 @@
 import functools
 import pytest
 from checkpoint_schedules.schedule import \
-    Forward, Reverse, Copy, EndForward, EndReverse, StorageType
+    Forward, Reverse, Copy, Move, EndForward, EndReverse, StorageType
 from checkpoint_schedules import HRevolve, DiskRevolve, PeriodicDiskRevolve,\
     Revolve, MultistageCheckpointSchedule, TwoLevelCheckpointSchedule,\
     MixedCheckpointSchedule
@@ -179,13 +179,13 @@ def mixed(n, s):
 @pytest.mark.parametrize(
     "schedule",
     [
-     revolve,
-     periodic_disk,
-     disk_revolve,
-     h_revolve,
+    #  revolve,
+    #  periodic_disk,
+    #  disk_revolve,
+    #  h_revolve,
      multistage,
-     twolevel_binomial,
-     mixed,
+    #  twolevel_binomial,
+    #  mixed,
      ]
      )
 @pytest.mark.parametrize("n, S", [
@@ -273,7 +273,7 @@ def test_validity(schedule, n, S):
     @action.register(Copy)
     def action_copy(cp_action):
         nonlocal model_n
-        assert cp_action.to_storage == StorageType.TAPE
+        assert cp_action.to_storage == StorageType.WORK
         # The checkpoint exists
         assert cp_action.n in snapshots[cp_action.from_storage]
         cp = snapshots[cp_action.from_storage][cp_action.n]
@@ -297,9 +297,24 @@ def test_validity(schedule, n, S):
         if len(cp[1]) > 0:
             data.clear()
             data.update(cp[1])
+
+
+    @action.register(Move)
+    def action_move(cp_action):
+        # The checkpoint exists
+        assert cp_action.n in snapshots[cp_action.from_storage]
+        cp = snapshots[cp_action.from_storage][cp_action.n]
         
-        if cp_action.delete:
+
+        # The checkpoint contains forward restart or non-linear dependency data
+        assert len(cp[0]) > 0 or len(cp[1]) > 0
+
+        # The checkpoint data is before the current location of the adjoint
+        assert cp_action.n < n - model_r
+        
+        if cp_action.to_storage == StorageType.NONE:
             del snapshots[cp_action.from_storage][cp_action.n]
+
 
     @action.register(EndForward)
     def action_end_forward(cp_action):

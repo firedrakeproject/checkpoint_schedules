@@ -1,6 +1,6 @@
 import functools
 from operator import itemgetter
-from .schedule import CheckpointSchedule, Forward, Reverse, Copy,\
+from .schedule import CheckpointSchedule, Forward, Reverse, Copy, Move,\
     EndForward, EndReverse, StorageType
 from .utils import n_advance
 
@@ -47,13 +47,22 @@ def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
         raise TypeError(f"Unexpected checkpointing action: {cp_action}")
 
     @action.register(Copy)
-    def action_read(cp_action):
+    def action_copy(cp_action):
         nonlocal snapshot_i
 
         if snapshot_i < 0:
             raise RuntimeError("Invalid checkpointing state")
         weights[snapshot_i] += read_weight
-        if cp_action.delete:
+        
+
+    @action.register(Move)
+    def action_move(cp_action):
+        nonlocal snapshot_i
+
+        if snapshot_i < 0:
+            raise RuntimeError("Invalid checkpointing state")
+        
+        if cp_action.to_storage == StorageType.NONE:
             weights[snapshot_i] += delete_weight
             snapshot_i -= 1
 
@@ -197,7 +206,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
 
         # Forward -> reverse
         self._n += 1
-        yield Forward(self._n - 1, self._n, False, True, StorageType.TAPE)
+        yield Forward(self._n - 1, self._n, False, True, StorageType.WORK)
 
         yield EndForward()
 
@@ -213,10 +222,11 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
             if cp_n == self._max_n - self._r - 1:
                 snapshots.pop()
                 self._n = cp_n
-                yield Copy(cp_n, cp_storage, StorageType.TAPE, delete=True)
+                yield Copy(cp_n, cp_storage, StorageType.WORK)
+                yield Move(cp_n, cp_storage, StorageType.NONE)
             else:
                 self._n = cp_n
-                yield Copy(cp_n, cp_storage, StorageType.TAPE, delete=False)
+                yield Copy(cp_n, cp_storage, StorageType.WORK)
                 n_snapshots = (self._snapshots_in_ram
                                + self._snapshots_on_disk
                                - len(snapshots) + 1)
@@ -245,7 +255,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
                     raise RuntimeError("Invalid checkpointing state")
                 
             self._n += 1
-            yield Forward(self._n - 1, self._n, False, True, StorageType.TAPE)
+            yield Forward(self._n - 1, self._n, False, True, StorageType.WORK)
             self._r += 1
             yield Reverse(self._n, self._n - 1, True)
         if self._r != self._max_n:

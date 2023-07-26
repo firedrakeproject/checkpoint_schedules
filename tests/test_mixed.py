@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from checkpoint_schedules import MixedCheckpointSchedule, Copy,\
-     Forward, Reverse, EndForward, EndReverse, StorageType
+     Forward, Reverse, EndForward, EndReverse, StorageType, Move
 from checkpoint_schedules.utils import mixed_step_memoization, \
     optimal_steps_mixed
 
@@ -96,13 +96,13 @@ def test_mixed(n, S):
         model_r += 1
 
     @action.register(Copy)
-    def action_read(cp_action):
+    def action_copy(cp_action):
         nonlocal model_n
 
         # The checkpoint exists
         assert cp_action.n in snapshots
         assert cp_action.from_storage == StorageType.DISK
-        assert cp_action.to_storage == StorageType.TAPE
+        assert cp_action.to_storage == StorageType.WORK
 
         cp = snapshots[cp_action.n]
 
@@ -120,12 +120,6 @@ def test_mixed(n, S):
             # The checkpoint data is at least two steps away from the current
             # location of the adjoint
             assert cp_action.n < n - model_r - 1
-            # The loaded data is deleted iff non-linear dependency data for all
-            # remaining steps can be checkpoint and stored
-            assert cp_action.delete is (cp_action.n >= n - model_r - 1
-                                        - (s - len(snapshots) + 1))
-
-            ics.clear()
             ics.update(cp[0])
             model_n = cp_action.n
 
@@ -142,8 +136,26 @@ def test_mixed(n, S):
             data.update(cp[1])
             model_n = None
 
-        if cp_action.delete:
+    @action.register(Move)
+    def action_move(cp_action):
+        nonlocal model_n
+
+        # The checkpoint exists
+        assert cp_action.n in snapshots
+        assert cp_action.from_storage == StorageType.DISK
+        cp = snapshots[cp_action.n]
+
+        # The checkpoint contains forward restart data
+        assert len(cp[0]) > 0
+        assert len(cp[1]) == 0
+
+        # The loaded data is deleted if it is exactly one step away from the
+        # current location of the adjoint
+
+        if cp_action.to_storage == StorageType.NONE:
+            assert (cp_action.n == n - model_r - 1)
             del snapshots[cp_action.n]
+
 
     @action.register(EndForward)
     def action_end_forward(cp_action):

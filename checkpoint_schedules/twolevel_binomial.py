@@ -1,4 +1,4 @@
-from .schedule import CheckpointSchedule, Forward, Reverse, Copy,\
+from .schedule import CheckpointSchedule, Forward, Reverse, Copy, Move,\
     EndForward, EndReverse, StorageType
 from .utils import n_advance
 
@@ -83,15 +83,16 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                         snapshots.pop()
                         self._n = cp_n
                         if cp_n == n0s:
-                            yield Copy(cp_n, StorageType.DISK, StorageType.TAPE, delete=False)
+                            yield Copy(cp_n, StorageType.DISK, StorageType.WORK)
                         else:
-                            yield Copy(cp_n, self._binomial_storage, StorageType.TAPE, delete=True)
+                            yield Copy(cp_n, self._binomial_storage, StorageType.WORK)
+                            yield Move(cp_n, self._binomial_storage, StorageType.NONE)
                     else:
                         self._n = cp_n
                         if cp_n == n0s:
-                            yield Copy(cp_n, StorageType.DISK, StorageType.TAPE, delete=False)
+                            yield Copy(cp_n, StorageType.DISK, StorageType.WORK)
                         else:
-                            yield Copy(cp_n, self._binomial_storage, StorageType.TAPE, delete=False)
+                            yield Copy(cp_n, self._binomial_storage, StorageType.WORK)
 
                         n_snapshots = (self._binomial_snapshots + 1
                                        - len(snapshots) + 1)
@@ -123,7 +124,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                             raise RuntimeError("Invalid checkpointing state")
 
                     self._n += 1
-                    yield Forward(self._n - 1, self._n, False, True, StorageType.TAPE)
+                    yield Forward(self._n - 1, self._n, False, True, StorageType.WORK)
 
                     self._r += 1
                     yield Reverse(self._n, self._n - 1, True)

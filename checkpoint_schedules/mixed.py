@@ -1,5 +1,5 @@
 import warnings
-from .schedule import CheckpointSchedule, Forward, Reverse, Copy,\
+from .schedule import CheckpointSchedule, Forward, Reverse, Copy, Move,\
     EndForward, EndReverse, StorageType, StepType
 
 from .utils import mixed_step_memoization, mixed_step_memoization_0,\
@@ -90,7 +90,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                     elif n1 <= n0:
                         raise InvalidForwardStep
                     self._n += 1
-                    yield Forward(n1 - 1, n1, False, True, StorageType.TAPE)
+                    yield Forward(n1 - 1, n1, False, True, StorageType.WORK)
                 elif step_type == StepType.FORWARD:
                     if n1 <= n0:
                         raise InvalidForwardStep
@@ -155,7 +155,9 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                 self._n += 1
             elif step_type != StepType.READ_ICS:
                 raise RuntimeError("Invalid checkpointing state")
-            yield Copy(cp_n, self._storage, StorageType.TAPE, delete=cp_delete)
+            yield Copy(cp_n, self._storage, StorageType.WORK)
+            if cp_delete:
+                yield Move(cp_n, self._storage, StorageType.NONE)
 
         if len(snapshot_n) > 0 or len(snapshots) > 0:
             raise RuntimeError("Invalid checkpointing state")

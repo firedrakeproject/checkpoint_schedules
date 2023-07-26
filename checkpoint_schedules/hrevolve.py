@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """..."""
 
-from .schedule import CheckpointSchedule, Forward, Reverse, Copy,\
+from .schedule import CheckpointSchedule, Forward, Reverse, Copy, Move, \
     EndForward, EndReverse, StorageType
 from .hrevolve_sequences import hrevolve, disk_revolve, periodic_disk_revolve,\
       revolve
@@ -96,11 +96,10 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                   or cp_action == "Read_memory"
                   or cp_action == "Read_disk"):
                 self._n = n_0
+                yield Copy(n_0, storage, StorageType.WORK)
                 if n_0 == self._max_n - self._r - 1:
-                    delete = True
-                else:
-                    delete = False
-                yield Copy(n_0, storage, StorageType.TAPE, delete=delete)
+                    snapshots.remove(n_0)
+                    yield Move(n_0, storage, StorageType.NONE)
             elif (cp_action == "Write" or cp_action == "Write_disk"
                   or cp_action == "Write_memory"):
                 if n_0 != self._n:
@@ -126,14 +125,13 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             elif cp_action == "Discard" or cp_action == "Discard_memory":
                 if i < 2:
                     raise InvalidRevolverAction
-                snapshots.remove(n_0)
             elif cp_action == "Discard_Forward" or cp_action == "Discard_Forward_memory":
                 if n_0 != self._n:
                     raise InvalidActionIndex
             else:
                 raise InvalidRevolverAction
             i += 1
-        if len(snapshots) > self._snapshots_on_disk:
+        if len(snapshots) > self._snapshots_on_disk + self._snapshots_in_ram:
             raise RuntimeError("Unexpected snapshot number.")
         
         self._exhausted = True
@@ -239,12 +237,12 @@ def _convert_action(action):
     elif cp_action in ["Write_Forward", "Discard_Forward"]:
         _, n_0 = action.index
         n_1 = None
-        storage = {0: StorageType.TAPE}[0]
+        storage = {0: StorageType.WORK}[0]
     elif cp_action in ["Write_Forward_memory",
                        "Discard_Forward_memory"]:
         n_0 = action.index
         n_1 = None
-        storage = {0: StorageType.TAPE}[0]
+        storage = {0: StorageType.WORK}[0]
     elif cp_action in ["Read_disk", "Write_disk", "Discard_disk"]:
         n_0 = action.index
         n_1 = None
