@@ -28,20 +28,6 @@ from checkpoint_schedules import HRevolve, DiskRevolve, PeriodicDiskRevolve,\
 
 
 def h_revolve(n, s):
-    """H-revolver.
-
-    Parameters
-    ----------
-    n : int
-        Total forward steps.
-    s : int
-        Snapshots to store in RAM.
-
-    Returns
-    -------
-    (HRevolve, dict, int)
-        H-revolver, checkpoint storage limits, data limit.
-    """
     snap_ram = s//3
     snap_disk = s - s//3
     if s//3 < 1:
@@ -55,20 +41,6 @@ def h_revolve(n, s):
 
 
 def disk_revolve(n, s):
-    """Disk revolver.
-
-    Parameters
-    ----------
-    n : int
-        Total forward steps.
-    s : int
-        Snapshots to store in RAM.
-
-    Returns
-    -------
-    (DiskRevolve, dict, int)
-        Disk revolver, checkpoint storage limits, data limit.
-    """
     if s < 1:
         return (None,
                 {StorageType.RAM: 0, StorageType.DISK: 0}, 0)
@@ -79,64 +51,16 @@ def disk_revolve(n, s):
 
 
 def multistage(n, s):
-    """Disk revolver.
-
-    Parameters
-    ----------
-    n : int
-        Total forward steps.
-    s : int
-        Snapshots to store in RAM.
-
-    Returns
-    -------
-    (DiskRevolve, dict, int)
-        Disk revolver, checkpoint storage limits, data limit.
-    """
-    if s < 1:
-        return (None,
-                {StorageType.RAM: 0, StorageType.DISK: 0}, 0)
-    else:
-        revolver = MultistageCheckpointSchedule(n, s//3, s - s//3)
-        return (revolver,
-                {StorageType.RAM: s//3, StorageType.DISK: s - s//3}, 1)
+    return (MultistageCheckpointSchedule(n, 0, s),
+            {StorageType.RAM: 0, StorageType.DISK: s}, 1)
 
 
 def twolevel_binomial(n, s):
-    """Disk revolver.
-
-    Parameters
-    ----------
-    n : int
-        Total forward steps.
-    s : int
-        Snapshots to store in RAM.
-
-    Returns
-    -------
-    (DiskRevolve, dict, int)
-        Disk revolver, checkpoint storage limits, data limit.
-    """
-
     return (TwoLevelCheckpointSchedule(2, s, binomial_storage=StorageType.RAM),
             {StorageType.RAM: s, StorageType.DISK: 1 + (n - 1) // 2}, 1)
 
 
 def periodic_disk(n, s):
-    """Periodic disk revolver.
-
-    Parameters
-    ----------
-    n : int
-        Total forward steps.
-    s : int
-        Snapshots to save in RAM.
-
-    Returns
-    -------
-    (PeriodicDiskRevolve, dict, int)
-        Periodic disk revolver, checkpoint storage limits, data limit.
-    """
     if s < 1:
         return (None,
                 {StorageType.RAM: 0, StorageType.DISK: 0}, 0)
@@ -148,20 +72,6 @@ def periodic_disk(n, s):
 
 
 def revolve(n, s):
-    """Periodic disk revolver.
-
-    Parameters
-    ----------
-    n : int
-        Total forward steps.
-    s : int
-        Snapshots to save in RAM.
-
-    Returns
-    -------
-    (PeriodicDiskRevolve, dict, int)
-        Periodic disk revolver, checkpoint storage limits, data limit.
-    """
     if s < 1:
         return (None,
                 {StorageType.RAM: 0, StorageType.DISK: 0}, 0)
@@ -179,13 +89,13 @@ def mixed(n, s):
 @pytest.mark.parametrize(
     "schedule",
     [
-    #  revolve,
-    #  periodic_disk,
-    #  disk_revolve,
-    #  h_revolve,
+     revolve,
+     periodic_disk,
+     disk_revolve,
+     h_revolve,
      multistage,
-    #  twolevel_binomial,
-    #  mixed,
+     twolevel_binomial,
+     mixed,
      ]
      )
 @pytest.mark.parametrize("n, S", [

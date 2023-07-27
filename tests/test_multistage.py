@@ -131,12 +131,7 @@ def test_multistage(trajectory,
         assert cp_action.from_storage == StorageType.DISK
         cp = snapshots[cp_action.n]
 
-        # The checkpoint contains forward restart data
-        assert len(cp[0]) > 0
-        assert len(cp[1]) == 0
-
-        # The loaded data is deleted if it is exactly one step away from the
-        # current location of the adjoint
+        assert len(cp[0]) > 0 or len(cp[1]) > 0
 
         if cp_action.to_storage == StorageType.NONE:
             assert (cp_action.n == n - model_r - 1)

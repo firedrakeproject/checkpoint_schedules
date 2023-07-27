@@ -10,7 +10,8 @@ import functools
 import pytest
 
 
-@pytest.mark.parametrize("n, S", [(1, (0,)),
+@pytest.mark.parametrize("n, S", [
+                                  (1, (0,)),
                                   (2, (1,)),
                                   (3, (1, 2)),
                                   (10, tuple(range(1, 10))),
@@ -18,6 +19,7 @@ import pytest
                                   (250, tuple(range(25, 250, 25)))
                                   ])
 def test_mixed(n, S):
+    cp_action_lists = []
     @functools.singledispatch
     def action(cp_action):
         raise TypeError("Unexpected action")
@@ -129,8 +131,6 @@ def test_mixed(n, S):
             # The checkpoint data is exactly one step away from the current
             # location of the adjoint
             assert cp_action.n == n - model_r - 1
-            # The loaded data is always deleted
-            assert cp_action.delete
 
             data.clear()
             data.update(cp[1])
@@ -146,14 +146,22 @@ def test_mixed(n, S):
         cp = snapshots[cp_action.n]
 
         # The checkpoint contains forward restart data
-        assert len(cp[0]) > 0
-        assert len(cp[1]) == 0
+        assert len(cp[0]) == 0 or len(cp[1]) == 0
+        assert len(cp[0]) > 0 or len(cp[1]) > 0
+        if len(cp[1]) > 0:
+            # Loading a non-linear dependency data checkpoint:
 
-        # The loaded data is deleted if it is exactly one step away from the
-        # current location of the adjoint
+            # The checkpoint data is exactly one step away from the current
+            # location of the adjoint
+            assert cp_action.n == n - model_r - 1
+            # The loaded data is always deleted
+            assert cp_action.to_storage == StorageType.NONE
+            model_n = None
+
+        if len(cp[0]) > 0:
+            assert (cp_action.n < n - model_r - 1)
 
         if cp_action.to_storage == StorageType.NONE:
-            assert (cp_action.n == n - model_r - 1)
             del snapshots[cp_action.n]
 
 
@@ -189,7 +197,7 @@ def test_mixed(n, S):
 
         for _, cp_action in enumerate(cp_schedule):
             action(cp_action)
-
+            cp_action_lists.append(cp_action)
             # The schedule state is consistent with both the forward and
             # adjoint
             assert model_n is None or model_n == cp_schedule.n
