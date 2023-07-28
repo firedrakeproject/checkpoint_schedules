@@ -74,6 +74,7 @@ class SingleStorageSchedule(CheckpointSchedule):
 
         return storage_type == self._storage
 
+
 class NoneCheckpointSchedule(CheckpointSchedule):
     """A checkpointing schedule for the case where no adjoint calculation is
     performed.
