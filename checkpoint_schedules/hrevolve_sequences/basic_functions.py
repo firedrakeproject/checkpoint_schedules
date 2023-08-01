@@ -55,7 +55,7 @@ def beta(x, y):
 
 
 def argmin(l):
-    """Provide the index of the minimum value in a list.
+    """Provide the index of the minimum value of the memory list.
     It is used to compute operation index in the H-ReVolve 
     schedule for K = 0 (level 0).
 
@@ -67,9 +67,8 @@ def argmin(l):
     Returns
     -------
     int
-        Return the last argmin (1-based)
+        Index of the minimum value in the memory list.
     """
-    # 
     index = 0
     m = l[0]
     for i, _ in enumerate(l):
@@ -100,20 +99,30 @@ def from_list_to_string(l):
 
 
 class Operation:
-    """This class creates the revolve operations.
+    """This class represents the operations given by the checkpointing 
+    strategies.
 
     Attributes
     ----------
     type : str
-        The type of operation. The type of oprations are listed in
-        :py:dict:`checkpoint_schedules.hrevolve_sequences.basic_functions.official_names`.
-    index : int or list
-        The index of the operation. If is a H-ReVolve schedule, the index is a
-        list of two integers. The first integer is the storage hierarquical
-        level, and the second integer is the the time step.
-        Otherwise, the index is an integer representing the time step.
+        The type of operation. 
+    index : int or list of int
+        The index of the operation.
     params : dict
-        It is dictionary of parameters :py:func:`checkpoint_schedules.hrevolve_sequences.utils.revolver_parameters`.
+        It is dictionary of parameters.
+    
+    Notes
+    -----
+    If it is an H-Revolve schedule, the index is a list of two integers. 
+    The first integer represents the storage hierarchical level, and the 
+    second integer represents the time step. Otherwise, the index is an integer 
+    representing the time step.
+    The possible types of operations are listed in `official_names`.
+    The dictionary of parameters is defined in :py:func:`utils.revolver_parameters`.
+
+    See Also
+    --------
+    :func:`utils.revolver_parameters`, :dict:`official_names`
 
     """
     def __init__(self, operation_type, operation_index, params):
@@ -200,9 +209,14 @@ class Operation:
         Parameters
         ----------
         size : int
-            The size of the shift.
+            The index size to shift.
         branch : int, optional
-            The branch to shift. ...
+            The operation branch.
+        
+        Notes
+        -----
+        The shift is applied to the index that represents the time step of the
+        operation.
         """
         if isinstance(self.index, int):
             self.index += size
@@ -264,7 +278,7 @@ class Sequence:
     concat : int
         Give the output format for the returned sequence.
     makespan : int
-        Total execution time.
+        Represent the total execution time of a sequence.
     storage : list
         List of list of checkpoints in hierarchical storage
     memory : list
@@ -273,6 +287,11 @@ class Sequence:
         List of disk checkpoints.
     type : str
         Type of the sequence.
+    
+    Notes
+    -----
+    The possible types are listed in :attr:`official_names`.
+
     """
     def __init__(self, function, levels=None, concat=0):
         self.sequence = []  
@@ -421,7 +440,7 @@ class Sequence:
         del self.sequence[operation_index]
 
     def insert_sequence(self, sequence):
-        """Insert a sequence in the sequence.
+        """Insert a sequence into the current sequence.
 
         Parameters
         ----------
@@ -438,19 +457,19 @@ class Sequence:
             self.disk += sequence.disk
 
     def shift(self, size, branch=-1):
-        """Shift the elements of the sequence.
+        """Shift the index of the operation within this sequence.
 
         Parameters
         ----------
         size : int
             The size of the shift.
         branch : int, optional
-            The branch to shift.
+            The operation branch.
 
         Returns
         -------
         Sequence
-            The shifted sequence.
+            The updated sequence with the operation indexes shifted.
         """
         for x in self.sequence:
             x.shift(size, branch=branch)
@@ -463,17 +482,17 @@ class Sequence:
         return self
 
     def remove_useless_wm(self, K=-1):
-        """Remove useless write in memory operations.
+        """Remove useless write in memory operations from the sequence.
 
         Parameters
         ----------
         K : int, optional
-            
+            Index of the write storage level.
 
         Returns
         -------
         Sequence
-            The sequence without useless write in memory operations.
+            The updated sequence without useless write in-memory operations.
         """
         if len(self.sequence) > 0:
             if self.sequence[0].type == "Write_memory" or self.sequence[0].type == "Checkpoint":
@@ -622,7 +641,14 @@ class Sequence:
 
 
 class Table:
-    """This class is used to ....
+    """This class creates a Table.
+
+    Attributes
+    ----------
+    content : list
+        The content of the table.
+    size : int
+        The size of the table.
     """
     def __init__(self, n=0, x=float("inf")):
         self.content = [x for _ in range(n)]
@@ -642,12 +668,18 @@ class Table:
         self.file.write("#l\tvalue\n")
 
     def append(self, x):
-        """Add an element to the table.
+        """Appends an element to the table content.
 
         Parameters
         ----------
-        x : 
-            The element to add.
+        x : int
+            The element to append to the table content.
+
+        Notes
+        -----
+        The value of 'x' represents a function of the forward and backward
+        operation costs.
+
         """
         self.content.append(x)
         self.size += 1

@@ -11,9 +11,9 @@ def get_t(l, cm):
     Parameters
     ----------
     l : int
-        Steps number
+        Steps number.
     cm : int
-        Number of available memory slots.
+        The number of checkpoints stored in memory.
 
     Returns
     -------
@@ -26,19 +26,19 @@ def get_t(l, cm):
     return t-1
 
 
-def opt_0_closed_formula(l, cm, uf, ub, **params):
+def opt_0_closed_formula(l, cm, uf, ub):
     """Fast computation of "Opt_0" based on the closed formula.
 
     Parameters
     ----------
     l : int
-        Steps number.
+        The number of forward steps to use in the AC graph.
     cm : int
-        Number of available memory slots.
+        The number of checkpoints stored in memory.
     uf : float
-        Cost of the forward steps.
+        The cost of advancing the forward over one step.
     ub : float
-        Cost of the backward steps.
+        The cost of advancing the adjoint over one step.
 
     Returns
     -------
@@ -51,21 +51,21 @@ def opt_0_closed_formula(l, cm, uf, ub, **params):
     return ((l+1) * (t+1) - beta(cm+1, t)) * uf + (l+1) * ub
 
 
-def get_opt_0_table(lmax, mmax, uf, ub, print_table=None, **params):
+def get_opt_0_table(lmax, mmax, uf, ub, print_table=None):
     """Return the Opt_0 tables.
 
     Parameters
     ----------
     lmax : int
-        Steps number.
+        The number of forward steps to use in the AC graph.
     mmax : _type_
         _description_
+    ub : float, optional
+        The cost of advancing the adjoint over one step.
     uf : float
-        Cost associated to the forward step.
-    ub : float
-        Cost associated to the backward step.
-    print_table : _type_
-        _description_
+        The cost of advancing the forward over one step.
+    print_table : str, optional
+        File to which to print the results table.
 
     Notes
     -----
@@ -90,7 +90,8 @@ def get_opt_0_table(lmax, mmax, uf, ub, print_table=None, **params):
     # Compute everything
     for m in range(2, mmax + 1):
         for l in range(2, lmax + 1):
-            value = min([j * uf + opt[m-1][l - j] + opt[m][j-1] for j in range(1, l)])
+            value = min([j * uf + opt[m-1][l - j] + opt[m][j-1] 
+                         for j in range(1, l)])
             opt[m].append(value)
     return opt
 
@@ -103,7 +104,7 @@ def revolve(l, cm, rd, wd, fwd_cost, bwd_cost, opt_0=None):
     l : int
         Number of forward step to execute in the AC graph.
     cm : int
-        number of available memory slots
+        The number of checkpoints stored in memory.
     opt_0 : _type_, optional
         Return the optimal sequence of makespan.
 
@@ -115,59 +116,63 @@ def revolve(l, cm, rd, wd, fwd_cost, bwd_cost, opt_0=None):
     params = revolver_parameters(wd, rd, fwd_cost, bwd_cost)
     parameters = dict(params)
     if opt_0 is None:
-        opt_0 = get_opt_0_table(l, cm, **params)
-    sequence = Sequence(Function("Revolve", l, cm), concat=parameters["concat"])
-    Operation = partial(Op, params=parameters)
+        opt_0 = get_opt_0_table(l, cm, fwd_cost, bwd_cost)
+    sequence = Sequence(Function("Revolve", l, cm), 
+                        concat=parameters["concat"])
+    operation = partial(Op, params=parameters)
     if l == 0:
-        sequence.insert(Operation("Write_Forward_memory", 1))
-        sequence.insert(Operation("Forward", [0, 1]))
-        sequence.insert(Operation("Backward", [1, 0]))
-        sequence.insert(Operation("Discard_Forward_memory", 1))
-        sequence.insert(Operation("Discard_memory", 0))
+        sequence.insert(operation("Write_Forward_memory", 1))
+        sequence.insert(operation("Forward", [0, 1]))
+        sequence.insert(operation("Backward", [1, 0]))
+        sequence.insert(operation("Discard_Forward_memory", 1))
+        sequence.insert(operation("Discard_memory", 0))
         return sequence
     elif cm == 0:
         raise ValueError("It's impossible to execute an AC graph without memory")
     elif l == 1:
-        sequence.insert(Operation("Write_memory", 0))
-        sequence.insert(Operation("Forward", [0, 1]))
-        sequence.insert(Operation("Write_Forward_memory", 2))
-        sequence.insert(Operation("Forward", [1, 2]))
-        sequence.insert(Operation("Backward", [2, 1]))
-        sequence.insert(Operation("Discard_Forward_memory", 2))
-        sequence.insert(Operation("Read_memory", 0))
-        sequence.insert(Operation("Write_Forward_memory", 1))
-        sequence.insert(Operation("Forward", [0, 1]))
-        sequence.insert(Operation("Backward", [1, 0]))
-        sequence.insert(Operation("Discard_Forward_memory", 1))
-        sequence.insert(Operation("Discard_memory", 0))
+        sequence.insert(operation("Write_memory", 0))
+        sequence.insert(operation("Forward", [0, 1]))
+        sequence.insert(operation("Write_Forward_memory", 2))
+        sequence.insert(operation("Forward", [1, 2]))
+        sequence.insert(operation("Backward", [2, 1]))
+        sequence.insert(operation("Discard_Forward_memory", 2))
+        sequence.insert(operation("Read_memory", 0))
+        sequence.insert(operation("Write_Forward_memory", 1))
+        sequence.insert(operation("Forward", [0, 1]))
+        sequence.insert(operation("Backward", [1, 0]))
+        sequence.insert(operation("Discard_Forward_memory", 1))
+        sequence.insert(operation("Discard_memory", 0))
         return sequence
     elif cm == 1:
-        sequence.insert(Operation("Write_memory", 0))
+        sequence.insert(operation("Write_memory", 0))
         for index in range(l - 1, -1, -1):
             if index != l - 1:
-                sequence.insert(Operation("Read_memory", 0))
+                sequence.insert(operation("Read_memory", 0))
             if index + 1 != 0:
-                sequence.insert(Operation("Forward", [0, index + 1]))
-            sequence.insert(Operation("Write_Forward_memory", index + 2))
-            sequence.insert(Operation("Forward", [index + 1, index + 2]))
-            sequence.insert(Operation("Backward", [index + 2, index + 1]))
-            sequence.insert(Operation("Discard_Forward_memory", index + 2))
-        sequence.insert(Operation("Read_memory", 0))
-        sequence.insert(Operation("Write_Forward_memory", 1))
-        sequence.insert(Operation("Forward", [0, 1]))
-        sequence.insert(Operation("Backward", [1, 0]))
-        sequence.insert(Operation("Discard_Forward_memory", 1))
-        sequence.insert(Operation("Discard_memory", 0))
+                sequence.insert(operation("Forward", [0, index + 1]))
+            sequence.insert(operation("Write_Forward_memory", index + 2))
+            sequence.insert(operation("Forward", [index + 1, index + 2]))
+            sequence.insert(operation("Backward", [index + 2, index + 1]))
+            sequence.insert(operation("Discard_Forward_memory", index + 2))
+        sequence.insert(operation("Read_memory", 0))
+        sequence.insert(operation("Write_Forward_memory", 1))
+        sequence.insert(operation("Forward", [0, 1]))
+        sequence.insert(operation("Backward", [1, 0]))
+        sequence.insert(operation("Discard_Forward_memory", 1))
+        sequence.insert(operation("Discard_memory", 0))
         return sequence
-    list_mem = [j*parameters["uf"] + opt_0[cm-1][l-j] + opt_0[cm][j-1] for j in range(1, l)]
+    list_mem = [j*parameters["uf"] + opt_0[cm-1][l-j] + opt_0[cm][j-1] 
+                for j in range(1, l)]
     jmin = argmin(list_mem)
-    sequence.insert(Operation("Write_memory", 0))
-    sequence.insert(Operation("Forward", [0, jmin]))
+    sequence.insert(operation("Write_memory", 0))
+    sequence.insert(operation("Forward", [0, jmin]))
     sequence.insert_sequence(
-        revolve(l - jmin, cm - 1, wd, rd, fwd_cost, bwd_cost, opt_0=opt_0).shift(jmin)
+        revolve(l - jmin, cm - 1, wd, rd, fwd_cost, bwd_cost, 
+                opt_0=opt_0).shift(jmin)
     )
-    sequence.insert(Operation("Read_memory", 0))
+    sequence.insert(operation("Read_memory", 0))
     sequence.insert_sequence(
-        revolve(jmin - 1, cm, wd, rd, fwd_cost, bwd_cost, opt_0=opt_0).remove_useless_wm()
+        revolve(jmin - 1, cm, wd, rd, fwd_cost,
+                bwd_cost, opt_0=opt_0).remove_useless_wm()
     )
     return sequence

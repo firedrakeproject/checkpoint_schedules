@@ -200,7 +200,8 @@ class Revolve(RevolveCheckpointSchedule):
     def __init__(self, max_n, snap_in_ram, fwd_cost=1, bwd_cost=1, w_cost=2, r_cost=2):
         schedule = list(revolve(max_n - 1, snap_in_ram, w_cost, r_cost, fwd_cost, bwd_cost))
         super().__init__(max_n, snap_in_ram, max_n - snap_in_ram, schedule)
-        
+
+      
 def _convert_action(action):
     """Convert an revolver operation to the `checkpoint_schedules` actions.
 

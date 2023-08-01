@@ -14,19 +14,19 @@ def get_opt_1d_table(lmax, cm, ub, uf, rd, one_read_disk, print_table=None,
     Parameters
     ----------
     lmax : int
-        Maximal step.
+        The number of forward steps to use in the AC graph.
     cm : int
-        The number of checkpoint stored in memory.
-    print_table : _type_
-        _description_
+        The number of checkpoints stored in memory.
     ub : float
-        Cost of the backward steps.
+        The cost of advancing the adjoint over one step.
     uf : float
-        Cost of the forward steps.
-    rd : _type_
-        _description_
-    one_read_disk : _type_
-        _description_
+        The cost of advancing the forward over one step.
+    rd : float
+        Cost of reading the checkpoint data from disk.
+    one_read_disk : bool
+        Disk checkpoints are only read once.
+    print_table : str, optional
+        File to which to print the results table.
     opt_0 : _type_, optional
         _description_, by default None
 
@@ -62,27 +62,24 @@ def get_opt_1d_table(lmax, cm, ub, uf, rd, one_read_disk, print_table=None,
 
 
 def revolve_1d(l, cm, opt_0=None, opt_1d=None, **params):
-    """Return the 1D revolve sequence.
+    """1D revolve algorithm.
 
     Parameters
     ----------
     l : int
-        Total number of the forward step.
+        The number of forward step to execute in the AC graph.
     cm : int
-        Number of available memory slots.
+        The maximum number of checkpoints to store in memory.
     opt_0 : _type_, optional
         _description_
     opt_1d : _type_, optional
         _description_
 
-    Notes
-    -----
-    Consider that 'x_0' is already stored on the disk.
 
     Returns
     -------
-    object
-        1D revolve sequence of schedule.
+    Sequence
+        1D revolve schedule.
     """
     parameters = dict(params)
     rd = parameters["rd"]

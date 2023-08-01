@@ -7,7 +7,7 @@ from .revolve_1d import get_opt_1d_table, revolve_1d
 from .utils import revolver_parameters
 
 
-def compute_mmax(params):
+def compute_mmax(cm, wd, rd, uf):
     """Compute the maximum period.
 
     Parameters
@@ -15,21 +15,17 @@ def compute_mmax(params):
     cm : int
         The number of checkpoints stored in memory.
     wd : float
-        Cost of writing to disk.
+        Cost of writing the checkpoint data in disk.
     rd : float
-        Cost of reading from disk.
-    uf : int
-        Cost of the forward steps.
+        Cost of reading the checkpoint data from disk.
+    uf : float
+        The cost of advancing the forward over one step.
 
     Returns
     -------
-    _type_
-        _description_
+    int
+        The maximum period.
     """
-    cm = params["cm"]
-    wd = params["wd"]
-    rd = params["rd"]
-    uf = params["uf"]
     td1 = 0
     while beta(cm, td1) <= (wd + rd) / uf:
         td1 += 1
@@ -49,9 +45,9 @@ def rel_cost_x(m, opt_1d_m_moins_1, wd, rd):
     opt_1d_m_moins_1 : float
         The cost of the optimal 1D schedule for period m-1.
     wd : float
-        Cost of writing to disk.
+        Cost of writing the checkpoint data in disk.
     rd : float
-        Cost of reading from disk.
+        Cost of reading the checkpoint data from disk.
     """
     return 1.0*(wd + rd + opt_1d_m_moins_1) / m
 
@@ -61,22 +57,23 @@ def compute_mx(cm, opt_0=None, opt_1d=None, mmax=None, **params):
 
     Parameters
     ----------
-    cm : _type_
-        _description_
+    cm : int
+        The number of checkpoints stored in memory.
     opt_0 : _type_, optional
         _description_, by default None
     opt_1d : _type_, optional
         _description_, by default None
-    mmax : _type_, optional
-        _description_, by default None
+    mmax : int, optional
+        The maximum period.
 
     Returns
     -------
-    _type_
-        _description_
+    int
+        The optimal period.
     """
     if mmax is None:
-        mmax = compute_mmax(params)
+        mmax = compute_mmax(params["cm"], params["wd"], params["rd"], 
+                            params["uf"])
     if opt_0 is None or len(opt_0) < mmax:
         opt_0 = get_opt_0_table(mmax, cm, **params)
     if opt_1d is None or len(opt_1d) < mmax:
@@ -97,12 +94,12 @@ def mx_close_formula(cm, rd, wd, opt_0=None, opt_1d=None, **params):
 
     Parameters
     ----------
-    cm : _type_
-        _description_
-    rd : _type_
-        _description_
-    wd : _type_
-        _description_
+    cm : int
+        The number of checkpoints stored in memory.
+    rd : float
+        Cost of reading the checkpoint data from disk.
+    wd : float
+        Cost of writing the checkpoint data in disk.
     opt_0 : _type_, optional
         _description_, by default None
     opt_1d : _type_, optional
@@ -142,15 +139,16 @@ def mxrr_close_formula(cm, uf, rd, wd):
     cm : int
         The number of checkpoints stored in memory.
     uf : float
-        Cost of the forward step.
+        The cost of advancing the forward over one step.
     rd : float
-        Cost of reading from disk.
+        Cost of reading the checkpoint data from disk.
     wd : float
-        Cost of writing to disk.
+        Cost of writing the checkpoint data in disk.
 
     Returns
     -------
     int
+        ....
         
     """
     t = 0
@@ -159,7 +157,7 @@ def mxrr_close_formula(cm, uf, rd, wd):
     return int(beta(cm, t))
 
 
-def periodic_disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost, opt_0=None, 
+def periodic_disk_revolve(l, cm, rd, wd, uf, ub, opt_0=None, 
                           opt_1d=None, mmax=None):
     """Periodic disk revolve algorithm.
             
@@ -168,15 +166,15 @@ def periodic_disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost, opt_0=None,
     l : int
         The number of forward step to execute in the AC graph.
     cm : int
-        The number of slots available in memory.
+        The number of checkpoints stored in memory.
     rd : float
         Cost of read the checkpoint data from disk.
     wd : float
         Cost of writing the checkpoint data to disk.
-    fwd_cost : float
-        Cost of the forward step.
-    bwd_cost : float
-        Cost of the backward step.
+    ub : float
+        The cost of advancing the adjoint over one step.
+    uf : float
+        The cost of advancing the forward over one step.
     opt_0 : _type_, optional
         _description_, by default None
     opt_1d : _type_, optional
@@ -190,7 +188,7 @@ def periodic_disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost, opt_0=None,
         Return the periodic disk revolve schedule.
     """
     
-    params = revolver_parameters(wd, rd, fwd_cost, bwd_cost)
+    params = revolver_parameters(wd, rd, uf, ub)
     parameters = dict(params)
     # parameters.update(params)
     mx = parameters["mx"]
@@ -198,15 +196,16 @@ def periodic_disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost, opt_0=None,
     fast = parameters["fast"]
     if mmax is None:
         if one_read_disk:
-            mmax = mxrr_close_formula(cm, fwd_cost, rd, wd)
+            mmax = mxrr_close_formula(cm, uf, rd, wd)
             if mx is None:
                 mx = mmax
         else:
-            mmax = compute_mmax(parameters)
+            mmax = compute_mmax(params["cm"], params["wd"], params["rd"], 
+                                params["uf"])
     if mx is not None:
         mmax = max(mmax, mx) + 1
     if opt_0 is None:
-        opt_0 = get_opt_0_table(mmax, cm, **parameters)
+        opt_0 = get_opt_0_table(mmax, cm, params["uf"], params["ub"])
     if opt_1d is None and not one_read_disk:
         opt_1d = get_opt_1d_table(mmax, cm, opt_0=opt_0, **parameters)
     sequence = Sequence(Function("Periodic-Disk-Revolve", l, cm),
@@ -214,7 +213,7 @@ def periodic_disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost, opt_0=None,
     operation = partial(Op, params=parameters)
     if mx is None:
         if one_read_disk:
-            mx = mxrr_close_formula(cm, fwd_cost, rd, wd)
+            mx = mxrr_close_formula(cm, uf, rd, wd)
         elif fast:
             mx = mx_close_formula(cm, opt_0=opt_0, opt_1d=opt_1d, **parameters)
         else:
@@ -228,7 +227,7 @@ def periodic_disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost, opt_0=None,
         current_task += mx
     if one_read_disk or opt_1d[l - current_task] == opt_0[cm][l - current_task]:
         sequence.insert_sequence(
-            revolve(l - current_task, cm, rd, wd, fwd_cost, bwd_cost,
+            revolve(l - current_task, cm, rd, wd, uf, ub,
                     opt_0=opt_0).shift(current_task)
         )
     else:
@@ -242,7 +241,7 @@ def periodic_disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost, opt_0=None,
         sequence.insert(operation("Read_disk", current_task))
         if one_read_disk:
             sequence.insert_sequence(
-                revolve(mx - 1, cm, rd, wd, fwd_cost, bwd_cost,
+                revolve(mx - 1, cm, rd, wd, uf, ub,
                         opt_0=opt_0).shift(current_task)
             )
         else:

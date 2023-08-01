@@ -15,17 +15,17 @@ def get_opt_inf_table(lmax, cm, uf, ub, rd, wd, one_read_disk,
     Parameters
     ----------
     lmax : int
-        The maximum number of steps in the sequence.
+        The number of forward steps to use in the AC graph.
     cm : int
         The number of checkpoints stored in memory.
     ub : float
-        Cost of the backward steps.
+        The cost of advancing the adjoint over one step.
     uf : float
-        Cost of the forward steps.
+        The cost of advancing the forward over one step.
     rd : float
-        Cost of reading from disk.
+        Cost of reading the checkpoint data from disk.
     wd : float
-        Cost of writing to disk.
+        Cost of writing the checkpoint data in disk.
     one_read_disk : bool
         Disk checkpoints are only read once.
     print_table : str, optional
@@ -44,7 +44,7 @@ def get_opt_inf_table(lmax, cm, uf, ub, rd, wd, one_read_disk,
     
     """
     if opt_0 is None:
-        opt_0 = get_opt_0_table(lmax, cm, **params)
+        opt_0 = get_opt_0_table(lmax, cm, uf, ub)
     if opt_1d is None and not one_read_disk:
         opt_1d = get_opt_1d_table(lmax, cm, opt_0=opt_0, **params)
     opt_inf = Table()
@@ -69,24 +69,23 @@ def get_opt_inf_table(lmax, cm, uf, ub, rd, wd, one_read_disk,
     
 def disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost,
                  opt_0=None, opt_1d=None, opt_inf=None):
-    """Return the Disk-Revolve sequence.
+    """Disk-Revolve algorithm.
 
     Parameters
     ----------
     l : int
         The number of forward steps to execute in the AC graph.
     cm : int
-        The maximum number of forward restart checkpoints to store in memory.
-    opt_0 : _type_, optional
-        _description_, by default None
-    opt_1d : _type_, optional
-        _description_, by default None
-    opt_inf : _type_, optional
-        _description_, by default None
+        The number of checkpoints stored in memory.
+    opt_0 : 
+
+    opt_1d :
+
+    opt_inf : 
 
     Returns
     -------
-        Return the optimal sequence of makespan Opt_inf(l, cm).
+        Disk-Revolve schedule.
     """
     params = revolver_parameters(wd, rd, fwd_cost, bwd_cost)
     parameters = dict(params)
@@ -97,48 +96,49 @@ def disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost,
     one_read_disk = parameters["one_read_disk"]
 
     if opt_0 is None:
-        opt_0 = get_opt_0_table(l, cm, **parameters)
+        opt_0 = get_opt_0_table(l, cm, uf, ub)
     if opt_1d is None and not one_read_disk:
         opt_1d = get_opt_1d_table(l, cm, opt_0=opt_0, **parameters)
     if opt_inf is None:
         opt_inf = get_opt_inf_table(l, cm, opt_0=opt_0, opt_1d=opt_1d,
                                     **parameters)
-    sequence = Sequence(Function("Disk-Revolve", l, cm), concat=parameters["concat"])
-    Operation = partial(Op, params=parameters)
+    sequence = Sequence(Function("Disk-Revolve", l, cm), 
+                        concat=parameters["concat"])
+    operation = partial(Op, params=parameters)
     if l == 0:
-        sequence.insert(Operation("Write_Forward_memory", 1))
-        sequence.insert(Operation("Forward", [0, 1]))
-        sequence.insert(Operation("Backward", [1, 0]))
-        sequence.insert(Operation("Discard_Forward_memory",  1))
+        sequence.insert(operation("Write_Forward_memory", 1))
+        sequence.insert(operation("Forward", [0, 1]))
+        sequence.insert(operation("Backward", [1, 0]))
+        sequence.insert(operation("Discard_Forward_memory",  1))
         return sequence
     if l == 1:
         if cm == 0:
-            sequence.insert(Operation("Write_disk", 0))
-            sequence.insert(Operation("Forward", [0, 1]))
-            sequence.insert(Operation("Write_Forward_memory", 2))
-            sequence.insert(Operation("Forward", [1, 2]))
-            sequence.insert(Operation("Backward", [2, 1]))
-            sequence.insert(Operation("Discard_Forward_memory", 2))
-            sequence.insert(Operation("Read_disk", 0))
-            sequence.insert(Operation("Write_Forward_memory", 1))
-            sequence.insert(Operation("Forward", [0, 1]))
-            sequence.insert(Operation("Backward", [1, 0]))
-            sequence.insert(Operation("Discard_Forward_memory", 1))
-            sequence.insert(Operation("Discard_disk", 0))
+            sequence.insert(operation("Write_disk", 0))
+            sequence.insert(operation("Forward", [0, 1]))
+            sequence.insert(operation("Write_Forward_memory", 2))
+            sequence.insert(operation("Forward", [1, 2]))
+            sequence.insert(operation("Backward", [2, 1]))
+            sequence.insert(operation("Discard_Forward_memory", 2))
+            sequence.insert(operation("Read_disk", 0))
+            sequence.insert(operation("Write_Forward_memory", 1))
+            sequence.insert(operation("Forward", [0, 1]))
+            sequence.insert(operation("Backward", [1, 0]))
+            sequence.insert(operation("Discard_Forward_memory", 1))
+            sequence.insert(operation("Discard_disk", 0))
             return sequence
         else:
-            sequence.insert(Operation("Write_memory", 0))
-            sequence.insert(Operation("Forward", [0, 1]))
-            sequence.insert(Operation("Write_Forward_memory", 2))
-            sequence.insert(Operation("Forward", [1, 2]))
-            sequence.insert(Operation("Backward", [2, 1]))
-            sequence.insert(Operation("Discard_Forward_memory", 2))
-            sequence.insert(Operation("Read_memory", 0))
-            sequence.insert(Operation("Write_Forward_memory", 1))
-            sequence.insert(Operation("Forward", [0, 1]))
-            sequence.insert(Operation("Backward", [1, 0]))
-            sequence.insert(Operation("Discard_Forward_memory", 1))
-            sequence.insert(Operation("Discard_memory", 0))
+            sequence.insert(operation("Write_memory", 0))
+            sequence.insert(operation("Forward", [0, 1]))
+            sequence.insert(operation("Write_Forward_memory", 2))
+            sequence.insert(operation("Forward", [1, 2]))
+            sequence.insert(operation("Backward", [2, 1]))
+            sequence.insert(operation("Discard_Forward_memory", 2))
+            sequence.insert(operation("Read_memory", 0))
+            sequence.insert(operation("Write_Forward_memory", 1))
+            sequence.insert(operation("Forward", [0, 1]))
+            sequence.insert(operation("Backward", [1, 0]))
+            sequence.insert(operation("Discard_Forward_memory", 1))
+            sequence.insert(operation("Discard_memory", 0))
             return sequence
     if one_read_disk:
         list_mem = [wd + j * uf + opt_inf[l - j] + rd + opt_0[cm][j-1] for j in range(1, l)]
@@ -146,12 +146,12 @@ def disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost,
         list_mem = [wd + j * uf + opt_inf[l - j] + rd + opt_1d[j-1] for j in range(1, l)]
     if min(list_mem) < opt_0[cm][l]:
         jmin = argmin(list_mem)
-        sequence.insert(Operation("Write_disk", 0))
-        sequence.insert(Operation("Forward", [0, jmin]))
+        sequence.insert(operation("Write_disk", 0))
+        sequence.insert(operation("Forward", [0, jmin]))
         sequence.insert_sequence(
             disk_revolve(l - jmin, cm, rd, wd, uf, ub, opt_0=opt_0, opt_1d=opt_1d, opt_inf=opt_inf).shift(jmin)
         )
-        sequence.insert(Operation("Read_disk", 0))
+        sequence.insert(operation("Read_disk", 0))
         if one_read_disk:
             sequence.insert_sequence(
                 revolve(jmin - 1, cm, rd, wd, uf, ub, opt_0=opt_0)
