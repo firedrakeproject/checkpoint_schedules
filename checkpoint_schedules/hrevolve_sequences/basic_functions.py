@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+"""This module contains the basic functions used in the H-ReVolve algorithm."""
 import math
 
 official_names = {
@@ -30,19 +30,24 @@ official_names = {
 
 
 def beta(x, y):
-    """A function used in the optimal makespan computation.
+    """This function auxiliate in the optimal makespan computation.
 
     Parameters
     ----------
     x : float
         The number of slots available in memory.
     y : int
-        _description_
+        It is the unic inter satisfying the following inequality
+        
+        .. math::
 
+            \\frac{(x+y)!}{x!y!} \leq l \leq \\frac{(x+y+1)!}{x!(y+1)!} 
+      
     Returns
     -------
     int
-        _description_
+        This function returns the value that contributes for the optimal
+        makespan computation.
     """
     if y < 0:
         return 0
@@ -50,87 +55,42 @@ def beta(x, y):
 
 
 def argmin(l):
-    """_summary_
+    """Provide the index of the minimum value in a list.
+    It is used to compute operation index in the H-ReVolve 
+    schedule for K = 0 (level 0).
 
     Parameters
     ----------
-    l : _type_
-        _description_
+    l : list
+        The list of memory.
 
     Returns
     -------
-    _type_
-        _description_
+    int
+        Return the last argmin (1-based)
     """
-    # Return the last argmin (1-based)
+    # 
     index = 0
     m = l[0]
-    for i in range(len(l)):
+    for i, _ in enumerate(l):
         if l[i] <= m:
             index = i
             m = l[i]
     return 1 + index
 
 
-def argmin0(l):
-    """_summary_
-
-    Parameters
-    ----------
-    l : _type_
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
-    # Return the first argmin (0-based)
-    index = 0
-    m = l[0]
-    for i in range(len(l)):
-        if l[i] < m:
-            index = i
-            m = l[i]
-    return index
-
-
-def argmin_list(l):
-    """_summary_
-
-    Parameters
-    ----------
-    l : _type_
-        _description_
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
-    index_list = [0]
-    m = l[0]
-    for i in range(len(l)):
-        if l[i] < m:
-            index_list = [i+1]
-            m = l[i]
-        if l[i] == m:
-            index_list.append(i+1)
-    return index_list
-
-
 def from_list_to_string(l):
-    """_summary_
+    """Convert a list to a string.
 
     Parameters
     ----------
-    l : _type_
-        _description_
+    l : list
+        The list to be converted.
 
     Returns
     -------
-    _type_
-        _description_
+    str
+        The string representation of the list.
     """
     s = ""
     for x in l[:-1]:
@@ -140,7 +100,21 @@ def from_list_to_string(l):
 
 
 class Operation:
-    """_summary_
+    """This class creates the revolve operations.
+
+    Attributes
+    ----------
+    type : str
+        The type of operation. The type of oprations are listed in
+        :py:dict:`checkpoint_schedules.hrevolve_sequences.basic_functions.official_names`.
+    index : int or list
+        The index of the operation. If is a H-ReVolve schedule, the index is a
+        list of two integers. The first integer is the storage hierarquical
+        level, and the second integer is the the time step.
+        Otherwise, the index is an integer representing the time step.
+    params : dict
+        It is dictionary of parameters :py:func:`checkpoint_schedules.hrevolve_sequences.utils.revolver_parameters`.
+
     """
     def __init__(self, operation_type, operation_index, params):
         if operation_type not in official_names:
@@ -165,17 +139,12 @@ class Operation:
                 return official_names[self.type] + "^" + str(self.index[0]) + "_" + str(self.index[1])
 
     def cost(self):
-        """_summary_
+        """Cost of the operations.
 
         Returns
         -------
-        _type_
-            _description_
-
-        Raises
-        ------
-        ValueError
-            _description_
+        float
+            The cost.
         """
         if self.type == "Forward":
             return (self.index[1] - self.index[0]) * self.params["uf"]
@@ -226,18 +195,18 @@ class Operation:
         raise ValueError("Unknown cost for operation type " + self.type)
 
     def shift(self, size, branch=-1):
-        """_summary_
+        """Shift the index of the operation.
 
         Parameters
         ----------
-        size : _type_
-            _description_
+        size : int
+            The size of the shift.
         branch : int, optional
-            _description_, by default -1
+            The branch to shift. ...
         """
-        if type(self.index) is int:
+        if isinstance(self.index, int):
             self.index += size
-        elif type(self.index) is list:
+        elif isinstance(self.index, list):
             if self.type == "Forward" or self.type == "Backward":
                 self.index[0] += size
                 self.index[1] += size
@@ -255,7 +224,19 @@ class Operation:
 
 
 class Function:
-    """_summary_
+    """This class creates the H-Revolve functions.
+
+    Attributes
+    ----------
+    name : str
+        Name of the function.
+    l : int
+        The storage type of the function.
+    index : int or list
+        The index of the function.  If is a H-ReVolve schedule, the index is a
+        list of two integers. The first integer is the storage type (either RAM or disk),
+        and the second integer is the the time step. Otherwise, the index is an integer 
+        representing the time step.
     """
     def __init__(self, name, l, index):
         self.name = name
@@ -270,19 +251,40 @@ class Function:
 
 
 class Sequence:
-    """_summary_
+    """This class creates the Revolve sequences.
+    
+    Attributes
+    ----------
+    sequence : list
+        List create to store the :class:`Operation` and :class:`Sequence`.
+    function : Function
+        Description the function (name and parameters).
+    levels : int
+        The number of levels in the hierarchical storage.
+    concat : int
+        Give the output format for the returned sequence.
+    makespan : int
+        Total execution time.
+    storage : list
+        List of list of checkpoints in hierarchical storage
+    memory : list
+        List of memory checkpoints.
+    disk : list
+        List of disk checkpoints.
+    type : str
+        Type of the sequence.
     """
     def __init__(self, function, levels=None, concat=0):
-        self.sequence = []  # List of Operation and Sequence
-        self.function = function  # Description the function (name and parameters)
+        self.sequence = []  
+        self.function = function 
         self.levels = levels
         self.concat = concat
-        self.makespan = 0  # Makespan to be updated
-        if self.function.name == "HRevolve" or self.function.name == "hrevolve_aux":
-            self.storage = [[] for _ in range(self.levels)]  # List of list of checkpoints in hierarchical storage
+        self.makespan = 0 
+        if (self.function.name == "HRevolve" or self.function.name == "hrevolve_aux"):
+            self.storage = [[] for _ in range(self.levels)] 
         else:
-            self.memory = []  # List of memory checkpoints
-            self.disk = []  # List of disk checkpoints
+            self.memory = []
+            self.disk = [] 
         self.type = "Function"
 
     def __repr__(self):
@@ -298,33 +300,30 @@ class Sequence:
         return iter(self.concat_sequence(self.concat))
 
     def canonical(self):
+        """Return the canonical sequence.
+        """
         if self.function.name == "Disk-Revolve":
             concat = 2
         if self.function.name == "1D-Revolve" or self.function.name == "Revolve":
             concat = 1
-        l = [x.l + 1 for x in self.concat_sequence(concat=concat) if x.__class__.__name__ == "Function"]
+        l = [x.l + 1
+             for x in self.concat_sequence(concat=concat)
+             if x.__class__.__name__ == "Function"]
         l.reverse()
         return l
 
     def concat_sequence(self, concat):
-        """_summary_
+        """Concatenate the sequence.
 
         Parameters
         ----------
-        concat : _type_
-            _description_
+        concat : int
+            Give the output format for the returned sequence.
 
         Returns
         -------
-        _type_
-            _description_
-
-        Raises
-        ------
-        ValueError
-            _description_
-        ValueError
-            _description_
+        list
+            The concatenated sequence.
         """
         l = []
         for x in self.sequence:
@@ -350,22 +349,17 @@ class Sequence:
         return l
 
     def concat_sequence_hierarchic(self, concat):
-        """_summary_
+        """Concatenate the sequence in hierarchical storage.
 
         Parameters
         ----------
-        concat : _type_
-            _description_
+        concat : int
+            Give the output format for the returned sequence.
 
         Returns
         -------
-        _type_
-            _description_
-
-        Raises
-        ------
-        ValueError
-            _description_
+        list
+            The concatenated sequence.
         """
         l = []
         for x in self.sequence:
@@ -383,12 +377,12 @@ class Sequence:
         return l
 
     def insert(self, operation):
-        """_summary_
+        """Insert an operation in the sequence.
 
         Parameters
         ----------
-        operation : _type_
-            _description_
+        operation : Operation
+            The operation to insert.
         """
         self.sequence.append(operation)
         self.makespan += operation.cost()
@@ -406,12 +400,12 @@ class Sequence:
             self.memory.append((operation.index[0], operation.index[1]))
 
     def remove(self, operation_index):
-        """_summary_
+        """Remove an operation in the sequence.
 
         Parameters
         ----------
-        operation_index : _type_
-            _description_
+        operation_index : int
+            The index of the operation to remove.
         """
         self.makespan -= self.sequence[operation_index].cost()
         if self.sequence[operation_index].type == "Write_memory":
@@ -427,12 +421,12 @@ class Sequence:
         del self.sequence[operation_index]
 
     def insert_sequence(self, sequence):
-        """_summary_
+        """Insert a sequence in the sequence.
 
         Parameters
         ----------
-        sequence : _type_
-            _description_
+        sequence : Sequence
+            The sequence to insert.
         """
         self.sequence.append(sequence)
         self.makespan += sequence.makespan
@@ -444,19 +438,19 @@ class Sequence:
             self.disk += sequence.disk
 
     def shift(self, size, branch=-1):
-        """_summary_
+        """Shift the elements of the sequence.
 
         Parameters
         ----------
-        size : _type_
-            _description_
+        size : int
+            The size of the shift.
         branch : int, optional
-            _description_, by default -1
+            The branch to shift.
 
         Returns
         -------
-        _type_
-            _description_
+        Sequence
+            The shifted sequence.
         """
         for x in self.sequence:
             x.shift(size, branch=branch)
@@ -469,17 +463,17 @@ class Sequence:
         return self
 
     def remove_useless_wm(self, K=-1):
-        """_summary_
+        """Remove useless write in memory operations.
 
         Parameters
         ----------
         K : int, optional
-            _description_, by default -1
+            
 
         Returns
         -------
-        _type_
-            _description_
+        Sequence
+            The sequence without useless write in memory operations.
         """
         if len(self.sequence) > 0:
             if self.sequence[0].type == "Write_memory" or self.sequence[0].type == "Checkpoint":
@@ -493,7 +487,7 @@ class Sequence:
         return self
 
     def remove_last_discard(self):
-        """_summary_
+        """Remove the last discard operation.
         """
         if self.sequence[-1].type == "Function":
             self.sequence[-1].remove_last_discard()
@@ -501,12 +495,12 @@ class Sequence:
             self.remove(-1)
 
     def first_operation(self):
-        """_summary_
+        """Get the first operation of the sequence.
 
         Returns
         -------
-        _type_
-            _description_
+        Operation
+            The first operation of the sequence.
         """
         if self.sequence[0].type == "Function":
             return self.sequence[0].first_operation()
@@ -514,17 +508,17 @@ class Sequence:
             return self.sequence[0]
 
     def next_operation(self, i):
-        """_summary_
+        """Get the next operation of the sequence.
 
         Parameters
         ----------
-        i : _type_
-            _description_
+        i : int
+            The index of the current operation.
 
         Returns
         -------
-        _type_
-            _description_
+        Operation
+            The next operation of the sequence.
         """
         if self.sequence[i+1].type == "Function":
             return self.sequence[i+1].first_operation()
@@ -532,17 +526,17 @@ class Sequence:
             return self.sequence[i+1]
 
     def convert_old_to_branch(self, index):
-        """_summary_
+        """Convert an old operation to a branch operation.
 
         Parameters
         ----------
-        index : _type_
-            _description_
+        index : int
+            The index of the branch.
 
         Returns
         -------
-        _type_
-            _description_
+        Sequence
+            The sequence with the converted operation.
         """
         for (i, x) in enumerate(self.memory):
             if type(x) is int:
@@ -586,22 +580,22 @@ class Sequence:
         for (i, index) in enumerate(to_remove):
             self.remove(index-i)
         return self
-
+    
     def convert_new_to_branch(self, index):
-        """_summary_
+        """Convert a new operation to a branch operation.
 
         Parameters
         ----------
-        index : _type_
-            _description_
+        index : int
+            The index of the branch.
 
         Returns
         -------
-        _type_
-            _description_
+        Sequence
+            The sequence with the converted operation.
         """
         for (i, x) in enumerate(self.memory):
-            if type(x) is int:
+            if isinstance(x, int):
                 self.memory[i] = (index, x)
         to_remove = []
         for (i, op) in enumerate(self.sequence):
@@ -628,7 +622,7 @@ class Sequence:
 
 
 class Table:
-    """_summary_
+    """This class is used to ....
     """
     def __init__(self, n=0, x=float("inf")):
         self.content = [x for _ in range(n)]
@@ -636,24 +630,24 @@ class Table:
         self.print_table = 0
 
     def set_to_print(self, file_name):
-        """_summary_
+        """Print the table to a file.
 
         Parameters
         ----------
-        file_name : _type_
-            _description_
+        file_name : str
+            The name of the file to print to.
         """
         self.print_table = 1
         self.file = open(file_name, "w")
         self.file.write("#l\tvalue\n")
 
     def append(self, x):
-        """_summary_
+        """Add an element to the table.
 
         Parameters
         ----------
-        x : _type_
-            _description_
+        x : 
+            The element to add.
         """
         self.content.append(x)
         self.size += 1
@@ -663,22 +657,23 @@ class Table:
                 self.file.flush()
 
     def remove(self, x):
-        """_summary_
+        """Remove an element from the table.
 
         Parameters
         ----------
-        x : _type_
-            _description_
+        x : 
+            The element to remove.
         """
         self.content.remove(x)
         self.size -= 1
 
     def __getitem__(self, i):
-        try:
-            return self.content[i]
-        except IndexError:
-            raise IndexError("In table of length %d, index %d does not exist." % (len(self), i))
-
+        if i < 0 or i >= len(self):
+            raise IndexError("Index out of range. Table length: " +
+                             str(len(self)) + "," + "Index: " + str(i))
+        
+        return self.content[i]
+    
     def __repr__(self):
         return self.content.__repr__()
 

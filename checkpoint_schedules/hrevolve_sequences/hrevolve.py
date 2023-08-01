@@ -1,4 +1,4 @@
-"""Rotine of the H-Revolve schedules.
+"""This module contains the implementation of the H-Revolve schedule.
 """
 from functools import partial
 from .basic_functions import (Operation as Op, Sequence, Function, argmin)
@@ -29,12 +29,11 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub, uf):
     Notes
     -----
     The term makespan is used for the total execution time.
-    So, minimize makespan means minimize the execution time.
 
     Returns
     -------
     tuple : (list, list)
-        _description_
+        The first list is the optimal makespan for each level.
     """
     K = len(cvect)
     assert len(wvect) == len(rvect) == len(cvect)
@@ -73,30 +72,26 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub, uf):
 
 
 def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **params):
-    """Auxiliary function used to built the H-Revolve sequence.
+    """Auxiliary function to compute the optimal sequence of operations.
 
     Parameters
     ----------
     l : int
         The number of forward steps to execute in the AC graph.
     K : int
-        Memory level.
+        Memory level. For instance, in two level of memory (RAM and DISK),
+        `K = 0` is RAM and `K = 1` is DISK.
     cmem : int
         Number of available slots in the K-th level of memory.
-        For instance, in two level of memory (RAM and DISK), `cmem` collects
-        the number of checkpoints stored in DISK.
     cvect : tuple
-        The maximal number of slots that needs to be stored in the levels.
+        The maximal number of slots that must be stored in the levels.
     wvect : tuple
-        Number of elements defining the write cost associated with storing
-        the checkpoint data used to restart the forward solver.
+        
     rvect : tuple
-        Number of elements defining the read cost associated with storing
-        the checkpoint data used to restart the forward solver.
-    hoptp
-        _description_ 
-    hopt : _type_, optional
-        _description_
+        
+    hoptp : 
+        
+    hopt : 
     
     Returns
     -------
@@ -208,14 +203,14 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, **param
 
 
 def hrevolve(l, cvect, wvect, rvect, fwd_cost, bwd_cost):
-    """H-Revolve scheduler.
+    """H-Revolve algorithm.
     
     Parameters
     ----------
     l : int
         The number of forward steps in the initial forward calculation.
     cvect : tuple
-        The maximal number of slots that needs to be stored in the levels.
+        The maximal number of slots to be stored in the levels.
     wvect : tuple
         Number os elements defining the write cost associated with saving a forward 
         restart checkpoint.
@@ -227,7 +222,7 @@ def hrevolve(l, cvect, wvect, rvect, fwd_cost, bwd_cost):
     Returns
     -------
     Sequence
-        The H-Revolve schedules.
+        H-Revolve schedules.
     """
     params = revolver_parameters(wvect, rvect, fwd_cost, bwd_cost)
     

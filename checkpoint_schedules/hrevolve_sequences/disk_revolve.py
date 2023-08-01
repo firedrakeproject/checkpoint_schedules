@@ -1,5 +1,5 @@
 #!/usr/bin/python
-"""Rotine of the Disk-Revolve schedules.
+"""This module contains the functions to compute the Disk-Revolve schedules.
 """
 from functools import partial
 from .basic_functions import (Operation as Op, Table, Sequence, Function, argmin)
@@ -7,39 +7,40 @@ from .revolve import get_opt_0_table, revolve
 from .revolve_1d import revolve_1d, get_opt_1d_table
 from .utils import revolver_parameters
 
-def get_opt_inf_table(lmax, cm, uf, ub, rd, wd, one_read_disk, print_table=None,
-                      opt_0=None, opt_1d=None, **params):
+
+def get_opt_inf_table(lmax, cm, uf, ub, rd, wd, one_read_disk, 
+                      print_table=None, opt_0=None, opt_1d=None, **params):
     """Compute the opt_inf table for architecture and l=0...lmax.
 
     Parameters
     ----------
     lmax : int
-        Maximal step.
+        The maximum number of steps in the sequence.
     cm : int
-        The number of checkpoint stored in memory.
+        The number of checkpoints stored in memory.
     ub : float
         Cost of the backward steps.
     uf : float
         Cost of the forward steps.
-    rd : _type_
-        _description_
-    wd : _type_
-        _description_
-    one_read_disk : _type_
-        _description_
-    print_table : _type_
-        _description_
+    rd : float
+        Cost of reading from disk.
+    wd : float
+        Cost of writing to disk.
+    one_read_disk : bool
+        Disk checkpoints are only read once.
+    print_table : str, optional
+        File to which to print the results table, by default None.
     opt_0 : _type_, optional
         _description_, by default None
     opt_1 : _type_, optional
         _description_, by default None
-
-    Notes
-    -----
-    This computation uses a dynamic program.
+    **params : dict
+        Dictionary of the parameters.
 
     Returns
     -------
+    Table
+        Return the opt_inf table for architecture and l=0...lmax.
     
     """
     if opt_0 is None:
@@ -85,7 +86,6 @@ def disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost,
 
     Returns
     -------
-
         Return the optimal sequence of makespan Opt_inf(l, cm).
     """
     params = revolver_parameters(wd, rd, fwd_cost, bwd_cost)

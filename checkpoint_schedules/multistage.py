@@ -62,7 +62,7 @@ def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
         if snapshot_i < 0:
             raise RuntimeError("Invalid checkpointing state")
         
-        if cp_action.to_storage == StorageType.NONE:
+        if cp_action.to_storage == StorageType.FWD_RESTART:
             weights[snapshot_i] += delete_weight
             snapshot_i -= 1
 
@@ -206,7 +206,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
 
         # Forward -> reverse
         self._n += 1
-        yield Forward(self._n - 1, self._n, False, True, StorageType.WORK)
+        yield Forward(self._n - 1, self._n, False, True, StorageType.ADJ_DEPS)
 
         yield EndForward()
 
@@ -222,11 +222,10 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
             if cp_n == self._max_n - self._r - 1:
                 snapshots.pop()
                 self._n = cp_n
-                yield Copy(cp_n, cp_storage, StorageType.WORK)
-                yield Move(cp_n, cp_storage, StorageType.NONE)
+                yield Move(cp_n, cp_storage, StorageType.FWD_RESTART)
             else:
                 self._n = cp_n
-                yield Copy(cp_n, cp_storage, StorageType.WORK)
+                yield Copy(cp_n, cp_storage, StorageType.FWD_RESTART)
                 n_snapshots = (self._snapshots_in_ram
                                + self._snapshots_on_disk
                                - len(snapshots) + 1)
@@ -236,7 +235,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
                                     trajectory=self._trajectory)
                 assert n1 > n0
                 self._n = n1
-                yield Forward(n0, n1, False, False, StorageType.NONE)
+                yield Forward(n0, n1, False, False, StorageType.FWD_RESTART)
 
                 while self._n < self._max_n - self._r - 1:
                     n_snapshots = (self._snapshots_in_ram
@@ -255,7 +254,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
                     raise RuntimeError("Invalid checkpointing state")
                 
             self._n += 1
-            yield Forward(self._n - 1, self._n, False, True, StorageType.WORK)
+            yield Forward(self._n - 1, self._n, False, True, StorageType.ADJ_DEPS)  # noqa: E501
             self._r += 1
             yield Reverse(self._n, self._n - 1, True)
         if self._r != self._max_n:

@@ -83,16 +83,15 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                         snapshots.pop()
                         self._n = cp_n
                         if cp_n == n0s:
-                            yield Copy(cp_n, StorageType.DISK, StorageType.WORK)
+                            yield Copy(cp_n, StorageType.DISK, StorageType.FWD_RESTART) # noqa: E501
                         else:
-                            yield Copy(cp_n, self._binomial_storage, StorageType.WORK)
-                            yield Move(cp_n, self._binomial_storage, StorageType.NONE)
+                            yield Move(cp_n, self._binomial_storage, StorageType.FWD_RESTART) # noqa: E501
                     else:
                         self._n = cp_n
                         if cp_n == n0s:
-                            yield Copy(cp_n, StorageType.DISK, StorageType.WORK)
+                            yield Copy(cp_n, StorageType.DISK, StorageType.FWD_RESTART) # noqa: E501
                         else:
-                            yield Copy(cp_n, self._binomial_storage, StorageType.WORK)
+                            yield Copy(cp_n, self._binomial_storage, StorageType.FWD_RESTART) # noqa: E501
 
                         n_snapshots = (self._binomial_snapshots + 1
                                        - len(snapshots) + 1)
@@ -102,7 +101,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                                             trajectory=self._trajectory)
                         assert n1 > n0
                         self._n = n1
-                        yield Forward(n0, n1, False, False, StorageType.NONE)
+                        yield Forward(n0, n1, False, False, StorageType.FWD_RESTART)  # noqa: E501
 
                         while self._n < self._max_n - self._r - 1:
                             n_snapshots = (self._binomial_snapshots + 1
@@ -124,7 +123,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                             raise RuntimeError("Invalid checkpointing state")
 
                     self._n += 1
-                    yield Forward(self._n - 1, self._n, False, True, StorageType.WORK)
+                    yield Forward(self._n - 1, self._n, False, True, StorageType.ADJ_DEPS)  # noqa: E501
 
                     self._r += 1
                     yield Reverse(self._n, self._n - 1, True)

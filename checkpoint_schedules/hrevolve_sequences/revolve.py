@@ -1,23 +1,24 @@
 #!/usr/bin/python
+"""This module contains the functions used to compute the revolver sequences."""
 from functools import partial
 from .basic_functions import (Operation as Op, Sequence, Function, Table, beta, argmin)
 from .utils import revolver_parameters
 
 
 def get_t(l, cm):
-    """_summary_
+    """Return the smallest t.
 
     Parameters
     ----------
     l : int
-        Steps number.
+        Steps number
     cm : int
         Number of available memory slots.
 
     Returns
     -------
     int
-        _description_
+        .
     """
     t = 0
     while (beta(cm, t) <= l):
@@ -109,11 +110,6 @@ def revolve(l, cm, rd, wd, fwd_cost, bwd_cost, opt_0=None):
     Returns
     -------
     _type_
-        _description_
-
-    Raises
-    ------
-    ValueError
         _description_
     """
     params = revolver_parameters(wd, rd, fwd_cost, bwd_cost)

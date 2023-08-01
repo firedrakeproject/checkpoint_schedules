@@ -86,6 +86,7 @@ def mixed(n, s):
     return (MixedCheckpointSchedule(n, s),
             {StorageType.RAM: 0, StorageType.DISK: s}, 1)
 
+
 @pytest.mark.parametrize(
     "schedule",
     [
@@ -183,7 +184,6 @@ def test_validity(schedule, n, S):
     @action.register(Copy)
     def action_copy(cp_action):
         nonlocal model_n
-        assert cp_action.to_storage == StorageType.WORK
         # The checkpoint exists
         assert cp_action.n in snapshots[cp_action.from_storage]
         cp = snapshots[cp_action.from_storage][cp_action.n]
@@ -208,22 +208,32 @@ def test_validity(schedule, n, S):
             data.clear()
             data.update(cp[1])
 
-
     @action.register(Move)
     def action_move(cp_action):
+        nonlocal model_n
         # The checkpoint exists
         assert cp_action.n in snapshots[cp_action.from_storage]
         cp = snapshots[cp_action.from_storage][cp_action.n]
         
-
         # The checkpoint contains forward restart or non-linear dependency data
         assert len(cp[0]) > 0 or len(cp[1]) > 0
 
         # The checkpoint data is before the current location of the adjoint
         assert cp_action.n < n - model_r
+
+        assert cp_action.n < n - model_r
         
-        if cp_action.to_storage == StorageType.NONE:
-            del snapshots[cp_action.from_storage][cp_action.n]
+        model_n = None
+        if len(cp[0]) > 0:
+            ics.clear()
+            ics.update(cp[0])
+            model_n = cp_action.n
+
+        if len(cp[1]) > 0:
+            data.clear()
+            data.update(cp[1])
+
+        del snapshots[cp_action.from_storage][cp_action.n]
 
 
     @action.register(EndForward)

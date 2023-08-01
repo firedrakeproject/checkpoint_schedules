@@ -7,23 +7,39 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   checkpoint_schedules.revolve_sequences
+   checkpoint_schedules.hrevolve_sequences
 
 Submodules
 ----------
 
-checkpoint\_schedules.off\_revolver\_iterators module
------------------------------------------------------
+checkpoint\_schedules.hrevolve module
+-------------------------------------
 
-.. automodule:: checkpoint_schedules.off_revolver_iterators
+.. automodule:: checkpoint_schedules.hrevolve
    :members:
    :undoc-members:
    :show-inheritance:
 
-checkpoint\_schedules.on\_revolver\_iterators module
-----------------------------------------------------
+checkpoint\_schedules.mixed module
+----------------------------------
 
-.. automodule:: checkpoint_schedules.on_revolver_iterators
+.. automodule:: checkpoint_schedules.mixed
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+checkpoint\_schedules.multistage module
+---------------------------------------
+
+.. automodule:: checkpoint_schedules.multistage
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+checkpoint\_schedules.none\_revolver module
+-------------------------------------------
+
+.. automodule:: checkpoint_schedules.none_revolver
    :members:
    :undoc-members:
    :show-inheritance:
@@ -32,6 +48,14 @@ checkpoint\_schedules.schedule module
 -------------------------------------
 
 .. automodule:: checkpoint_schedules.schedule
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+checkpoint\_schedules.twolevel\_binomial module
+-----------------------------------------------
+
+.. automodule:: checkpoint_schedules.twolevel_binomial
    :members:
    :undoc-members:
    :show-inheritance:

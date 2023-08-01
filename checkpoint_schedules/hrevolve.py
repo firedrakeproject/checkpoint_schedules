@@ -13,6 +13,7 @@ __all__ = \
         "Revolve"
     ]
 
+
 class RevolveCheckpointSchedule(CheckpointSchedule):
     """This object allows to iterate over a sequence
     of the checkpoint schedule actions. 
@@ -79,7 +80,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 else:
                     write_ics = False
                     adj_deps = False
-                    w_storage = StorageType.NONE
+                    w_storage = StorageType.FWD_RESTART
                 yield Forward(n_0, n_1, write_ics, adj_deps, w_storage)
                 if self._n == self._max_n:
                     if self._r != 0:
@@ -96,10 +97,12 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                   or cp_action == "Read_memory"
                   or cp_action == "Read_disk"):
                 self._n = n_0
-                yield Copy(n_0, storage, StorageType.WORK)
+                
                 if n_0 == self._max_n - self._r - 1:
                     snapshots.remove(n_0)
-                    yield Move(n_0, storage, StorageType.NONE)
+                    yield Move(n_0, storage, StorageType.FWD_RESTART)
+                else:
+                    yield Copy(n_0, storage, StorageType.FWD_RESTART)     
             elif (cp_action == "Write" or cp_action == "Write_disk"
                   or cp_action == "Write_memory"):
                 if n_0 != self._n:
@@ -237,12 +240,12 @@ def _convert_action(action):
     elif cp_action in ["Write_Forward", "Discard_Forward"]:
         _, n_0 = action.index
         n_1 = None
-        storage = {0: StorageType.WORK}[0]
+        storage = {0: StorageType.ADJ_DEPS}[0]
     elif cp_action in ["Write_Forward_memory",
                        "Discard_Forward_memory"]:
         n_0 = action.index
         n_1 = None
-        storage = {0: StorageType.WORK}[0]
+        storage = {0: StorageType.ADJ_DEPS}[0]
     elif cp_action in ["Read_disk", "Write_disk", "Discard_disk"]:
         n_0 = action.index
         n_1 = None

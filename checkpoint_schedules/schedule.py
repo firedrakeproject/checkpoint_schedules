@@ -31,7 +31,9 @@ class StorageType(Enum):
     """
     RAM = 0
     DISK = 1
-    WORK = -1
+    FWD_RESTART = 2
+    ADJ_DEPS = 3
+    WORKING_MEMORY = 4
     NONE = None
 
 

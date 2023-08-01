@@ -1,5 +1,5 @@
 #!/usr/bin/python
-"""Rotine of the Revolve-1D schedules.
+"""This module contains the functions used to compute the 1D revolver sequences.
 """
 from .basic_functions import (Operation as Op, Sequence, Function, Table, argmin)
 from .revolve import revolve, get_opt_0_table
@@ -77,12 +77,12 @@ def revolve_1d(l, cm, opt_0=None, opt_1d=None, **params):
 
     Notes
     -----
-    Consider that "x_0" is already stored on the disk.
+    Consider that 'x_0' is already stored on the disk.
 
     Returns
     -------
     object
-        1D revolve sequence.
+        1D revolve sequence of schedule.
     """
     parameters = dict(params)
     rd = parameters["rd"]

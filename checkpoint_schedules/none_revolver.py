@@ -20,7 +20,7 @@ class SingleStorageSchedule(CheckpointSchedule):
     Online, unlimited adjoint calculations permitted.
     """
 
-    def __init__(self, storage=StorageType.WORK):
+    def __init__(self, storage=StorageType.WORKING_MEMORY):
         self._storage = storage
         super().__init__()
     

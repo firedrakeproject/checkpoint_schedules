@@ -86,16 +86,16 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                 if step_type == StepType.FORWARD_REVERSE:
                     if n1 > n0 + 1:
                         self._n = n1 - 1
-                        yield Forward(n0, n1 - 1, False, False, StorageType.NONE)
+                        yield Forward(n0, n1 - 1, False, False, StorageType.FWD_RESTART)  # noqa: E501
                     elif n1 <= n0:
                         raise InvalidForwardStep
                     self._n += 1
-                    yield Forward(n1 - 1, n1, False, True, StorageType.WORK)
+                    yield Forward(n1 - 1, n1, False, True, StorageType.ADJ_DEPS)  # noqa: E501
                 elif step_type == StepType.FORWARD:
                     if n1 <= n0:
                         raise InvalidForwardStep
                     self._n = n1
-                    yield Forward(n0, n1, False, False, StorageType.NONE)
+                    yield Forward(n0, n1, False, False, StorageType.FWD_RESTART)  # noqa: E501
                 elif step_type == StepType.WRITE_DATA:
                     if n1 != n0 + 1:
                         raise InvalidForwardStep
@@ -129,7 +129,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                 yield EndForward()
 
             self._r += 1
-            yield Reverse(self._max_n - self._r + 1, self._max_n - self._r, True)
+            yield Reverse(self._max_n - self._r + 1, self._max_n - self._r, True)  # noqa: E501
 
             if self._r == self._max_n:
                 break
@@ -155,9 +155,15 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                 self._n += 1
             elif step_type != StepType.READ_ICS:
                 raise RuntimeError("Invalid checkpointing state")
-            yield Copy(cp_n, self._storage, StorageType.WORK)
+            if step_type == StepType.READ_DATA:
+                storage_type = StorageType.ADJ_DEPS
+            elif step_type == StepType.READ_ICS:
+                storage_type = StorageType.FWD_RESTART
+            
             if cp_delete:
-                yield Move(cp_n, self._storage, StorageType.NONE)
+                yield Move(cp_n, self._storage, storage_type)
+            else:
+                yield Copy(cp_n, self._storage, storage_type)
 
         if len(snapshot_n) > 0 or len(snapshots) > 0:
             raise RuntimeError("Invalid checkpointing state")
