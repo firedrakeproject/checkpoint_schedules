@@ -6,12 +6,13 @@ from .utils import revolver_parameters
 
 
 def get_hopt_table(lmax, cvect, wvect, rvect, ub, uf):
-    """Compute the optimal execution of a AC chain.
-
+    """ Compute the optimal hierarchical execution time
+    for the H-Revolve algorithm.
+    
     Parameters
     ----------
     lmax : int
-        The number of forward steps to use in the AC graph.
+        The maximal number of foward/adjoint steps.
     cvect : tuple
         A tuple with the number of slots to store in K levels.
     wvect : tuple
@@ -27,11 +28,11 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub, uf):
 
     Notes
     -----
+    This computation uses a dynamic program.
     K is the number of levels in the hierarchy.
     The *checkpoint_schedules* uses two storage levels: RAM and disk.
     Thus, K = 2.
-    The work [1] presents detailed the hyphotesess to obtain the optimal
-    execution of a AC chain.
+    For more details on execution time, refer to the work presented in [1], at section 3.1.
 
     [1] Herrmann, J. and Pallez (Aupy), G.. "H-Revolve: a framework
     for adjoint computation on synchronous hierarchical platforms."
@@ -42,7 +43,7 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub, uf):
     Returns
     -------
     tuple : (list, list)
-        The optimal time execution of the AC chain.
+        A tuple containing the execution time on such arquitecture.
     """
     K = len(cvect)
     assert len(wvect) == len(rvect) == len(cvect)
@@ -84,12 +85,12 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub, uf):
 
 def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, 
                  **params):
-    """Auxiliary function to compute the optimal sequence of operations.
+    """Auxiliary function to compute the H-Revolve sequence of operations.
 
     Parameters
     ----------
     l : int
-        The number of forward steps to use in the AC graph.
+        The number of forward steps to use in the AC(Adjoint Computation) graph.
     K : int
         Memory level, where `K = 0` represents RAM and `K = 1` represents disk.
     cmem : int
@@ -103,21 +104,12 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None,
     rvect : tuple
         A tuple containing the cost of reading the checkpoint data in each level.
     hoptp : list
-        (details can be found in [1]).
+        Execution time for a optimal solution in which the data at step 0 is stored
+        in the top K-th level of storage.
     hopt : list
-        (details can be found in [1]).
+        Execution time for general hierarchical AC problem.
     params : dict
         Input parameters to be passed to the `Op` function.
-
-    Notes
-    -----
-    This auxiliary function calculates the optimal sequence of operations.
-    The value of K should be 0 for RAM or 1 for disk, depending on the memory level.
-    For more details on `hoptp` and `hopt`, refer to the work presented in [1].
-
-    [1] Herrmann, J. and Pallez (Aupy), G.. "H-Revolve: a framework for adjoint
-    computation on synchronous hierarchical platforms." ACM Transactions on 
-    Mathematical Software (TOMS) 46.2 (2020): 1-25. DOI: https://doi.org/10.1145/3378672.
 
     Returns
     -------

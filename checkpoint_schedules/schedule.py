@@ -20,11 +20,12 @@ __all__ = \
 
 class StorageType(Enum):
     """
-    RAM : It is the first type of checkpoint storage.
+    RAM : It is the type which the forward restarting data is stored in the RAM.
 
-    DISK : It is the second type of checkpoint storage.
+    DISK : It is the type which the forward restarting data is stored in the disk.
     
-    WORK : ...
+    FWD_RESTART : It the type which the forward restarting data is stored in the
+    in a "variable" that holds the data used to initialise the forward solver.
 
     NONE : Indicate that there is no specific storage location defined 
     for the checkpoint data.

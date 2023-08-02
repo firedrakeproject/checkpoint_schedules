@@ -5,61 +5,15 @@ from .basic_functions import (Operation as Op, Sequence, Function, Table, beta, 
 from .utils import revolver_parameters
 
 
-def get_t(l, cm):
-    """Return the smallest t.
-
-    Parameters
-    ----------
-    l : int
-        Steps number.
-    cm : int
-        The number of checkpoints stored in memory.
-
-    Returns
-    -------
-    int
-        .
-    """
-    t = 0
-    while (beta(cm, t) <= l):
-        t += 1
-    return t-1
-
-
-def opt_0_closed_formula(l, cm, uf, ub):
-    """Fast computation of "Opt_0" based on the closed formula.
-
-    Parameters
-    ----------
-    l : int
-        The number of forward steps to use in the AC graph.
-    cm : int
-        The number of checkpoints stored in memory.
-    uf : float
-        The cost of advancing the forward over one step.
-    ub : float
-        The cost of advancing the adjoint over one step.
-
-    Returns
-    -------
-    _type_
-        _description_
-    """
-    if l == 0:
-        return ub
-    t = get_t(l, cm)
-    return ((l+1) * (t+1) - beta(cm+1, t)) * uf + (l+1) * ub
-
-
 def get_opt_0_table(lmax, mmax, uf, ub, print_table=None):
-    """Return the Opt_0 tables.
+    """Compute optimal execution time for Revolve algorithm.
 
     Parameters
     ----------
     lmax : int
         The number of forward steps to use in the AC graph.
-    mmax : _type_
-        _description_
+    mmax : int
+        Slots number in memory.
     ub : float, optional
         The cost of advancing the adjoint over one step.
     uf : float
@@ -73,8 +27,8 @@ def get_opt_0_table(lmax, mmax, uf, ub, print_table=None):
 
     Returns
     -------
-    _type_
-        _description_
+    list
+        Optimal execution time for Revolve algorithm.
     """
     # Build table
     opt = [Table() for _ in range(mmax + 1)]

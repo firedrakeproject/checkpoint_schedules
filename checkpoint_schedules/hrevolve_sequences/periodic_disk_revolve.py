@@ -13,7 +13,7 @@ def compute_mmax(cm, wd, rd, uf):
     Parameters
     ----------
     cm : int
-        The number of checkpoints stored in memory.
+        Memory slots.
     wd : float
         Cost of writing the checkpoint data in disk.
     rd : float
@@ -32,44 +32,64 @@ def compute_mmax(cm, wd, rd, uf):
     td2 = 0
     while beta(cm, td2) <= wd / uf:
         td2 += 1
-    return int(max(beta(cm, td1+1), 2*beta(cm, td2) + 1))
+    return int(max(beta(cm, td1 + 1), 2 * beta(cm, td2) + 1))
 
 
 def rel_cost_x(m, opt_1d_m_moins_1, wd, rd):
-    """ The RelCost_X function
+    """Compute the relative cost of the optimal execution time.
 
     Parameters
     ----------
     m : int
         The period.
-    opt_1d_m_moins_1 : float
-        The cost of the optimal 1D schedule for period m-1.
+    opt_1d_m_moins_1 : list
+        The optimal execution time.
     wd : float
         Cost of writing the checkpoint data in disk.
     rd : float
         Cost of reading the checkpoint data from disk.
+
+    Returns
+    -------
+    float
+        The relative cost of the optimal execution time.
     """
     return 1.0*(wd + rd + opt_1d_m_moins_1) / m
 
 
 def compute_mx(cm, opt_0=None, opt_1d=None, mmax=None, **params):
-    """Compute the optimal period.
+    """Compute the period.
+    
 
     Parameters
     ----------
     cm : int
-        The number of checkpoints stored in memory.
-    opt_0 : _type_, optional
-        _description_, by default None
+        Memory slots.
+    opt_0 : list, optional
+        Optimal execution time for a memory revolve algorithm.
     opt_1d : _type_, optional
-        _description_, by default None
+        Optimal execution time for a 1D revolve algorithm.
     mmax : int, optional
         The maximum period.
+    params : dict
+        The parameters dictionary.
+    
+    Notes
+    -----
+    This period only depends of `cm`, `wd` and `rd`.
+    In the current case, the forward computations performed
+    between two consecutive checkpoints into the second level 
+    of storage is always the same except for a bounded number of them.
+    Additional details about the period computation, refers to the paper [1].
+
+    [1] Aupy, G.,  Herrmann, J. "Periodicity in optimal hierarchical checkpointing 
+    schemes for adjoint computations". Optimization Methods and Software, 32(3), 
+    594-624, (2017). DOI: http://dx.doi.org/10.1080/10556788.2016.1230612. 
 
     Returns
     -------
     int
-        The optimal period.
+        The period.
     """
     if mmax is None:
         mmax = compute_mmax(params["cm"], params["wd"], params["rd"], 
@@ -89,21 +109,34 @@ def compute_mx(cm, opt_0=None, opt_1d=None, mmax=None, **params):
 
 
 def mx_close_formula(cm, rd, wd, opt_0=None, opt_1d=None, **params):
-    """Compute mX using the close formula in the paper
-        It's not proven yet, but it's been verified and it's faster
+    """Compute the period by a closed formula.
 
     Parameters
     ----------
     cm : int
-        The number of checkpoints stored in memory.
+        Memory slots.
     rd : float
         Cost of reading the checkpoint data from disk.
     wd : float
         Cost of writing the checkpoint data in disk.
-    opt_0 : _type_, optional
-        _description_, by default None
+    opt_0 : list, optional
+        Optimal execution time for a memory revolve algorithm.
     opt_1d : _type_, optional
-        _description_, by default None
+        Optimal execution time for a 1D revolve algorithm.
+    params : dict
+        The parameters dictionary.
+
+    Notes
+    -----
+    This period is computed by a closed formula. The authors of the paper [1]
+    showed that a solution that checkpoints periodically data to disks is asymptotically optimal, 
+    both in the offline case (the number of steps is known before-hand), and in the 
+    online case (the number of steps is not known before-hand).
+
+    [1] Aupy, G.,  Herrmann, J. "Periodicity in optimal hierarchical checkpointing 
+    schemes for adjoint computations". Optimization Methods and Software, 32(3), 
+    594-624, (2017). DOI: http://dx.doi.org/10.1080/10556788.2016.1230612. 
+
     """
     def f(x, y, c):
         return int(beta(c + 1, x + y - 1) - sum([beta(c, k) for k in range(0, y)]))
@@ -132,12 +165,13 @@ def mx_close_formula(cm, rd, wd, opt_0=None, opt_1d=None, **params):
 
 
 def mxrr_close_formula(cm, uf, rd, wd):
-    """Compute mXrr using the close formula in the paper.
+    """Compute the period that minimises asymptotically
+    the execution time of the periodic disk revolve algorithm.
 
     Parameters
     ----------
     cm : int
-        The number of checkpoints stored in memory.
+        Memory slots.
     uf : float
         The cost of advancing the forward over one step.
     rd : float
@@ -148,8 +182,7 @@ def mxrr_close_formula(cm, uf, rd, wd):
     Returns
     -------
     int
-        ....
-        
+        The period.    
     """
     t = 0
     while beta(cm+1, t) <= (wd + rd) / uf:
@@ -166,7 +199,7 @@ def periodic_disk_revolve(l, cm, rd, wd, uf, ub, opt_0=None,
     l : int
         The number of forward step to execute in the AC graph.
     cm : int
-        The number of checkpoints stored in memory.
+        Memory slots.
     rd : float
         Cost of read the checkpoint data from disk.
     wd : float
@@ -181,6 +214,10 @@ def periodic_disk_revolve(l, cm, rd, wd, uf, ub, opt_0=None,
         _description_, by default None
     mmax : int, optional
         The maximum period to consider, by default None.
+
+    Notes
+    -----
+    Memory slots are also interpreted as the number of checkpoints stored in memory.
 
     Returns
     -------
@@ -207,7 +244,8 @@ def periodic_disk_revolve(l, cm, rd, wd, uf, ub, opt_0=None,
     if opt_0 is None:
         opt_0 = get_opt_0_table(mmax, cm, params["uf"], params["ub"])
     if opt_1d is None and not one_read_disk:
-        opt_1d = get_opt_1d_table(mmax, cm, opt_0=opt_0, **parameters)
+        opt_1d = get_opt_1d_table(mmax, cm, ub, uf, rd, one_read_disk, 
+                                  opt_0=opt_0)
     sequence = Sequence(Function("Periodic-Disk-Revolve", l, cm),
                         concat=parameters["concat"])
     operation = partial(Op, params=parameters)

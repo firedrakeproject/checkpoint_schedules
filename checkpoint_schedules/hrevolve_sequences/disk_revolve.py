@@ -9,15 +9,15 @@ from .utils import revolver_parameters
 
 
 def get_opt_inf_table(lmax, cm, uf, ub, rd, wd, one_read_disk, 
-                      print_table=None, opt_0=None, opt_1d=None, **params):
-    """Compute the opt_inf table for architecture and l=0...lmax.
+                      print_table=None, opt_0=None, opt_1d=None):
+    """Compute the optimal execution time for the Disk-Revolve algorithm.
 
     Parameters
     ----------
     lmax : int
         The number of forward steps to use in the AC graph.
     cm : int
-        The number of checkpoints stored in memory.
+        Slots stored in memory.
     ub : float
         The cost of advancing the adjoint over one step.
     uf : float
@@ -30,23 +30,30 @@ def get_opt_inf_table(lmax, cm, uf, ub, rd, wd, one_read_disk,
         Disk checkpoints are only read once.
     print_table : str, optional
         File to which to print the results table, by default None.
-    opt_0 : _type_, optional
-        _description_, by default None
-    opt_1 : _type_, optional
-        _description_, by default None
-    **params : dict
-        Dictionary of the parameters.
+    opt_0 : list, optional
+        Optimal execution time for a memory revolve algorithm.
+    opt_1 : list, optional
+        Optimal execution time for a 1D revolve algorithm.
+
+    Notes
+    -----
+    In this case, the optimal solution is given as a function of the `cm`, `l`, `wd` and `rd`. 
+    Additional details about the execution time is avaiable in the paper [1], at the Theorem 3.15.
+    
+    [1] Aupy, G.,  Herrmann, Ju. and Hovland, P. and Robert, Y. "Optimal multistage 
+    algorithm for adjoint computation". SIAM Journal on Scientific Computing, 38(3),
+    C232-C255, (2016). DOI: https://doi.org/10.1145/347837.347846
 
     Returns
     -------
-    Table
-        Return the opt_inf table for architecture and l=0...lmax.
+    list
+        The optimal execution time for the Disk-Revolve algorithm.
     
     """
     if opt_0 is None:
         opt_0 = get_opt_0_table(lmax, cm, uf, ub)
     if opt_1d is None and not one_read_disk:
-        opt_1d = get_opt_1d_table(lmax, cm, opt_0=opt_0, **params)
+        opt_1d = get_opt_1d_table(lmax, cm, ub, uf, rd, one_read_disk, opt_0=opt_0)
     opt_inf = Table()
     if __name__ == '__main__' and print_table:
         opt_inf.set_to_print(print_table)
@@ -77,11 +84,12 @@ def disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost,
         The number of forward steps to execute in the AC graph.
     cm : int
         The number of checkpoints stored in memory.
-    opt_0 : 
-
-    opt_1d :
-
-    opt_inf : 
+    opt_0 : list, optional
+        Optimal execution time for the revolve algorithm.
+    opt_1d : list, optional
+        Optimal execution time for the 1D revolve algorithm.
+    opt_inf : list, optional
+        Optimal execution time.
 
     Returns
     -------
@@ -98,10 +106,10 @@ def disk_revolve(l, cm, rd, wd, fwd_cost, bwd_cost,
     if opt_0 is None:
         opt_0 = get_opt_0_table(l, cm, uf, ub)
     if opt_1d is None and not one_read_disk:
-        opt_1d = get_opt_1d_table(l, cm, opt_0=opt_0, **parameters)
+        opt_1d = get_opt_1d_table(l, cm,ub,uf, rd, one_read_disk, opt_0=opt_0)
     if opt_inf is None:
-        opt_inf = get_opt_inf_table(l, cm, opt_0=opt_0, opt_1d=opt_1d,
-                                    **parameters)
+        opt_inf = get_opt_inf_table(l, cm, uf, ub, rd, wd, one_read_disk,
+                                    opt_0=opt_0, opt_1d=opt_1d)
     sequence = Sequence(Function("Disk-Revolve", l, cm), 
                         concat=parameters["concat"])
     operation = partial(Op, params=parameters)

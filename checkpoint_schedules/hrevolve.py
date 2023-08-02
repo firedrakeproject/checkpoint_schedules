@@ -27,8 +27,18 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
     snap_on_disk : int
         The maximum steps to store the forward checkpoints on disk.
     schedule : list
-        Revolver sequence of operations.
-    
+        A sequence of operations given by a revolver algorithm.
+
+    Notes
+    -----
+    This object is written to interpret the revolver algorithmics discussed in [1],
+    which means that the revolver algorithmics are used to build the following sequence:
+    H-Revolve, Disk Revolve, Periodic Disk Revolve and Revolve.
+
+    [1] Herrmann, J. and Pallez (Aupy), G.. "H-Revolve: a framework
+    for adjoint computation on synchronous hierarchical platforms."
+    ACM Transactions on Mathematical Software (TOMS) 46.2 (2020): 1-25.
+    DOI: https://doi.org/10.1145/3378672.
     """
 
     def __init__(self, max_n, snap_in_ram, snap_on_disk, schedule):
@@ -43,8 +53,8 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
 
         Yields
         ------
-        action, (n0, n1, storage)
-            Schedule actions, step `n0`, step `n1` and the storage type.
+        checkpoint_schedules.schedule.CheckpointScheduleAction
+            The next action in the schedule.
         
         """
         if self._max_n is None:
@@ -169,58 +179,148 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
 
 
 class HRevolve(RevolveCheckpointSchedule):
-    """H-Revolve checkpointing schedule."""
-    def __init__(self, max_n, snap_in_ram, snap_on_disk, fwd_cost=1, bwd_cost=1, w_cost=2, r_cost=2):
+    """H-Revolve checkpointing schedule.
+    
+    Atributes
+    ---------
+    max_n : int
+        The number of forward steps in the initial forward calculation.
+    snap_in_ram : int
+        The maximum steps to store the forward checkpoints in RAM.
+    snap_on_disk : int
+        The maximum steps to store the forward checkpoints on disk.
+    uf : float
+        The cost of advancing the forward over one step.
+    ub : float
+        The cost of advancing the adjoint over one step.
+    wd : float
+        The cost of writing the checkpoint data in disk.
+    rd : float
+        The cost of reading the checkpoint data from disk.
+    
+    Notes
+    -----
+    The H-Revolve schedule is described in [1].
+
+    [1] Herrmann, J. and Pallez (Aupy), G.. "H-Revolve: a framework
+    for adjoint computation on synchronous hierarchical platforms."
+    ACM Transactions on Mathematical Software (TOMS) 46.2 (2020): 1-25.
+    DOI: https://doi.org/10.1145/3378672.
+
+    """
+    def __init__(self, max_n, snap_in_ram, snap_on_disk, uf=1, ub=1, wd=2, rd=2):
         cvec = (snap_in_ram, snap_on_disk)
-        wc = [0, w_cost]
-        rc = [0, r_cost]
-        schedule = list(hrevolve(max_n - 1, cvec, wc, rc, fwd_cost, bwd_cost))
+        wc = [0, wd]
+        rc = [0, rd]
+        schedule = list(hrevolve(max_n - 1, cvec, wc, rc, uf, ub))
         super().__init__(max_n, snap_in_ram, snap_on_disk, schedule)
         
 
 class DiskRevolve(RevolveCheckpointSchedule):
     """Disk Revolve checkpointing schedule.
+
+    Atributes
+    ---------
+    max_n : int
+        The number of forward steps in the initial forward calculation.
+    snap_in_ram : int
+        The maximum steps to store the forward checkpoints in RAM.
+    uf : float
+        The cost of advancing the forward over one step.
+    ub : float
+        The cost of advancing the adjoint over one step.
+    wd : float
+        The cost of writing the checkpoint data in disk.
+    rd : float
+        The cost of reading the checkpoint data from disk.
+    
+    Notes
+    -----
+    The H-Revolve schedule is described in [1].
     """
 
-    def __init__(self, max_n, snap_in_ram, fwd_cost=1, bwd_cost=1, w_cost=2, r_cost=2):
-        schedule = list(disk_revolve(max_n - 1, snap_in_ram, w_cost, r_cost, fwd_cost, bwd_cost))
+    def __init__(self, max_n, snap_in_ram, uf=1, ub=1, wd=2, rd=2):
+        schedule = list(disk_revolve(max_n - 1, snap_in_ram, wd, rd, uf, ub))
         super().__init__(max_n, snap_in_ram, max_n - snap_in_ram, schedule)
 
 
 class PeriodicDiskRevolve(RevolveCheckpointSchedule):
-    """Periodic Disk Revolve checkpointing schedule."""
+    """Periodic Disk Revolve checkpointing schedule.
+    
+    Atributes
+    ---------
+    max_n : int
+        The number of forward steps in the initial forward calculation.
+    snap_in_ram : int
+        The maximum steps to store the forward checkpoints in RAM.
+    uf : float
+        The cost of advancing the forward over one step.
+    ub : float
+        The cost of advancing the adjoint over one step.
+    wd : float
+        The cost of writing the checkpoint data in disk.
+    rd : float
+        The cost of reading the checkpoint data from disk.
 
-    def __init__(self, max_n, snap_in_ram, fwd_cost=1, bwd_cost=1, w_cost=2, r_cost=2):
-        schedule = list(periodic_disk_revolve(max_n - 1, snap_in_ram, w_cost, r_cost, fwd_cost, bwd_cost))
+    Notes
+    -----
+    The H-Revolve schedule is described in [1].
+    """
+
+    def __init__(self, max_n, snap_in_ram, uf=1, ub=1, wd=2, rd=2):
+        schedule = list(periodic_disk_revolve(max_n - 1, snap_in_ram, wd, rd, uf, ub))
         super().__init__(max_n, snap_in_ram, max_n - snap_in_ram, schedule)
 
 class Revolve(RevolveCheckpointSchedule):
-    """Revolve checkpointing schedule."""
+    """Revolve checkpointing schedule.
 
-    def __init__(self, max_n, snap_in_ram, fwd_cost=1, bwd_cost=1, w_cost=2, r_cost=2):
-        schedule = list(revolve(max_n - 1, snap_in_ram, w_cost, r_cost, fwd_cost, bwd_cost))
+    Atributes
+    ---------
+    max_n : int
+        The number of forward steps in the initial forward calculation.
+    snap_in_ram : int
+        The maximum steps to store the forward checkpoints in RAM.
+    uf : float
+        The cost of advancing the forward over one step.
+    ub : float
+        The cost of advancing the adjoint over one step.
+    wd : float
+        The cost of writing the checkpoint data in disk.
+    rd : float
+        The cost of reading the checkpoint data from disk.
+
+    Notes
+    -----
+    The H-Revolve schedule is described in [1].
+    """
+
+    def __init__(self, max_n, snap_in_ram, uf=1, ub=1, wd=2, rd=2):
+        schedule = list(revolve(max_n - 1, snap_in_ram, wd, rd, uf, ub))
         super().__init__(max_n, snap_in_ram, max_n - snap_in_ram, schedule)
 
       
 def _convert_action(action):
-    """Convert an revolver operation to the `checkpoint_schedules` actions.
+    """Convert an operation to a `checkpoint_schedules` action.
 
     Parameters
     ----------
-    action_n : h_revolve.operation
-        An operation from the H-revolve sequence.
+    action_n : hrevolve_sequences.revolve.Operation
+        An operation from the `checkpoint_schedules.hrevolve_sequences`.
     
     Notes
     -----
-    The H-Revolve operation has type and index attributes used to interpret the next action.
-    For instance, if operation type is `Forward`, the operation index that is a tuple `(n0, n1)`, 
-    which it read as the next action aims to execute the forward solver from the step n0 to step n1.
-    Write is another H-Revolve operation type 
+    The operations have `type` and `index` attributes. The `type` attribute is a string that gives
+    the operation name, which are listed at the `checkpoint_schedules.schedule.basic_funtions.official_names` 
+    dictionary. The `index` attribute is a tuple containing the time steps for some operations or the storage
+    level and time step for other operations. For instance, if operation type is `Forward`, the operation index 
+    that is a tuple `(n0, n1)`, which it read as the next action aims to execute the forward solver from the 
+    step n0 to step n1. If the operation is `Write` type, the operation index is a tuple `(storage, n0)`.
 
     Returns
     -------
     str, tuple(int, int , str)
-        Return the operation name, steps `n_0`, step `n_1` and the storage level (either RAM or disk).
+        Return the operation name, and a tuple containig the steps `n_0`, step `n_1` and the storage 
+        level (either RAM or disk).
 
     """
     cp_action = action.type

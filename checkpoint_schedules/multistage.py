@@ -30,7 +30,8 @@ def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
     delete_weight : float, optional
         The weight of a delete of a checkpoint.
     trajectory : str, optional
-        The trajectory to use for allocating checkpoints. See the `trajectory`.  
+        The trajectory to use for allocating checkpoints. 
+    
     """
     snapshots_in_ram = min(snapshots_in_ram, max_n - 1)
     snapshots_on_disk = min(snapshots_on_disk, max_n - 1)
@@ -111,47 +112,50 @@ def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
 
 
 class MultistageCheckpointSchedule(CheckpointSchedule):
-    """A binomial checkpointing schedule using the approach described in
+    """A binomial checkpointing schedule. 
 
-      - Andreas Griewank and Andrea Walther, 'Algorithm 799: revolve: an
-        implementation of checkpointing for the reverse or adjoint mode of
-        computational differentiation', ACM Transactions on Mathematical
-        Software, 26(1), pp. 19--45, 2000, doi: 10.1145/347837.347846
-
-    hereafter referred to as GW2000.
-
-    Uses a 'MultiStage' distribution of checkpoints between RAM and disk
-    equivalent to that described in
-
-        - Philipp Stumm and Andrea Walther, 'MultiStage approaches for optimal
-          offline checkpointing', SIAM Journal on Scientific Computing, 31(3),
-          pp. 1946--1967, 2009, doi: 10.1137/080718036
-
-    The distribution between RAM and disk is determined using an initial run of
-    the schedule.
-
-    Offline, one adjoint calculation permitted.
-
-    :arg max_n: The number of forward steps in the initial forward calculation.
-    :arg snapshots_in_ram: The maximum number of forward restart checkpoints
-        to store in memory.
-    :arg snapshots_on_disk: The maximum number of forward restart checkpoints
-        to store on disk.
-    :arg trajectory: When advancing `n` forward steps with `s` checkpointing
+    Attributes
+    ----------
+    max_n : int
+        The number of forward steps in the initial forward calculation.
+    snapshots_in_ram : int
+        The maximum number of forward restart checkpoints to store in memory.
+    snapshots_on_disk : int
+        The maximum number of forward restart checkpoints to store on disk.
+    trajectory : str
+        When advancing `n` forward steps with `s` checkpointing
         units available there are in general multiple solutions to the problem
         of determining the number of forward steps to advance before storing
-        a new forward restart checkpoint -- see Fig. 4 of GW2000. This argument
+        a new forward restart checkpoint -- see Fig. 4 of [1]. This argument
         selects a solution:
 
             - `'revolve'`: The standard revolve solution, as specified in the
-              equation at the bottom of p. 34 of GW2000.
+                equation at the bottom of p. 34 of GW2000.
             - `'maximum'`: The maximum possible number of steps, corresponding
-              to the maximum step size compatible with the optimal region in
-              Fig. 4 of GW2000.
+                to the maximum step size compatible with the optimal region in
+                Fig. 4 of GW2000.
+    
+    Notes
+    -----
+    This checkpointing approach is described in [1].
+    Uses a 'MultiStage' distribution of checkpoints between RAM and disk
+    equivalent to that described in [2].
+    The distribution between RAM and disk is determined using an initial run of
+    the schedule. Offline, one adjoint calculation permitted.
 
     The argument names `snaps_in_ram` and `snaps_on_disk` originate from the
     corresponding arguments for the :func:`adj_checkpointing` function in
     dolfin-adjoint (see e.g. version 2017.1.0).
+
+    [1] Andreas Griewank and Andrea Walther, 'Algorithm 799: revolve: an
+    implementation of checkpointing for the reverse or adjoint mode of
+    computational differentiation', ACM Transactions on Mathematical
+    Software, 26(1), pp. 19--45, 2000, doi: 10.1145/347837.347846
+
+    [2] Philipp Stumm and Andrea Walther, 'MultiStage approaches for optimal
+    offline checkpointing', SIAM Journal on Scientific Computing, 31(3),
+    pp. 1946--1967, 2009, doi: 10.1137/080718036
+    
     """
 
     def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk, *,

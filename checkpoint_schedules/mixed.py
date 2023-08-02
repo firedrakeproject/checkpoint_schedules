@@ -14,22 +14,29 @@ __all__ = ["MixedCheckpointSchedule"]
 
 class MixedCheckpointSchedule(CheckpointSchedule):
     """A checkpointing schedule which mixes storage of forward restart data and
-    non-linear dependency data in checkpointing units. Assumes that the data
-    required to restart the forward has the same size as the data required to
-    advance the adjoint over a step.
-
-    Described in
-
-        - James R. Maddison, 'On the implementation of checkpointing with
-          high-level algorithmic differentiation',
-          https://arxiv.org/abs/2305.09568v1, 2023
-
-    Offline, one adjoint calculation permitted.
-
-    :arg max_n: The number of forward steps in the initial forward calculation.
-    :arg snapshots: The number of available checkpointing units.
-    :arg storage: Checkpointing unit storage location. Either `'RAM'` or
+    non-linear dependency data in checkpointing units. 
+    
+    Attributes
+    ----------
+    max_n : int
+        The number of forward steps in the initial forward calculation.
+    snapshots: int
+        The number of available checkpointing units.
+    storage: StorageType.RAM or StorageType.DISK
+        Checkpointing unit storage location. Either `'RAM'` or
         `'disk'`.
+
+    Notes
+    -----
+    Assumes that the data required to restart the forward has the same size as the data 
+    required to advance the adjoint over a step. Additionall details about the mixed  
+    checkpointing schedule is avaiable in [1].
+    This is a offline checkpointing strategy, one adjoint calculation permitted.
+
+    [1] James R. Maddison, 'On the implementation of checkpointing with high-level 
+    algorithmic differentiation' (2023), https://arxiv.org/abs/2305.09568v1.
+
+    
     """
 
     def __init__(self, max_n, snapshots, *, storage=StorageType.DISK):
@@ -181,7 +188,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
         Parameters
         ----------
         storage_type : StorageType.RAM or StorageType.DISK
-            Given storage type.
+            A given storage type.
 
         Returns
         -------

@@ -7,16 +7,15 @@ from functools import partial
 
 
 def get_opt_1d_table(lmax, cm, ub, uf, rd, one_read_disk, print_table=None,
-                     opt_0=None, **params):
-    """Compute the opt_1d table. 
-    This computation uses a dynamic program.
-
+                     opt_0=None):
+    """Compute the execution time of the 1D revolver algorithm.
+    
     Parameters
     ----------
     lmax : int
-        The number of forward steps to use in the AC graph.
+        The number of forward steps to use in the AC (Adjoint Computation) graph.
     cm : int
-        The number of checkpoints stored in memory.
+        Number of memory slots.
     ub : float
         The cost of advancing the adjoint over one step.
     uf : float
@@ -27,20 +26,28 @@ def get_opt_1d_table(lmax, cm, ub, uf, rd, one_read_disk, print_table=None,
         Disk checkpoints are only read once.
     print_table : str, optional
         File to which to print the results table.
-    opt_0 : _type_, optional
-        _description_, by default None
+    opt_0 : list, optional
+        Optimal execution time for a memory revolver algorithm.
 
     Notes
     -----
-    Consider that 'x_0' is already stored on the disk.
+    This computation uses a dynamic program.
+    One considers that 'x_0' is already stored on the disk.
+    The schedule building is the execution time of an optimal solution.  
+    In this case, the optimal solution is given as a function of the `cm`, `l` and `rd`. 
+    Additional details about the execution time is avaiable in the paper [1], at the Theorem 3.15.
+    
+    [1] Aupy, G.,  Herrmann, Ju. and Hovland, P. and Robert, Y. "Optimal multistage 
+    algorithm for adjoint computation". SIAM Journal on Scientific Computing, 38(3),
+    C232-C255, (2016). DOI: https://doi.org/10.1145/347837.347846
 
     Returns
     -------
-    _type_
-        _description_
+    list
+        Optimal execution time of the 1D revolver algorithm.
     """
     if opt_0 is None:
-        opt_0 = get_opt_0_table(lmax, cm, uf, ub, print_table, **params)
+        opt_0 = get_opt_0_table(lmax, cm, uf, ub, print_table)
     opt_1d = Table()
     if __name__ == '__main__' and print_table:
         opt_1d.set_to_print(print_table)
@@ -70,11 +77,15 @@ def revolve_1d(l, cm, opt_0=None, opt_1d=None, **params):
         The number of forward step to execute in the AC graph.
     cm : int
         The maximum number of checkpoints to store in memory.
-    opt_0 : _type_, optional
-        _description_
-    opt_1d : _type_, optional
-        _description_
+    opt_0 : list, optional
+        Optimal execution time for a memory revolver algorithm.
+    opt_1d : lis, optional
+        Optimal execution time for a 1D revolver algorithm.
 
+    Notes
+    -----
+    This algorithm is a subroutine of Disk-Revolve.
+    1D revolve uses only on checkpoint slot in the second level of storage. 
 
     Returns
     -------
