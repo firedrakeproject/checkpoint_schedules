@@ -35,8 +35,6 @@ class MixedCheckpointSchedule(CheckpointSchedule):
 
     [1] James R. Maddison, 'On the implementation of checkpointing with high-level 
     algorithmic differentiation' (2023), https://arxiv.org/abs/2305.09568v1.
-
-    
     """
 
     def __init__(self, max_n, snapshots, *, storage=StorageType.DISK):
@@ -103,7 +101,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                         raise InvalidForwardStep
                     self._n = n1
                     yield Forward(n0, n1, False, False, StorageType.FWD_RESTART)  # noqa: E501
-                elif step_type == StepType.WRITE_DATA:
+                elif step_type == StepType.WRITE_ADJ_DEPS:
                     if n1 != n0 + 1:
                         raise InvalidForwardStep
                     self._n = n1
@@ -113,7 +111,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                     elif len(snapshots) > self._snapshots - 1:
                         raise RuntimeError("Invalid checkpointing state")
                     snapshot_n.add(n0)
-                    snapshots.append((StepType.READ_DATA, n0))
+                    snapshots.append((StepType.READ_ADJ_DEPS, n0))
                 elif step_type == StepType.WRITE_ICS:
                     if n1 <= n0 + 1:
                         raise InvalidActionIndex
@@ -129,7 +127,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                     raise RuntimeError("Unexpected step type")
             if self._n != self._max_n - self._r:
                 raise InvalidForwardStep
-            if step_type not in (StepType.FORWARD_REVERSE, StepType.READ_DATA):
+            if step_type not in (StepType.FORWARD_REVERSE, StepType.READ_ADJ_DEPS):
                 raise RuntimeError("Invalid checkpointing state")
 
             if self._r == 0:
@@ -152,7 +150,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                 snapshots.pop()
 
             self._n = cp_n
-            if step_type == StepType.READ_DATA:
+            if step_type == StepType.READ_ADJ_DEPS:
                 # Non-linear dependency data checkpoint
                 if not cp_delete:
                     # We cannot advance from a loaded non-linear dependency
@@ -162,7 +160,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                 self._n += 1
             elif step_type != StepType.READ_ICS:
                 raise RuntimeError("Invalid checkpointing state")
-            if step_type == StepType.READ_DATA:
+            if step_type == StepType.READ_ADJ_DEPS:
                 storage_type = StorageType.ADJ_DEPS
             elif step_type == StepType.READ_ICS:
                 storage_type = StorageType.FWD_RESTART

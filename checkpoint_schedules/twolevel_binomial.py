@@ -6,9 +6,27 @@ __all__ = ["TwoLevelCheckpointSchedule"]
 
 
 class TwoLevelCheckpointSchedule(CheckpointSchedule):
-    """A two-level mixed periodic/binomial checkpointing schedule using the
-    approach described in
+    """A two-level mixed periodic/binomial checkpointing schedule.
 
+    Attributes
+    ----------
+    period : int
+        Forward restart checkpoints are stored to disk every `period`
+        forward steps in the initial forward calculation.
+    binomial_snapshots : int
+        The maximum number of additional forward restart
+        checkpointing units to use when advancing the adjoint between periodic
+        disk checkpoints.
+    binomial_storage : StorageType, optional
+        The storage to use for the additional forward
+        restart checkpoints generated when advancing the adjoint between
+        periodic disk checkpoints. Either `'RAM'` or `'disk'`.
+    binomial_trajectory : str, optional
+        See the `trajectory` constructor argument for :class:`MultistageCheckpointSchedule`.
+
+    Notes
+    -----
+    This schedule is described in:
         - Gavin J. Pringle, Daniel C. Jones, Sudipta Goswami, Sri Hari Krishna
           Narayanan, and Daniel Goldberg, 'Providing the ARCHER community with
           adjoint modelling tools for high-performance oceanographic and
@@ -23,16 +41,6 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
 
     Online, unlimited adjoint calculations permitted.
 
-    :arg period: Forward restart checkpoints are stored to disk every `period`
-        forward steps in the initial forward calculation.
-    :arg binomial_snapshots: The maximum number of additional forward restart
-        checkpointing units to use when advancing the adjoint between periodic
-        disk checkpoints.
-    :arg binomial_storage: The storage to use for the additional forward
-        restart checkpoints generated when advancing the adjoint between
-        periodic disk checkpoints. Either `'RAM'` or `'disk'`.
-    :arg binomial_trajectory: See the `trajectory` constructor argument for
-        :class:`MultistageCheckpointSchedule`.
     """
 
     def __init__(self, period, binomial_snapshots, *,
@@ -149,15 +157,12 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
 
         Parameters
         ----------
-        storage_type : StorageType.RAM or StorageType.DISK
-            Given storage type. Either :class:`StorageType.RAM` or
-            :class:`StorageType.DISK`.
-
+        storage_type : StorageType
+            Given storage type.
         Returns
         -------
         bool
             Whether this schedule uses the given storage type.
         """
-        assert storage_type in StorageType
         return storage_type == self._binomial_storage
 

@@ -31,14 +31,9 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
 
     Notes
     -----
-    This object is written to interpret the revolver algorithmics discussed in [1],
-    which means that the revolver algorithmics are used to build the following sequence:
-    H-Revolve, Disk Revolve, Periodic Disk Revolve and Revolve.
-
-    [1] Herrmann, J. and Pallez (Aupy), G.. "H-Revolve: a framework
-    for adjoint computation on synchronous hierarchical platforms."
-    ACM Transactions on Mathematical Software (TOMS) 46.2 (2020): 1-25.
-    DOI: https://doi.org/10.1145/3378672.
+    This Class is able to convert the revolver algorithmics to *checkpoint_schedules* 
+    actions and iterate over them. The revolver algorithmics are: H-Revolve, Disk Revolve, 
+    Periodic Disk Revolve and Revolve.
     """
 
     def __init__(self, max_n, snap_in_ram, snap_on_disk, schedule):
@@ -200,12 +195,11 @@ class HRevolve(RevolveCheckpointSchedule):
     
     Notes
     -----
-    The H-Revolve schedule is described in [1].
-
-    [1] Herrmann, J. and Pallez (Aupy), G.. "H-Revolve: a framework
-    for adjoint computation on synchronous hierarchical platforms."
-    ACM Transactions on Mathematical Software (TOMS) 46.2 (2020): 1-25.
-    DOI: https://doi.org/10.1145/3378672.
+    The H-Revolve schedule is described in:
+        - Herrmann, J. and Pallez (Aupy), G.. "H-Revolve: a framework
+        for adjoint computation on synchronous hierarchical platforms."
+        ACM Transactions on Mathematical Software (TOMS) 46.2 (2020): 1-25.
+        DOI: https://doi.org/10.1145/3378672.
 
     """
     def __init__(self, max_n, snap_in_ram, snap_on_disk, uf=1, ub=1, wd=2, rd=2):
@@ -264,7 +258,7 @@ class PeriodicDiskRevolve(RevolveCheckpointSchedule):
 
     Notes
     -----
-    The H-Revolve schedule is described in [1].
+    Periodic Disk Revolve checkpointing is described in [1].
     """
 
     def __init__(self, max_n, snap_in_ram, uf=1, ub=1, wd=2, rd=2):
@@ -291,7 +285,7 @@ class Revolve(RevolveCheckpointSchedule):
 
     Notes
     -----
-    The H-Revolve schedule is described in [1].
+    The Revolve schedule is described in [1].
     """
 
     def __init__(self, max_n, snap_in_ram, uf=1, ub=1, wd=2, rd=2):

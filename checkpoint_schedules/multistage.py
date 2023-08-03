@@ -13,22 +13,22 @@ __all__ = \
 def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
                        write_weight=1.0, read_weight=1.0, delete_weight=0.0,
                        trajectory="maximum"):
-    """Allocate snapshots for a checkpointing schedule.
+    """Allocate snapshots.
     
     Parameters
     ----------
     max_n : int
         The maximum number of forward steps in the calculation.
     snapshots_in_ram : int
-        The maximum number of forward restart checkpoints to store in RAM.
+        The maximum number of forward restart checkpoints to store in `'RAM'`.
     snapshots_on_disk : int
-        The maximum number of forward restart checkpoints to store on disk.
+        The maximum number of forward restart checkpoints to store on `'disk'`.
     write_weight : float, optional
-        The weight of a write to a checkpoint.
+        The weight (cost?) of writing a checkpoint.
     read_weight : float, optional
-        The weight of a read from a checkpoint.
+        The weight (cost?) of a read from a checkpoint.
     delete_weight : float, optional
-        The weight of a delete of a checkpoint.
+        The weight (cost?) of deleting a checkpoint.
     trajectory : str, optional
         The trajectory to use for allocating checkpoints. 
     
@@ -119,9 +119,9 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
     max_n : int
         The number of forward steps in the initial forward calculation.
     snapshots_in_ram : int
-        The maximum number of forward restart checkpoints to store in memory.
+        The maximum number of forward restart checkpoints to store in memory (`'RAM'`).
     snapshots_on_disk : int
-        The maximum number of forward restart checkpoints to store on disk.
+        The maximum number of forward restart checkpoints to store on `'disk'`.
     trajectory : str
         When advancing `n` forward steps with `s` checkpointing
         units available there are in general multiple solutions to the problem
@@ -138,7 +138,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
     Notes
     -----
     This checkpointing approach is described in [1].
-    Uses a 'MultiStage' distribution of checkpoints between RAM and disk
+    Uses a 'MultiStage' distribution of checkpoints between `'RAM'` and `'disk'`
     equivalent to that described in [2].
     The distribution between RAM and disk is determined using an initial run of
     the schedule. Offline, one adjoint calculation permitted.
