@@ -31,7 +31,7 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
         
     """
 
-    def __init__(self, storage=StorageType.WORKING_MEMORY):
+    def __init__(self, storage=StorageType.RAM):
         self._storage = storage
         super().__init__()
     
@@ -82,6 +82,7 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
         """
 
         return storage_type == self._storage
+
 
 class SingleDiskStorageSchedule(CheckpointSchedule):
     """A checkpointing schedule where all forward restart and non-linear

@@ -265,6 +265,7 @@ class PeriodicDiskRevolve(RevolveCheckpointSchedule):
         schedule = list(periodic_disk_revolve(max_n - 1, snap_in_ram, wd, rd, uf, ub))
         super().__init__(max_n, snap_in_ram, max_n - snap_in_ram, schedule)
 
+
 class Revolve(RevolveCheckpointSchedule):
     """Revolve checkpointing schedule.
 
