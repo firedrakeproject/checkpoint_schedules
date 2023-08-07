@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""This module contains the checkpointing schedules for the cases where no revolver algorithm are used."""
+
+"""This module contains the checkpointing schedules for the cases where no 
+revolver algorithm are used.
+"""
+
 import sys
 from .schedule import CheckpointSchedule, Forward, Reverse,\
     EndForward, EndReverse, StorageType, Move, Copy
@@ -16,23 +20,33 @@ __all__ = \
 
 
 class SingleMemoryStorageSchedule(CheckpointSchedule):
-    """A checkpointing schedule where all forward restart and non-linear
-    dependency data are stored in memory.
-
-    Notes
-    -----
-    Online, unlimited adjoint calculations permitted.
+    """A checkpointing schedule where forward data required 
+    for the adjoint computation.
+    This schedule can also store at every time step the forward
+    restart data.
 
     Parameters
     ----------
-    storage : StorageType.RAM
-        Indicate that the execution should stores in `'RAM'` all foward restart 
-        data and non-linear dependency data.
-        
+    write_ics : bool
+        Indicate whether to store the forward restart data for all steps.
+    storage_ics: enum
+        Indicate the storage type of the forward restart data. 
+        This atributte is checked only if the user desires to save the forward 
+        restart.
+
+    Notes
+    -----
+    This class has an aditional method only
+
+    Notes
+    -----
+    Online, unlimited adjoint calculations permitted.   
     """
 
-    def __init__(self, storage=StorageType.RAM):
-        self._storage = storage
+    def __init__(self, write_ics=False, storage_ics=StorageType.NONE):
+
+        self.write_ics = write_ics
+        self.storage_ics = storage_ics
         super().__init__()
     
     def _iterator(self):
@@ -46,7 +60,7 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
             n0 = self._n
             n1 = n0 + sys.maxsize
             self._n = n1
-            yield Forward(n0, n1, True, True, self._storage)
+            yield Forward(n0, n1, self.write_ics, True, StorageType.ADJ_DEPS)
 
         yield EndForward()
 
@@ -68,7 +82,7 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
         return False
 
     def uses_storage_type(self, storage_type):
-        """Check if the storage is in memory.
+        """Check the storage type.
 
         Parameters
         ----------
@@ -81,8 +95,8 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
             Whether this schedule uses the given storage type.
         """
 
-        return storage_type == self._storage
-
+        return storage_type == self.storage_ics
+    
 
 class SingleDiskStorageSchedule(CheckpointSchedule):
     """A checkpointing schedule where all forward restart and non-linear
@@ -94,15 +108,16 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
 
     Parameters
     ----------
-    storage : StorageType.WORKING_Disk
+    storage : enum
         Indicate that the execution should stores in memore all foward restart 
         data and non-linear dependency data.
         
     """
 
-    def __init__(self, storage=StorageType.DISK, delete=False):
-        self._storage = storage
-        self._delete = delete
+    def __init__(self, delete=False, write_ics=False, storage_ics=StorageType.NONE):
+        self.write_ics = write_ics
+        self.storage_ics = storage_ics
+        self._delete_adj_deps = delete
         super().__init__()
     
     def _iterator(self):
@@ -116,19 +131,19 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
             n0 = self._n
             n1 = n0 + sys.maxsize
             self._n = n1
-            yield Forward(n0, n1, True, True, self._storage)
+            yield Forward(n0, n1, self.write_ics, True, StorageType.DISK)
 
         yield EndForward()
 
-        for i in range(self._max_n + 1):
+        for i in range(self._max_n, 0, -1):
             if self._r < self._max_n:
                 # Reverse
-                if self._delete:
-                    Move(i, self._storage, StorageType.ADJ_DEPS)
+                if self._delete_adj_deps is True:
+                    yield Move(i, StorageType.DISK, StorageType.ADJ_DEPS)
                 else:
-                    Copy(i, self._storage, StorageType.ADJ_DEPS)
+                    yield Copy(i, StorageType.DISK, StorageType.ADJ_DEPS)
 
-                yield Reverse(i + 1, i, True)
+                yield Reverse(i, i - 1, True)
             elif self._r == self._max_n:
                 # Reset for new reverse
 
@@ -156,13 +171,19 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
             Whether this schedule uses the given storage type.
         """
 
-        return storage_type == self._storage
+        return storage_type == self.storage_ics
 
 
 class NoneCheckpointSchedule(CheckpointSchedule):
     """A checkpointing schedule for the case where no adjoint calculation is
     performed.
 
+    Parameters
+    ----------
+    _exhausted : bool
+        Indicate that the execution is exhausted.
+    Notes
+    -----
     Online, zero adjoint calculations permitted.
     """
 
@@ -188,6 +209,8 @@ class NoneCheckpointSchedule(CheckpointSchedule):
 
     @property
     def is_exhausted(self):
+        """Check if the execution is exhausted.
+        """
         return self._exhausted
 
     def uses_storage_type(self, storage_type):

@@ -122,7 +122,7 @@ class Operation:
 
     See Also
     --------
-    :func:`utils.revolver_parameters`, :dict:`official_names`
+    :func:`utils.revolver_parameters`, `official_names`
 
     """
     def __init__(self, operation_type, operation_index, params):

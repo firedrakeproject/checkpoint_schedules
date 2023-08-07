@@ -1,77 +1,81 @@
-checkpoint\_schedules package
-=============================
-
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 4
-
-   checkpoint_schedules.hrevolve_sequences
-
-Submodules
-----------
-
-checkpoint\_schedules.hrevolve module
--------------------------------------
+Schedules
+==========
 
 .. automodule:: checkpoint_schedules.hrevolve
    :members:
    :undoc-members:
    :show-inheritance:
 
-checkpoint\_schedules.mixed module
-----------------------------------
-
 .. automodule:: checkpoint_schedules.mixed
    :members:
    :undoc-members:
    :show-inheritance:
-
-checkpoint\_schedules.multistage module
----------------------------------------
 
 .. automodule:: checkpoint_schedules.multistage
    :members:
    :undoc-members:
    :show-inheritance:
 
-checkpoint\_schedules.none\_revolver module
--------------------------------------------
 
 .. automodule:: checkpoint_schedules.none_revolver
    :members:
    :undoc-members:
    :show-inheritance:
 
-checkpoint\_schedules.schedule module
--------------------------------------
 
 .. automodule:: checkpoint_schedules.schedule
    :members:
    :undoc-members:
    :show-inheritance:
 
-checkpoint\_schedules.twolevel\_binomial module
------------------------------------------------
-
 .. automodule:: checkpoint_schedules.twolevel_binomial
    :members:
    :undoc-members:
    :show-inheritance:
 
-checkpoint\_schedules.utils module
-----------------------------------
 
 .. automodule:: checkpoint_schedules.utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
+H-Revolve Sequences
+===================
 
-.. automodule:: checkpoint_schedules
+.. automodule:: checkpoint_schedules.hrevolve_sequences.basic_functions
    :members:
    :undoc-members:
    :show-inheritance:
+
+.. automodule:: checkpoint_schedules.hrevolve_sequences.disk_revolve
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: checkpoint_schedules.hrevolve_sequences.hrevolve
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: checkpoint_schedules.hrevolve_sequences.periodic_disk_revolve
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: checkpoint_schedules.hrevolve_sequences.revolve
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. automodule:: checkpoint_schedules.hrevolve_sequences.revolve_1d
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. automodule:: checkpoint_schedules.hrevolve_sequences.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+

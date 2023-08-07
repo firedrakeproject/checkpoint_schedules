@@ -67,7 +67,7 @@ def compute_mx(cm, opt_0=None, opt_1d=None, mmax=None, **params):
         Memory slots.
     opt_0 : list, optional
         Optimal execution time for a memory revolve algorithm.
-    opt_1d : _type_, optional
+    opt_1d : list, optional
         Optimal execution time for a 1D revolve algorithm.
     mmax : int, optional
         The maximum period.
@@ -121,7 +121,7 @@ def mx_close_formula(cm, rd, wd, opt_0=None, opt_1d=None, **params):
         Cost of writing the checkpoint data in disk.
     opt_0 : list, optional
         Optimal execution time for a memory revolve algorithm.
-    opt_1d : _type_, optional
+    opt_1d : list, optional
         Optimal execution time for a 1D revolve algorithm.
     params : dict
         The parameters dictionary.

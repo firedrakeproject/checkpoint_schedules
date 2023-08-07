@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""..."""
+"""This module contains the checkpointing schedules for the H-Revolve,
+Disk Revolve, Periodic Disk Revolve and Revolve algorithms.
+"""
 
 from .schedule import CheckpointSchedule, Forward, Reverse, Copy, Move, \
     EndForward, EndReverse, StorageType
@@ -16,13 +18,13 @@ __all__ = \
 
 class RevolveCheckpointSchedule(CheckpointSchedule):
     """This object allows to iterate over a sequence
-    of the checkpoint schedule actions. 
- 
+    of the checkpoint schedule actions.
+
     Attributes
     ----------
     max_n : int
         The number of forward steps in the initial forward calculation.
-    snap_in_ram : int
+    chk_in_ram : int
         The maximum steps to store the forward checkpoints in RAM.
     snap_on_disk : int
         The maximum steps to store the forward checkpoints on disk.
@@ -31,16 +33,18 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
 
     Notes
     -----
-    This Class is able to convert the revolver algorithmics to *checkpoint_schedules* 
-    actions and iterate over them. The revolver algorithmics are: H-Revolve, Disk Revolve, 
+    This Class is able to convert the revolver algorithmics to 
+    *checkpoint_schedules* actions and iterate over them. 
+    The revolver algorithmics are: H-Revolve, Disk Revolve,
     Periodic Disk Revolve and Revolve.
+
     """
 
-    def __init__(self, max_n, snap_in_ram, snap_on_disk, schedule):
+    def __init__(self, max_n, chk_in_ram, snap_on_disk, schedule):
         super().__init__(max_n)
         self._exhausted = False
         self._snapshots_on_disk = snap_on_disk
-        self._snapshots_in_ram = snap_in_ram
+        self._snapshots_in_ram = chk_in_ram
         self._schedule = schedule
 
     def _iterator(self):
@@ -170,8 +174,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             return self._snapshots_on_disk > 0
         elif storage_type == StorageType.RAM:
             return self._snapshots_in_ram > 0
-        
-
+     
 
 class HRevolve(RevolveCheckpointSchedule):
     """H-Revolve checkpointing schedule.
@@ -180,7 +183,7 @@ class HRevolve(RevolveCheckpointSchedule):
     ---------
     max_n : int
         The number of forward steps in the initial forward calculation.
-    snap_in_ram : int
+    chk_in_ram : int
         The maximum steps to store the forward checkpoints in RAM.
     snap_on_disk : int
         The maximum steps to store the forward checkpoints on disk.
@@ -202,12 +205,12 @@ class HRevolve(RevolveCheckpointSchedule):
         DOI: https://doi.org/10.1145/3378672.
 
     """
-    def __init__(self, max_n, snap_in_ram, snap_on_disk, uf=1, ub=1, wd=2, rd=2):
-        cvec = (snap_in_ram, snap_on_disk)
+    def __init__(self, max_n, chk_in_ram, snap_on_disk, uf=1, ub=1, wd=2, rd=2):
+        cvec = (chk_in_ram, snap_on_disk)
         wc = [0, wd]
         rc = [0, rd]
         schedule = list(hrevolve(max_n - 1, cvec, wc, rc, uf, ub))
-        super().__init__(max_n, snap_in_ram, snap_on_disk, schedule)
+        super().__init__(max_n, chk_in_ram, snap_on_disk, schedule)
         
 
 class DiskRevolve(RevolveCheckpointSchedule):
@@ -217,7 +220,7 @@ class DiskRevolve(RevolveCheckpointSchedule):
     ---------
     max_n : int
         The number of forward steps in the initial forward calculation.
-    snap_in_ram : int
+    chk_in_ram : int
         The maximum steps to store the forward checkpoints in RAM.
     uf : float
         The cost of advancing the forward over one step.
@@ -227,25 +230,30 @@ class DiskRevolve(RevolveCheckpointSchedule):
         The cost of writing the checkpoint data in disk.
     rd : float
         The cost of reading the checkpoint data from disk.
-    
+
     Notes
     -----
     The H-Revolve schedule is described in [1].
+
+    [1] Aupy, G.,  Herrmann, Ju. and Hovland, P. and Robert, Y. "Optimal multistage 
+    algorithm for adjoint computation". SIAM Journal on Scientific Computing, 38(3),
+    C232-C255, (2016). DOI: https://doi.org/10.1145/347837.347846.
+
     """
 
-    def __init__(self, max_n, snap_in_ram, uf=1, ub=1, wd=2, rd=2):
-        schedule = list(disk_revolve(max_n - 1, snap_in_ram, wd, rd, uf, ub))
-        super().__init__(max_n, snap_in_ram, max_n - snap_in_ram, schedule)
+    def __init__(self, max_n, chk_in_ram, uf=1, ub=1, wd=2, rd=2):
+        schedule = list(disk_revolve(max_n - 1, chk_in_ram, wd, rd, uf, ub))
+        super().__init__(max_n, chk_in_ram, max_n - chk_in_ram, schedule)
 
 
 class PeriodicDiskRevolve(RevolveCheckpointSchedule):
     """Periodic Disk Revolve checkpointing schedule.
-    
+
     Atributes
     ---------
     max_n : int
         The number of forward steps in the initial forward calculation.
-    snap_in_ram : int
+    chk_in_ram : int
         The maximum steps to store the forward checkpoints in RAM.
     uf : float
         The cost of advancing the forward over one step.
@@ -259,11 +267,12 @@ class PeriodicDiskRevolve(RevolveCheckpointSchedule):
     Notes
     -----
     Periodic Disk Revolve checkpointing is described in [1].
+
     """
 
-    def __init__(self, max_n, snap_in_ram, uf=1, ub=1, wd=2, rd=2):
-        schedule = list(periodic_disk_revolve(max_n - 1, snap_in_ram, wd, rd, uf, ub))
-        super().__init__(max_n, snap_in_ram, max_n - snap_in_ram, schedule)
+    def __init__(self, max_n, chk_in_ram, uf=1, ub=1, wd=2, rd=2):
+        schedule = list(periodic_disk_revolve(max_n - 1, chk_in_ram, wd, rd, uf, ub))
+        super().__init__(max_n, chk_in_ram, max_n - chk_in_ram, schedule)
 
 
 class Revolve(RevolveCheckpointSchedule):
@@ -273,7 +282,7 @@ class Revolve(RevolveCheckpointSchedule):
     ---------
     max_n : int
         The number of forward steps in the initial forward calculation.
-    snap_in_ram : int
+    chk_in_ram : int
         The maximum steps to store the forward checkpoints in RAM.
     uf : float
         The cost of advancing the forward over one step.
@@ -287,11 +296,12 @@ class Revolve(RevolveCheckpointSchedule):
     Notes
     -----
     The Revolve schedule is described in [1].
+
     """
 
-    def __init__(self, max_n, snap_in_ram, uf=1, ub=1, wd=2, rd=2):
-        schedule = list(revolve(max_n - 1, snap_in_ram, wd, rd, uf, ub))
-        super().__init__(max_n, snap_in_ram, max_n - snap_in_ram, schedule)
+    def __init__(self, max_n, chk_in_ram, uf=1, ub=1, wd=2, rd=2):
+        schedule = list(revolve(max_n - 1, chk_in_ram, wd, rd, uf, ub))
+        super().__init__(max_n, chk_in_ram, max_n - chk_in_ram, schedule)
 
       
 def _convert_action(action):
@@ -301,21 +311,24 @@ def _convert_action(action):
     ----------
     action_n : hrevolve_sequences.revolve.Operation
         An operation from the `checkpoint_schedules.hrevolve_sequences`.
-    
+
     Notes
     -----
-    The operations have `type` and `index` attributes. The `type` attribute is a string that gives
-    the operation name, which are listed at the `checkpoint_schedules.schedule.basic_funtions.official_names` 
-    dictionary. The `index` attribute is a tuple containing the time steps for some operations or the storage
-    level and time step for other operations. For instance, if operation type is `Forward`, the operation index 
-    that is a tuple `(n0, n1)`, which it read as the next action aims to execute the forward solver from the 
-    step n0 to step n1. If the operation is `Write` type, the operation index is a tuple `(storage, n0)`.
+    The operations have `type` and `index` attributes. The `type` attribute is
+    a string that gives the operation name, which are listed at the
+    `checkpoint_schedules.schedule.basic_funtions.official_names`
+    dictionary. The `index` attribute is a tuple containing the time steps for
+    some operations or the storage level and time step for other operations.
+    For instance, if operation type is `Forward`, the operation index
+    that is a tuple `(n0, n1)`, which it read as the next action aims to
+    execute the forward solver from the step `n0` to step `n1`. If the
+    operation is `Write` type, the operation index is a tuple `(storage, n0)`.
 
     Returns
     -------
     str, tuple(int, int , str)
-        Return the operation name, and a tuple containig the steps `n_0`, step `n_1` and the storage 
-        level (either RAM or disk).
+        Return the operation name, and a tuple containig the steps `n_0`, step 
+        `n_1` and the storage level (either RAM or disk).
 
     """
     cp_action = action.type

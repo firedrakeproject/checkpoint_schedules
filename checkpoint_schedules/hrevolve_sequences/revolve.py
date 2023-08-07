@@ -1,7 +1,7 @@
 #!/usr/bin/python
 """This module contains the functions used to compute the revolver sequences."""
 from functools import partial
-from .basic_functions import (Operation as Op, Sequence, Function, Table, beta, argmin)
+from .basic_functions import (Operation as Op, Sequence, Function, Table, argmin)
 from .utils import revolver_parameters
 
 
@@ -59,13 +59,13 @@ def revolve(l, cm, rd, wd, fwd_cost, bwd_cost, opt_0=None):
         Number of forward step to execute in the AC graph.
     cm : int
         The number of checkpoints stored in memory.
-    opt_0 : _type_, optional
+    opt_0 : list, optional
         Return the optimal sequence of makespan.
 
     Returns
     -------
-    _type_
-        _description_
+    Sequence
+        Revolve schedule
     """
     params = revolver_parameters(wd, rd, fwd_cost, bwd_cost)
     parameters = dict(params)

@@ -309,17 +309,15 @@ class Move(CheckpointAction):
     @property
     def n(self):
         return self.args[0]
-    
+
     @property
     def from_storage(self):
         return self.args[1]
-    
+
     @property
     def to_storage(self):
 
         return self.args[2]
-    
-
 
 
 class EndForward(CheckpointAction):
@@ -331,7 +329,7 @@ class EndReverse(CheckpointAction):
     """A checkpointing action which indicates the end of an adjoint
     calculation.
     """
-    
+
 
 class CheckpointSchedule(ABC):
     """A checkpointing schedule.
@@ -364,7 +362,7 @@ class CheckpointSchedule(ABC):
             action(cp_action)
             if isinstance(cp_action, EndReverse):
                 break
-                
+
     Schedules control an intermediate storage, which buffers forward restart
     data for forward restart checkpoints, and which stores non-linear
     dependency data either for storage in checkpointing units or for immediate
@@ -422,11 +420,11 @@ class CheckpointSchedule(ABC):
 
     @property
     def is_exhausted(self):
-        """Return whether the schedule has concluded. 
+        """Return whether the schedule has concluded.
         
         Notes
         -----
-        Note that some schedules permit multiple adjoint calculation, 
+        Note that some schedules permit multiple adjoint calculation,
         and may never conclude.
         """
         raise NotImplementedError
@@ -444,16 +442,16 @@ class CheckpointSchedule(ABC):
 
     @property
     def n(self):
-        """Return the forward step location. 
-        
+        """Return the forward step location.
+
         Notes
         -----
-        After executing all actions defined so far in the schedule the forward 
+        After executing all actions defined so far in the schedule the forward
         is at the start of this step.
 
         Returns
         -------
-        int 
+        int
             The forward step location.
         """
         return self._n
@@ -468,7 +466,7 @@ class CheckpointSchedule(ABC):
 
         Returns
         -------
-        self._r : int 
+        self._r : int
             The reverse step.
         """
         return self._r

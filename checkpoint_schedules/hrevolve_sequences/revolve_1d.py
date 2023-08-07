@@ -1,9 +1,9 @@
 #!/usr/bin/python
 """This module contains the functions used to compute the 1D revolver sequences.
 """
+from functools import partial
 from .basic_functions import (Operation as Op, Sequence, Function, Table, argmin)
 from .revolve import revolve, get_opt_0_table
-from functools import partial
 
 
 def get_opt_1d_table(lmax, cm, ub, uf, rd, one_read_disk, print_table=None,
