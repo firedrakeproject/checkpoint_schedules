@@ -43,10 +43,8 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
     Online, unlimited adjoint calculations permitted.   
     """
 
-    def __init__(self, write_ics=False, storage_ics=StorageType.NONE):
-
-        self.write_ics = write_ics
-        self.storage_ics = storage_ics
+    def __init__(self):
+        self._storage = StorageType.ADJ_DEPS
         super().__init__()
     
     def _iterator(self):
@@ -60,7 +58,7 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
             n0 = self._n
             n1 = n0 + sys.maxsize
             self._n = n1
-            yield Forward(n0, n1, self.write_ics, True, StorageType.ADJ_DEPS)
+            yield Forward(n0, n1, False, True, StorageType.ADJ_DEPS)
 
         yield EndForward()
 
@@ -95,7 +93,7 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
             Whether this schedule uses the given storage type.
         """
 
-        return storage_type == self.storage_ics
+        return storage_type == self._storage
     
 
 class SingleDiskStorageSchedule(CheckpointSchedule):
@@ -114,10 +112,9 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
         
     """
 
-    def __init__(self, delete=False, write_ics=False, storage_ics=StorageType.NONE):
-        self.write_ics = write_ics
-        self.storage_ics = storage_ics
-        self._delete_adj_deps = delete
+    def __init__(self, move_data=False):
+        self._move_data = move_data
+        self._storage = StorageType.ADJ_DEPS
         super().__init__()
     
     def _iterator(self):
@@ -131,14 +128,14 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
             n0 = self._n
             n1 = n0 + sys.maxsize
             self._n = n1
-            yield Forward(n0, n1, self.write_ics, True, StorageType.DISK)
+            yield Forward(n0, n1, False, True, StorageType.DISK)
 
         yield EndForward()
 
         for i in range(self._max_n, 0, -1):
             if self._r < self._max_n:
                 # Reverse
-                if self._delete_adj_deps is True:
+                if self._move_data is True:
                     yield Move(i, StorageType.DISK, StorageType.ADJ_DEPS)
                 else:
                     yield Copy(i, StorageType.DISK, StorageType.ADJ_DEPS)
@@ -171,7 +168,7 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
             Whether this schedule uses the given storage type.
         """
 
-        return storage_type == self.storage_ics
+        return storage_type == self._storage
 
 
 class NoneCheckpointSchedule(CheckpointSchedule):
