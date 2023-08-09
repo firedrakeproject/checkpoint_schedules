@@ -55,7 +55,6 @@ def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
             raise RuntimeError("Invalid checkpointing state")
         weights[snapshot_i] += read_weight
         
-
     @action.register(Move)
     def action_move(cp_action):
         nonlocal snapshot_i

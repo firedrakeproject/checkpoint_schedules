@@ -17,34 +17,33 @@ __all__ = \
 
 
 class RevolveCheckpointSchedule(CheckpointSchedule):
-    """This object allows to iterate over a sequence
-    of the checkpoint schedule actions.
+    """A Revolve checkpointing schedule.
+    Offline, one adjoint calculation permitted.
 
     Attributes
     ----------
-    max_n : int
-        The number of forward steps in the initial forward calculation.
-    chk_in_ram : int
-        The maximum steps to store the forward checkpoints in RAM.
-    snap_on_disk : int
+    _snapshots_in_ram : int
+        The maximum steps to store the forward checkpoints in memory.
+    _snapshots_on_disk : int
         The maximum steps to store the forward checkpoints on disk.
-    schedule : list
+    _schedule : list
         A sequence of operations given by a revolver algorithm.
+    _exhausted : bool
+        A flag indicating whether the schedule is exhausted.
 
     Notes
     -----
-    This Class is able to convert the revolver algorithmics to 
-    *checkpoint_schedules* actions and iterate over them. 
+    This Class is able to convert the revolver algorithmics to
+    *checkpoint_schedules* actions and iterate over them.
     The revolver algorithmics are: H-Revolve, Disk Revolve,
     Periodic Disk Revolve and Revolve.
-
     """
 
-    def __init__(self, max_n, chk_in_ram, snap_on_disk, schedule):
+    def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk, schedule):
         super().__init__(max_n)
         self._exhausted = False
-        self._snapshots_on_disk = snap_on_disk
-        self._snapshots_in_ram = chk_in_ram
+        self._snapshots_on_disk = snapshots_on_disk
+        self._snapshots_in_ram = snapshots_in_ram
         self._schedule = schedule
 
     def _iterator(self):
@@ -178,14 +177,14 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
 
 class HRevolve(RevolveCheckpointSchedule):
     """H-Revolve checkpointing schedule.
-    
+
     Atributes
     ---------
     max_n : int
         The number of forward steps in the initial forward calculation.
-    chk_in_ram : int
+    snapshots_in_ram : int
         The maximum steps to store the forward checkpoints in RAM.
-    snap_on_disk : int
+    snapshots_on_disk : int
         The maximum steps to store the forward checkpoints on disk.
     uf : float
         The cost of advancing the forward over one step.
@@ -195,7 +194,7 @@ class HRevolve(RevolveCheckpointSchedule):
         The cost of writing the checkpoint data in disk.
     rd : float
         The cost of reading the checkpoint data from disk.
-    
+
     Notes
     -----
     The H-Revolve schedule is described in:
@@ -205,12 +204,13 @@ class HRevolve(RevolveCheckpointSchedule):
         DOI: https://doi.org/10.1145/3378672.
 
     """
-    def __init__(self, max_n, chk_in_ram, snap_on_disk, uf=1, ub=1, wd=2, rd=2):
-        cvec = (chk_in_ram, snap_on_disk)
+    def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk,
+                 uf=1, ub=1, wd=2, rd=2):
+        cvec = (snapshots_in_ram, snapshots_on_disk)
         wc = [0, wd]
         rc = [0, rd]
         schedule = list(hrevolve(max_n - 1, cvec, wc, rc, uf, ub))
-        super().__init__(max_n, chk_in_ram, snap_on_disk, schedule)
+        super().__init__(max_n, snapshots_in_ram, snapshots_on_disk, schedule)
         
 
 class DiskRevolve(RevolveCheckpointSchedule):
@@ -220,7 +220,7 @@ class DiskRevolve(RevolveCheckpointSchedule):
     ---------
     max_n : int
         The number of forward steps in the initial forward calculation.
-    chk_in_ram : int
+    snapshots_in_ram : int
         The maximum steps to store the forward checkpoints in RAM.
     uf : float
         The cost of advancing the forward over one step.
@@ -233,17 +233,17 @@ class DiskRevolve(RevolveCheckpointSchedule):
 
     Notes
     -----
-    The H-Revolve schedule is described in [1].
+    The Disk schedule is described in [1].
 
-    [1] Aupy, G.,  Herrmann, Ju. and Hovland, P. and Robert, Y. "Optimal multistage 
-    algorithm for adjoint computation". SIAM Journal on Scientific Computing, 38(3),
-    C232-C255, (2016). DOI: https://doi.org/10.1145/347837.347846.
-
+    [1] Aupy, G.,  Herrmann, Ju. and Hovland, P. and Robert, Y. "Optimal
+    multistage algorithm for adjoint computation". SIAM Journal on Scientific
+    Computing, 38(3), C232-C255, (2016). 
+    DOI: https://doi.org/10.1145/347837.347846.
     """
 
-    def __init__(self, max_n, chk_in_ram, uf=1, ub=1, wd=2, rd=2):
-        schedule = list(disk_revolve(max_n - 1, chk_in_ram, wd, rd, uf, ub))
-        super().__init__(max_n, chk_in_ram, max_n - chk_in_ram, schedule)
+    def __init__(self, max_n, snapshots_in_ram, uf=1, ub=1, wd=2, rd=2):
+        schedule = list(disk_revolve(max_n - 1, snapshots_in_ram, wd, rd, uf, ub))
+        super().__init__(max_n, snapshots_in_ram, max_n - snapshots_in_ram, schedule)
 
 
 class PeriodicDiskRevolve(RevolveCheckpointSchedule):
@@ -253,7 +253,7 @@ class PeriodicDiskRevolve(RevolveCheckpointSchedule):
     ---------
     max_n : int
         The number of forward steps in the initial forward calculation.
-    chk_in_ram : int
+    snapshots_in_ram : int
         The maximum steps to store the forward checkpoints in RAM.
     uf : float
         The cost of advancing the forward over one step.
@@ -270,9 +270,9 @@ class PeriodicDiskRevolve(RevolveCheckpointSchedule):
 
     """
 
-    def __init__(self, max_n, chk_in_ram, uf=1, ub=1, wd=2, rd=2):
-        schedule = list(periodic_disk_revolve(max_n - 1, chk_in_ram, wd, rd, uf, ub))
-        super().__init__(max_n, chk_in_ram, max_n - chk_in_ram, schedule)
+    def __init__(self, max_n, snapshots_in_ram, uf=1, ub=1, wd=2, rd=2):
+        schedule = list(periodic_disk_revolve(max_n - 1, snapshots_in_ram, wd, rd, uf, ub))
+        super().__init__(max_n, snapshots_in_ram, max_n - snapshots_in_ram, schedule)
 
 
 class Revolve(RevolveCheckpointSchedule):
@@ -282,7 +282,7 @@ class Revolve(RevolveCheckpointSchedule):
     ---------
     max_n : int
         The number of forward steps in the initial forward calculation.
-    chk_in_ram : int
+    snapshots_in_ram : int
         The maximum steps to store the forward checkpoints in RAM.
     uf : float
         The cost of advancing the forward over one step.
@@ -299,9 +299,9 @@ class Revolve(RevolveCheckpointSchedule):
 
     """
 
-    def __init__(self, max_n, chk_in_ram, uf=1, ub=1, wd=2, rd=2):
-        schedule = list(revolve(max_n - 1, chk_in_ram, wd, rd, uf, ub))
-        super().__init__(max_n, chk_in_ram, max_n - chk_in_ram, schedule)
+    def __init__(self, max_n, snapshots_in_ram, uf=1, ub=1, wd=2, rd=2):
+        schedule = list(revolve(max_n - 1, snapshots_in_ram, wd, rd, uf, ub))
+        super().__init__(max_n, snapshots_in_ram, max_n - snapshots_in_ram, schedule)
 
       
 def _convert_action(action):
