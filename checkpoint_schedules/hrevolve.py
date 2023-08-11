@@ -142,7 +142,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             else:
                 raise InvalidRevolverAction
             i += 1
-        if len(snapshots) > self._snapshots_on_disk + self._snapshots_in_ram:
+        if len(snapshots) > 0:
             raise RuntimeError("Unexpected snapshot number.")
         
         self._exhausted = True
@@ -198,10 +198,10 @@ class HRevolve(RevolveCheckpointSchedule):
     Notes
     -----
     The H-Revolve schedule is described in:
-        - Herrmann, J. and Pallez (Aupy), G.. "H-Revolve: a framework
-        for adjoint computation on synchronous hierarchical platforms."
-        ACM Transactions on Mathematical Software (TOMS) 46.2 (2020): 1-25.
-        DOI: https://doi.org/10.1145/3378672.
+        - Herrmann, J. and Pallez (Aupy), G. (2020). H-Revolve: 
+        a framework for adjoint computation on synchronous hierarchical 
+        platforms. ACM Transactions on Mathematical Software (TOMS), 46(2), 
+        1-25. DOI: https://doi.org/10.1145/3378672.
 
     """
     def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk,
@@ -235,15 +235,15 @@ class DiskRevolve(RevolveCheckpointSchedule):
     -----
     The Disk schedule is described in [1].
 
-    [1] Aupy, G.,  Herrmann, Ju. and Hovland, P. and Robert, Y. "Optimal
-    multistage algorithm for adjoint computation". SIAM Journal on Scientific
-    Computing, 38(3), C232-C255, (2016). 
+    [1] Aupy, G., Herrmann, J., Hovland, P., & Robert, Y. (2016). 
+    Optimal multistage algorithm for adjoint computation. SIAM 
+    Journal on Scientific Computing, 38(3), C232-C255. 
     DOI: https://doi.org/10.1145/347837.347846.
     """
 
     def __init__(self, max_n, snapshots_in_ram, uf=1, ub=1, wd=2, rd=2):
         schedule = list(disk_revolve(max_n - 1, snapshots_in_ram, wd, rd, uf, ub))
-        super().__init__(max_n, snapshots_in_ram, max_n - snapshots_in_ram, schedule)
+        super().__init__(max_n, snapshots_in_ram, None, schedule)
 
 
 class PeriodicDiskRevolve(RevolveCheckpointSchedule):
@@ -267,12 +267,16 @@ class PeriodicDiskRevolve(RevolveCheckpointSchedule):
     Notes
     -----
     Periodic Disk Revolve checkpointing is described in [1].
+    [1] Aupy, G., & Herrmann, J. (2017). Periodicity in optimal
+    hierarchical checkpointing schemes for adjoint computations.
+    Optimization Methods and Software, 32(3), 594-624.
+    doi: https://doi.org/10.1080/10556788.2016.1230612
 
     """
 
     def __init__(self, max_n, snapshots_in_ram, uf=1, ub=1, wd=2, rd=2):
         schedule = list(periodic_disk_revolve(max_n - 1, snapshots_in_ram, wd, rd, uf, ub))
-        super().__init__(max_n, snapshots_in_ram, max_n - snapshots_in_ram, schedule)
+        super().__init__(max_n, snapshots_in_ram, None, schedule)
 
 
 class Revolve(RevolveCheckpointSchedule):
@@ -301,7 +305,7 @@ class Revolve(RevolveCheckpointSchedule):
 
     def __init__(self, max_n, snapshots_in_ram, uf=1, ub=1, wd=2, rd=2):
         schedule = list(revolve(max_n - 1, snapshots_in_ram, wd, rd, uf, ub))
-        super().__init__(max_n, snapshots_in_ram, max_n - snapshots_in_ram, schedule)
+        super().__init__(max_n, snapshots_in_ram, None, schedule)
 
       
 def _convert_action(action):

@@ -35,9 +35,10 @@ class MixedCheckpointSchedule(CheckpointSchedule):
     This is a offline checkpointing strategy, one adjoint calculation 
     permitted.
 
-    [1] James R. Maddison, 'On the implementation of checkpointing with 
-    high-level algorithmic differentiation' (2023),
-    https://arxiv.org/abs/2305.09568v1.
+    [1] Maddison, J. R. (2023). On the implementation of checkpointing with
+    high-level algorithmic differentiation. arXiv preprint arXiv:2305.09568.
+    https://doi.org/10.48550/arXiv.2305.09568
+ 
     """
 
     def __init__(self, max_n, snapshots, *, storage=StorageType.DISK):
