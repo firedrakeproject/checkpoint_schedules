@@ -3,9 +3,8 @@ title: 'checkpoint_schedules: schedules for incremental of adjoint simulations.'
 
 tags:
   - Python
+  - Checkpointing methods
   - Adjoint-based gradient
-  - Checkpointing method
-  - Revolvers
 # authors:
 #   - name: 
 #     affiliation: 1
@@ -18,21 +17,16 @@ affiliations:
 #    index: 1
 #  - name:  
 #    index: 2
-date:  July 2023
+date:  August 2023
 bibliography: paper.bib
 
 ---
 # Indroduction
 
-Adjoint-based gradient problems are commonly used to compute of sensitivity measures for topology optimization `[@papadopoulos2021computing]`, inverse problems [@Plessix2006], flow optimisation, and control [@jansen2011adjoint]. These physical problems are governed by time-dependent partial differential equations, which are referred here to as forward problems. Hence, the adjoint-based sensitivity leads to computations of the time-dependent adjoint-based gradients are characterised by their backward progression in time and their dependence on the solution of a forward solution. In such cases, one must require either store the forward data or recompute the forward problem to obtain essential data for the adjoint computations.
-
-Storing the forward data at every time step in RAM (Random Access memory) is impractical for large systems due to the potential for high memory usage during extensive time executions. Techniques such as storing the forward data on disk or employing a checkpointing method can overcome this memory usage issue. Checkpointing strategies involve creating a sequence of schedules that coordinate the selective storage of forward data at specific time steps. During the adjoint computation, these schedules provide instructions for restarting the forward solver from the nearest time step where forward data was stored, in case the forward data is unavailable, until the step where the adjoint needs to be computed. 
-
-
-In order to optimise the checkpointing scheme, checkpoint strategies aims to minimise the required forward recomputation for any allowed checkpoint storage and for any previously defined number of time steps [@griewank2000algorithm]. Also, when the number of time steps is a priori unknown [@wang2009minimal]. Optimal checkpointing strategies also take into consideration different storage types [@stumm2009multistage; @aupy2016optimal; @schanen2016asynchronous; @herrmann2020h].
+<!-- Writting -->
 
 # Statement of Need
 
 # Acknowledgments
-This work was supported by the Engineering and Physical Sciences Research Council [grant numbers EP/W029731/1 and EP/W026066/1]. J. R. M. is funded by ... 
+This work was supported by the Engineering and Physical Sciences Research Council [EP/W029731/1 and EP/W026066/1]. J. R. M. is funded by ... 
 # References
