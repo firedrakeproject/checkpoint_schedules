@@ -59,63 +59,34 @@ effectively calls the specific action according to a schedule.
     
             @action.register(Forward)
             def action_forward(cp_action):
-                def illustrate_runtime(a, b, singlestorage):
-                    # Illustration of the forward execution in time          
-                    if singlestorage:
-                        time_exec = ".   "*cp_action.n0 + (a + '\u2212\u2212' + b)*(n1-cp_action.n0)
-                    else:
-                        time_exec = ".   "*cp_action.n0 + (a + ('\u2212\u2212\u2212' + b)*(n1-cp_action.n0))
-                    return time_exec
                 
                 nonlocal model_n
                 n1 = min(cp_action.n1, self.max_n)
-                # writting the symbols used in the illustrations            
-                if cp_action.write_ics and cp_action.write_adj_deps:
-                    singlestorage = True
-                    a = '\u002b'
-                    b = '\u25b6'
-                else:
-                    singlestorage = False
-                    if cp_action.write_ics:
-                        a = '\u002b'
-                    else:
-                        a = ''
-                    if cp_action.write_adj_deps:
-                        b = "\u25b6"
-                    else:
-                        b = "\u25b7"
-                time_exec = illustrate_runtime(a, b, singlestorage)
-                self.list_actions.append([self.index, time_exec, str(cp_action)])
+                .. execute_forward_solver(cp_action.n0, n1)
+                # forward time steps
                 model_n = n1
                 if n1 == self.max_n:
                     # Imposing the latest time step.
-                    # It is required for the online schedule.
                     cp_schedule.finalize(n1)
     
             @action.register(Reverse)
             def action_reverse(cp_action):
                 nonlocal model_r
-                # Illustration of the adjoint execution in time 
-                steps  = (cp_action.n1-cp_action.n0)
+                .. execute_adjoint_solver(cp_action.n0, cp_action.n1)
+                # reverse time steps
                 model_r += cp_action.n1 - cp_action.n0
-                time_exec = ".   "*(self.max_n - model_r) + (('\u25c0' + '\u2212\u2212\u2212')*steps)
-                                    
-                self.list_actions.append([self.index, time_exec, str(cp_action)])
                 
             @action.register(Copy)
             def action_copy(cp_action):
-                self.list_actions.append([self.index, " ", str(cp_action)])
+                .. copy_forward_data(cp_action.n)
     
             @action.register(Move)
             def action_move(cp_action):
-                self.list_actions.append([self.index, " ", str(cp_action)])
+                .. move_forward_data(cp_action.n)
     
             @action.register(EndForward)
             def action_end_forward(cp_action):
                 assert model_n == self.max_n
-                # The correct number of adjoint steps has been taken
-                illust = "End Forward" 
-                self.list_actions.append([self.index, illust, str(cp_action)])
                 if cp_schedule._max_n is None:
                     cp_schedule._max_n = self.max_n
                 
@@ -123,9 +94,7 @@ effectively calls the specific action according to a schedule.
             def action_end_reverse(cp_action):
                 nonlocal model_r, is_exhausted
                 assert model_r == self.max_n
-                illust = "End Reverse" 
                 is_exhausted = cp_schedule.is_exhausted
-                self.list_actions.append([self.index, illust, str(cp_action)])
                 
             model_n = 0
             model_r = 0
@@ -150,19 +119,19 @@ effectively calls the specific action according to a schedule.
 Schedule for no adjoint computation
 -----------------------------------
 
-Firstly, let us define the maximum solvers time steps ``max_n = 4``.
+Firstly, let us define the maximum solvers time steps ``max_n = 4`` to make easier the visual
+representation of the execution.
 Next, we instantiate an object named ``solver_manager`` of the
-``CheckpointingManager`` class, using the ``max_n`` value.
+``CheckpointingManager`` class, using the ``max_n`` as an argument.
 
 .. code:: ipython3
 
     max_n = 4 # Total number of time steps.
     solver_manager = CheckpointingManager(max_n) # manager object
 
-The ``NoneCheckpointSchedule`` class provides a schedule object that is
-a parameter within the ``solver_manager.execute`` method. In this case,
-the schedule is built to execute the forward solver exclusively,
-excluding any data storage.
+The :class:`NoneCheckpointSchedule` class provides a schedule object that is
+a parameter within the ``solver_manager.execute`` method. In this case, 
+the built schedule executes only the forward solver, excluding any data storage.
 
 .. code:: ipython3
 
@@ -178,29 +147,24 @@ excluding any data storage.
                   1  End Forward              EndForward()
 
 
-When executing ``solver_manager.execute(cp_schedule)``, the output
-provides a visual representation of the three distinct informations: 1.
-An index linked to each action, 2. A visualisation demonstrating the
-advancing of time-steps, 3. Actions associated with each step.
-
-Notice in the output that we have two actions: *Forward* and
-*EndForward()*. The fundamental structure of the *Forward* action is
-given by:
+The output above brings informations when a solver is executed with a schedule  given by :class:`NoneCheckpointSchedule`.
+Notice in the output that we have two actions: :class:`Forward` and :class:`EndForward`. 
+The fundamental structure of the :class:`Forward` action is given by:
 
 .. code:: python
 
    Forward(n0, n1, write_ics, write_adj_deps, storage_type)
 
-This action is read as: - Advance the forward solver from step ``n0`` to
-the start of any step ``n1``. - ``write_ics`` and ``write_adj_deps`` are
-booleans that indicate whether the forward solver should store the
-forward restart data and the forward data required for the adjoint
-computation, respectively. - ``storage_type`` is an enum that indicates
-the type of storage required for the forward restart data and the
-forward data required for the adjoint computation.
+This action is read as: 
+- Advance the forward solver from step ``n0`` to the start of any step ``n1``. 
+- ``write_ics`` and ``write_adj_deps`` are booleans that indicate whether the 
+forward solver should store the forward restart data and the forward data required for the adjoint
+computation, respectively. 
+- ``storage_type`` is an enum that indicates the type of storage required for the forward restart 
+data and the forward data required for the adjoint computation.
 
-Within the context of the ``NoneCheckpointSchedule`` schedule, the
-*Forward* action is then given by:
+Within the context of the :class:`NoneCheckpointSchedule` schedule, the
+:class:`Forward` action is then given by:
 
 .. code:: python
 
@@ -214,9 +178,9 @@ Within the context of the ``NoneCheckpointSchedule`` schedule, the
 -  The storage type is ``StorageType.NONE``, indicating that no specific
    storage type is required.
 
-*This schedule is built without specifying a maximum step for the
+* This schedule is built without specifying a maximum step for the
 forward solver execution. That is the reason to obtain this immeasurable
-number for ``n1``. Therefore, using the ``NoneCheckpointSchedule``
+number for ``n1``. Therefore, using the :class:`NoneCheckpointSchedule`
 schedule offers the flexibility to determine the desired steps while the
 forward solver is time advancing.*
 
@@ -236,28 +200,26 @@ Another action provided by the current schedule is the ``EndForward()``,
 which indicates the forward solver has reached the end of the time
 interval.
 
-Schedule for storing all time-step forward data
+Schedule for storing all time step forward data
 -----------------------------------------------
 
-We now begin to present the schedules when there is the adjoint solver
-computation.
+We now begin to present the schedules when the adjoint solver is considered.
 
 The following code is valuable for the cases where the user intend to
-store the forward data for all time-steps and does not applies any
+store the forward data for all time steps and does not applies any
 checkpointing strategy.
 
 The schedule in which there is the storage of the forward data for all
 time steps in ``'RAM'`` is achieved by using the
-``SingleMemoryStorageSchedule`` class. The code below gives a manual
-over the employment of this schedule in both forward and adjoint
-computations.
+:class:`SingleMemoryStorageSchedule` class. The code below shows the employment 
+of this schedule in both forward and adjoint computations.
 
-Storing the forward restart data is unnecessary by this schedule, as
+*Storing the forward restart data is unnecessary by this schedule, as
 there is no need to recompute the forward solver while time advancing
-the adjoint solver.
+the adjoint solver.*
 
-*The ``SingleMemoryStorageSchedule`` schedule offers the flexibility to
-determine the desired steps while the forward solver is time advancing.*
+*The :class:`SingleMemoryStorageSchedule` schedule offers the flexibility to
+determine the desired steps while the forward solver is time advancing. *
 
 .. code:: ipython3
 
@@ -276,17 +238,20 @@ determine the desired steps while the forward solver is time advancing.*
                   3  End Reverse              EndReverse(False,)
 
 
-In this particular case, the *Forward* action is given by:
+In this particular case, the :class:`Forward` action is given by:
 
 .. code:: python
 
    Forward(0, 9223372036854775807, False, True, <StorageType.RAM: 0>)
 
-which reads - Advance the forward solver from the step ``n0=0`` to the
-start of any step ``n1``. - Do not store the forward restart data once
-if ``write_ics`` is ``'False'``. - Store the forward data required for
-the adjoint computation once ``write_adj_deps`` is ``'True'``. - Storage
-type is ``<StorageType.ADJ_DEPS: 3>``, which indicates the storage in a
+which reads 
+- Advance the forward solver from the step ``n0=0`` to the
+start of any step ``n1``. 
+- Do not store the forward restart data once
+if ``write_ics`` is ``'False'``. 
+- Store the forward data required for
+the adjoint computation once ``write_adj_deps`` is ``'True'``. 
+- Storage type is ``<StorageType.ADJ_DEPS: 3>``, which indicates the storage in a
 ``'local'`` that holds the forward data required for the adjoint
 computation.
 
@@ -297,9 +262,9 @@ When the adjoint computation is considered in the schedule, we have the
 
    Reverse(n0, n1, clear_adj_deps)
 
-This is interpreted as follows: - Advance the adjoint solver from the
-step ``n0`` to the start of the step ``n1``. - Clear the adjoint
-dependency data if ``clear_adj_deps`` is ``'True'``.
+This is interpreted as follows: 
+- Advance the adjoint solver from the step ``n0`` to the start of the step ``n1``. 
+- Clear the adjoint dependency data if ``clear_adj_deps`` is ``'True'``.
 
 In the current context, the *Reverse* action is:
 
@@ -312,15 +277,15 @@ In the current context, the *Reverse* action is:
 -  Clear the adjoint dependency (forward data) once ``clear_adj_deps``
    is ``'True'``.
 
-When adjoint computations are taken into account in the schedules, an
-additional action referred to a ``EndReverse(True)`` is required to
-indicate the end of the adjoint advancing.
+When adjoint computations are taken into account in the schedules, the 
+``EndReverse(True)`` action is required to indicate the end of the adjoint 
+advancing.
 
 The *checkpoint_schedules* additionally allows users to execute forward
 and adjoint solvers while storing all adjoint dependencies on
 ``'disk'``. The following code shows this schedule applied in the
 forward and adjoint executions with the object generated by the
-``SingleDiskStorageSchedule`` class.
+:class:`SingleDiskStorageSchedule` class.
 
 .. code:: ipython3
 
@@ -346,7 +311,7 @@ forward and adjoint executions with the object generated by the
 
 
 In the case illustrated above, forward and adjoint executions with
-``SingleDiskStorageSchedule`` also have the *Copy* action (see the
+:class:`SingleDiskStorageSchedule` also have the *Copy* action (see the
 outputs associated with the indexes 2, 4, 6, 8) which indicates copying
 of the forward data from one storage type to another.
 
@@ -356,8 +321,9 @@ The *Copy* action has the fundamental structure:
 
    Copy(n, from_storage, to_storage)
 
-which reads: - Copy the data associated with step ``n``. - The term
-``from_storage`` denotes the storage type responsible for retaining
+which reads: 
+- Copy the data associated with step ``n``. 
+- The term ``from_storage`` denotes the storage type responsible for retaining
 forward data at step n, while ``to_storage`` refers to the designated
 storage type for storing this forward data.
 
@@ -368,8 +334,9 @@ Hence, on considering the *Copy* action associated with the output
 
    Copy(4, <StorageType.DISK: 1>, <StorageType.ADJ_DEPS: 3>)
 
-This action reads: - Copy the data associated with step ``4``. - The
-forward data is copied from ``'disk'`` storage, and the specified
+This action reads: 
+- Copy the data associated with step ``4``.
+ - The forward data is copied from ``'disk'`` storage, and the specified
 storage type to copy (``StorageType.ADJ_DEPS``) refers to the
 ``'local'`` storage that retains the forward data essential for the
 adjoint computation.
@@ -377,7 +344,7 @@ adjoint computation.
 Now, let us consider the case where the objective is to move the data
 from one storage type to another insteady of copying it. To achieve
 this, the optional ``move_data`` parameter within the
-``SingleDiskStorageSchedule`` need to be set as ``True``. This
+:class:`SingleDiskStorageSchedule` need to be set as ``True``. This
 configuration is illustrated in the following code example:
 
 .. code:: ipython3
@@ -408,9 +375,10 @@ The *Move* action follows a basic structure:
 
    Move(n, from_storage, to_storage)
 
-This can be understood as: - Move the data associated with step ``n``. -
-The terms ``from_storage`` and ``to_storage`` hold the same significance
-as in the *Copy* action.
+This can be understood as: 
+- Move the data associated with step ``n``. 
+- The terms ``from_storage`` and ``to_storage``
+hold the same meaning as in the *Copy* action.
 
 Now, on considering one of the *Move* action associated with the output
 ``Action index: 4``:
@@ -419,8 +387,9 @@ Now, on considering one of the *Move* action associated with the output
 
    Move(4, <StorageType.DISK: 1>, <StorageType.ADJ_DEPS: 3>)
 
-Interpreted as: - Move the data associated with the step ``4``. - The
-forward data is moved from ``'disk'`` storage to a storage used for the
+Interpreted as: 
+- Move the data associated with the step ``4``.
+- The forward data is moved from ``'disk'`` storage to a storage used for the
 adjoint computation.
 
 **The Move action entails that the data, once moved, becomes no longer
@@ -440,12 +409,12 @@ introduced in reference [1].
 The Revolve checkpointing strategy generates a schedule that only uses
 ``'RAM'`` storage.
 
-The ``Revolve`` class gives a schedule according to two essential
+The :class::`Revolve` class gives a schedule according to two essential
 parameters: the total count of forward time steps (``max_n = 4``) and
 the number of checkpoints to store in ``'RAM'`` (``snaps_in_ram = 2``).
 
-The code below shows the execution of the forward and adjoint solvers
-with the the ``Revolve`` schedule.
+The code below represents the execution of the forward and adjoint solvers
+with the the :class::`Revolve` schedule.
 
 .. code:: ipython3
 
@@ -478,9 +447,9 @@ with the the ``Revolve`` schedule.
 
 
 The employment of the checkpointing strategies within an adjoint-based
-gradient requires the forward solver recomputation. As demonstrated in
-the output above, we have the *Forward* action associated with the
-``Action index: 0`` that is read as follows:
+gradient requires the forward solver restart and recomputation.
+
+The :class:`Forward` action associated with the ``Action index: 0`` that is read as follows:
 
 .. code:: python
 
@@ -491,8 +460,7 @@ the output above, we have the *Forward* action associated with the
    time step 0.
 -  The storage of the forward restart data is done in RAM.
 
-\*In the displayed time step illustrations, we have ``'+−−−▷−−−▷'``
-associated to
+* In the displayed time step illustrations, we have ``'+−−−▷−−−▷'`` associated to
 
 .. code:: python
 
@@ -504,7 +472,7 @@ illustrations, the illustration ``'−−−▷'`` indicates that the forward
 data used for the adjoint computation is **not** stored. When you
 encounter ``'−−−▶'``, one indicates that the forward data is stored.
 
-To summarize: 
+To summarize:
 
 - ``'+'``: Forward data for restarting is stored. 
 - ``'−−−▷'``: Forward data for adjoint computation is not stored. 
@@ -521,11 +489,11 @@ exclusively the ``'disk'`` storage, or in both storage locations.
 The following code use two types of storage, ``'RAM'`` and ``'disk'``.
 
 *MultiStage* checkpointing schedule is given by
-``MultistageCheckpointSchedule``, which requires the parameters: number
+:class:`MultistageCheckpointSchedule`, which requires the parameters: number
 of checkpoints stored in ``'RAM'`` and ``'disk'``.
 
-See the forward and adjoint executions with
-``MultistageCheckpointSchedule`` in the following example:
+See below the code and output illustrating the forward and adjoint executions with
+:class:`MultistageCheckpointSchedule`.
 
 .. code:: ipython3
 
@@ -566,14 +534,15 @@ schedule considers two type of storage: memory (``'RAM'``) and
 ``'disk'``.
 
 The *Disk-Revolve* algorithm, available within the
-*checkpoint_schedules*, requires the definition of checkpoints stored in
+*checkpoint_schedules* is given by :class:`DiskRevolve` that requires 
+the definition of checkpoints stored in
 memory to be greater than 0 (``'snap_in_ram > 0'``). Specifying the
 checkpoints stored on ``'disk'`` is not required, as the algorithm
 itself calculates this value.
 
 The number of checkpoints stored in ``'disk'`` is determined according
 the costs associated with advancing the backward and forward solvers in
-a single time-step, and the costs of writing and reading the checkpoints
+a single time step, and the costs of writing and reading the checkpoints
 saved on disk. Additional details of the definition of these parameters
 can be found in the references [3], [4] and [5].
 
@@ -609,16 +578,16 @@ can be found in the references [3], [4] and [5].
 Periodic Disk Revolve
 ~~~~~~~~~~~~~~~~~~~~~
 
-The schedule used in the following code was presented in reference [4].
-It is a two type hierarchical schedule and it is referred here to as
-*Periodic Disk Revolve*. Analogously to the *Disk Revolve* schedule,
-this approach requires the specification of the maximum number of steps
-(``max_n``) and the number of checkpoints saved in memory
-(``snaps_in_ram``). The *Periodic Disk Revolve* computes automatically
-the number of checkpoint stored in disk.
+The schedule employed in the following code was presented in reference [4].
+It is referred to as *Periodic Disk Revolve*. 
 
-*It is essential for the number of checkpoints in ``'RAM'`` to be
-greater than zero (``'snap_in_ram > 0'``)*
+Analogously to the *Disk Revolve* schedule, one requires the specification of the maximum number of steps
+(``max_n``) and the number of checkpoints saved in memory
+(``snaps_in_ram``). The *Periodic Disk Revolve* also computes automatically
+the number of checkpoint stored in disk. 
+
+The class :class:`PeriodicDiskRevolve` provides the schedule object for this algorithm. *It is essential 
+for the number of checkpoints in ``'RAM'`` to be greater than zero (``'snap_in_ram > 0'``)*
 
 .. code:: ipython3
 
@@ -655,7 +624,7 @@ H-Revolve
 
 The following code illustrates the forward and adjoint computations
 using the checkpointing given by H-Revolve strategy [5]. This
-checkpointing schedule is generated with ``HRevolve`` class, which
+checkpointing schedule is generated with :class: `HRevolve` class, which
 requires the following parameters: maximum steps stored in RAM
 (``snap_in_ram``), maximum steps stored on disk (``snap_on_disk``), and
 the number of time steps (``max_n``).
@@ -704,7 +673,9 @@ reference [6].
 
 This specific schedule provides the flexibility to store the forward
 restart data either in ``'RAM'`` or on ``'disk'``, but not both
-simultaneously within the same schedule.
+simultaneously within the same schedule. The following code illustrates
+the forward and adjoint computations using the Mixed checkpointing reached
+with :class: `MixedCheckpointSchedule` class.
 
 .. code:: ipython3
 
@@ -737,7 +708,7 @@ simultaneously within the same schedule.
 
 In the example mentioned earlier, the storage of the forward restart
 data is default configured for ``'disk'``. To modify the storage type to
-``'RAM'``, the user can set the ``MixedCheckpointSchedule`` argument
+``'RAM'``, the user can set the :class:`MixedCheckpointSchedule` argument
 ``storage = StorageType.RAM``, as displayed below.
 
 .. code:: ipython3
@@ -782,7 +753,8 @@ checkpoints. The default sotrage type is ``'disk'``.
 
 Now, let us define the period of storage ``period = 2`` and the extra
 forward restart data storage ``add_snaps = 1``. The code displayed below
-shows the execution in time illustration for this setup.
+shows the execution in time illustration for this setup, where the schedule
+object is given by the :class:`TwoLevelCheckpointSchedule` class.
 
 .. code:: ipython3
 
@@ -818,7 +790,7 @@ shows the execution in time illustration for this setup.
 
 Now, let us modify the storage type to ``'RAM'`` of the additional
 forward restart checkpointing by setting the optional
-``TwoLevelCheckpointSchedule`` argument
+:class:`TwoLevelCheckpointSchedule` argument
 ``binomial_storage = StorageType.RAM``. Thus, on the example above, ones
 notices that the action associated with ``Action index: 8`` implies the
 forward restart data storage should be on ``'disk'``. On the other hand,

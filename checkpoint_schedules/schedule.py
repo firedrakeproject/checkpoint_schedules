@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+""" Essentials class used in the scheduling of the checkpointing actions.
+"""
 from abc import ABC, abstractmethod
 import functools
 from enum import Enum, IntEnum
@@ -26,16 +28,10 @@ class StorageType(Enum):
     DISK : A enum to indicate the storage of the forward checkpoint data in RAM.
     
     FWD_RESTART : A enum to indicate the storage of the forward checkpoint data
-    in a "variable" used to initilise the forward solver.
+    in a local used to initilise the forward solver.
 
     ADJ_DEPS : A enum to indicate the storage of the forward checkpoint data
-    in a "variable" used for the adjoint computation.
-
-    WORKING_MEMORY : A enum to indicate the storage of all forward checkpoint data
-    is stored in memory.
-
-    WORKING_DISK : A enum to indicate the storage of all forward checkpoint data
-    is stored in disk.
+    in a local used for the adjoint computation.
 
     NONE : A enum to indicate that there is no specific storage location defined 
     for the checkpoint data.
@@ -44,8 +40,6 @@ class StorageType(Enum):
     DISK = 1
     FWD_RESTART = 2
     ADJ_DEPS = 3
-    WORKING_MEMORY = 4
-    WORKING_DISK = 5
     NONE = None
 
 
@@ -54,16 +48,17 @@ class StepType(IntEnum):
 
     FORWARD : A enum to indicate the Forward execution is such step.
 
-    FORWARD_REVERSE : A enum to indicate the foward and adjoint execution in such step.
+    FORWARD_REVERSE : A enum to indicate the foward and adjoint execution in
+    such step.
 
-    WRITE_ADJ_DEPS : A enum to indicate that the storage of the forward data required
-    for the adjoint computation is such step.
+    WRITE_ADJ_DEPS : A enum to indicate that the storage of the forward data
+    required for the adjoint computation is such step.
 
-    WRITE_ICS : A enum to indicate that the storage of the forward data required
-    for the the forward solver restarting.
+    WRITE_ICS : A enum to indicate that the storage of the forward data
+    required for the the forward solver restarting.
 
-    READ_ADJ_DEPS : A enum to indicate that the read of the forward data required
-    for the adjoint computation is such step.
+    READ_ADJ_DEPS : A enum to indicate that the read of the forward data
+    required for the adjoint computation is such step.
 
     READ_ICS : A enum to indicate that the read of the forward data required
     for the the forward solver restarting.
@@ -79,18 +74,18 @@ class StepType(IntEnum):
 
 class CheckpointAction:
     """A checkpoint action base class.
-    
+
     Attributes
     ----------
     *args : Any
-        The *args correspond to the arguments of the checkpoint scheduled actions: 
-        `Forward`, `Reverse`, `Copy`, `EndForward`, `EndReverse`.
-    
+        The *args correspond to the arguments of the checkpoint scheduled 
+        actions: `Forward`, `Reverse`, `Copy`, `EndForward`, `EndReverse`.
+
     See Also
     --------
     :class:`Forward`, :class:`Reverse`, :class:`Copy`, :class:`EndForward`,
     :class:`EndReverse`.
-    
+
     """
     def __init__(self, *args):
         self.args = args
@@ -116,23 +111,22 @@ class Forward(CheckpointAction):
         Whether to store forward restart data. 
     write_adj_deps : bool
         Whether to store forward data required for the adjoint compuations. 
-    storage : StorageType
-        Indicates the storage type of the checkpoint data. 
-    
+    storage : enum
+        Indicate the storage type of the checkpoint data. 
+
     Notes
     -----
     To exemplify this action, let us consider a particular case:
 
     * `Forward(10, 25, True, False, StorageType.RAM)`
         This action is read as:
-            - Advance the forward solver from the step 10 to the start of the step 25.
+            - Advance the forward solver from the step 10 to the start of the 
+            step 25.
 
-            - Write the forward data (`write_ics` is `'True'`) required to initialise
-            a forward solver from the step 10.
-            
+            - Write the forward data (`write_ics` is `'True'`)
+            required to initialise a forward solver from the step 10.   
             - It is not required to store the forward data for the adjoint 
             computation once `write_adj_deps` is False.
-
             - The forward data storage is in memory (`storage` is `StorageType.RAM`).
 
     """
@@ -184,14 +178,15 @@ class Reverse(CheckpointAction):
     
     Notes
     -----
-    To exemplify this action, let us consider a particular case:
+    To exemplify this action, let us consider the following case:
 
     * `Reverse(3, 2, True)`
         This action is read as:
-            - Advance the adjoint solver from the step 3 to the start of the step 2.
+            - Advance the adjoint solver from the step 3 to the start of the 
+            step 2.
 
-            - Clear the forward data (`clear_adj_deps` is `'True'`) used for the adjoint
-            computation.
+            - Clear the forward data (`clear_adj_deps` is `'True'`) used for 
+            the adjoint computation.
     """
     def __init__(self, n1, n0, clear_adj_deps):
 
@@ -221,16 +216,16 @@ class Reverse(CheckpointAction):
 
 class Copy(CheckpointAction):
     """Indicate the action of copying from a storage type
-    to another storage type. 
+    to another storage type.
 
     
     Attributes
     ----------
     n : int
         The step with which the copied data is associated.
-    from_storage : StorageType
-        Indicate the storage type from which the data should be copied. 
-    to_storage : StorageType
+    from_storage : enum
+        Indicate the storage type from which the data should be copied.
+    to_storage : enum
         Indicate the storage type to which the data should be copied.
 
     Notes
@@ -240,17 +235,17 @@ class Copy(CheckpointAction):
     * `Copy(10, StorageType.RAM, StorageType.FWD_RESTART)`
         This action is read as:
             - Copy the forward checkpoint data of the step 10 which is
-            stored in `StorageType.RAM` to the variable used for the 
-            forward solver restarting.
-    
+            stored in `StorageType.RAM` to a variable/local used for the
+            forward solver restarting from the step 10.
     * `Copy(10, StorageType.DISK, StorageType.ADJ_DEPS)`
         This action is read as:
             - Copy the forward checkpoint data of the step 10 which is
-            stored in `StorageType.DISK` to the variable used for the 
+            stored in `StorageType.DISK` to the variable used for the
             adjoint computation.
+
     See Also
     --------
-    :class:`StorageLocation` 
+    :class:`StorageType`
 
     """
     def __init__(self, n, from_storage, to_storage):
@@ -278,30 +273,25 @@ class Move(CheckpointAction):
     ----------
     n : int
         The step with which the copied data is associated.
-    from_storage : StorageType
+    from_storage : enum
         Indicate the storage type from which the data should be copied. 
-    to_storage : StorageType
+    to_storage : enum
         Indicate the storage type to which the data should be copied.
     
     Notes
     -----
-    The difference between `Copy` and `Move` is that the `Move` action
-    move the data from a storage type to another storage type. Hence,
-    after the `Move` action, the data is not available in `from_storage`.
-    On the other hand, the `Copy` action copy the data from a storage type 
-    but the data is still available in `from_storage`.
+    The Move action entails that the data, once moved, becomes no longer
+    accessible in the original storage type. Whereas the Copy action means
+    that the copied data remains available in the original storage type.
 
     To exemplify this action, let us consider a particular case:
 
     * `Move(10, StorageType.RAM, StorageType.FWD_RESTART)`
-        This action is read as:
-            - Move the forward checkpoint data of the step 10 which is
-            stored in `StorageType.RAM` to the variable used for the
-            forward solver restarting. After this action, the forward
-            checkpoint data of the step 10 is not available in 
-            `StorageType.RAM`.
+        Interpreted as: 
 
-
+        - Move the data associated with the step ``10``.
+        - The forward data is moved from ``'disk'`` storage to a storage used 
+        for the adjoint computation.
     """
     def __init__(self, n, from_storage, to_storage):
         super().__init__(n, from_storage, to_storage)
@@ -364,11 +354,11 @@ class CheckpointSchedule(ABC):
                 break
 
     Schedules control an intermediate storage, which buffers forward restart
-    data for forward restart checkpoints, and which stores non-linear
-    dependency data either for storage in checkpointing units or for immediate
+    data for forward restart checkpoints, and which stores the adjoint dependency
+    either for storage in checkpointing units or for immediate
     use by the adjoint. The storage is accessed using the :class:`StorageType`.
 
-    This schedule is able to execute in two modes: 'offline' and 'online'.
+    This schedule is able to execute in two modes: `'offline'` and `'online'`.
     In 'offline' schedules, where the number of steps in the forward
     calculation is initially known, this should be provided using the `max_n`
     argument on instantiation. In 'online' schedules, where the number of steps
@@ -435,7 +425,7 @@ class CheckpointSchedule(ABC):
 
         Parameters
         ----------
-        storage_type : StorageType
+        storage_type : enum
             The storage type to check.
         """
         raise NotImplementedError
@@ -490,7 +480,7 @@ class CheckpointSchedule(ABC):
         -------
         bool
             Indicate whether the :class:`CheckpointSchedule` schedule has an 
-            iterator object. Do not finalise the checkpoint schedule if ``True``.
+            iterator object. Do not finalise the checkpoint schedule if `'True'`.
         """
         return hasattr(self, "_iter")
 

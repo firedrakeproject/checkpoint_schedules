@@ -17,12 +17,13 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
         The maximum number of additional forward restart
         checkpointing units to use when advancing the adjoint between periodic
         disk checkpoints.
-    binomial_storage : StorageType, optional
-        The storage to use for the additional forward
+    binomial_storage : enum, optional
+        The storage type to use for the additional forward
         restart checkpoints generated when advancing the adjoint between
         periodic disk checkpoints. Either `'RAM'` or `'disk'`.
     binomial_trajectory : str, optional
-        See the `trajectory` constructor argument for :class:`MultistageCheckpointSchedule`.
+        See the `trajectory` constructor argument for 
+        :class:`MultistageCheckpointSchedule`.
 
     Notes
     -----
@@ -158,8 +159,9 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
 
         Parameters
         ----------
-        storage_type : StorageType
-            Given storage type.
+        storage_type : enum
+            Storage type to check.
+
         Returns
         -------
         bool

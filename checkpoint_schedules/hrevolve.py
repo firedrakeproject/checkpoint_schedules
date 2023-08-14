@@ -158,7 +158,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             End the reverse computation if ``True``.
         """
         return self._exhausted
-    
+ 
     def uses_storage_type(self, storage_type):
         """Check if a given storage type is used in this schedule.
 
@@ -197,11 +197,12 @@ class HRevolve(RevolveCheckpointSchedule):
 
     Notes
     -----
-    The H-Revolve schedule is described in:
-        - Herrmann, J. and Pallez (Aupy), G. (2020). H-Revolve: 
-        a framework for adjoint computation on synchronous hierarchical 
-        platforms. ACM Transactions on Mathematical Software (TOMS), 46(2), 
-        1-25. DOI: https://doi.org/10.1145/3378672.
+    The H-Revolve schedule is described in [1]:
+
+    [1] Herrmann, J. and Pallez (Aupy), G. (2020). H-Revolve: 
+    a framework for adjoint computation on synchronous hierarchical 
+    platforms. ACM Transactions on Mathematical Software (TOMS), 46(2), 
+    1-25. DOI: https://doi.org/10.1145/3378672.
 
     """
     def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk,
@@ -267,6 +268,7 @@ class PeriodicDiskRevolve(RevolveCheckpointSchedule):
     Notes
     -----
     Periodic Disk Revolve checkpointing is described in [1].
+
     [1] Aupy, G., & Herrmann, J. (2017). Periodicity in optimal
     hierarchical checkpointing schemes for adjoint computations.
     Optimization Methods and Software, 32(3), 594-624.
@@ -301,6 +303,10 @@ class Revolve(RevolveCheckpointSchedule):
     -----
     The Revolve schedule is described in [1].
 
+    [1] Griewank, A., & Walther, A. (2000). Algorithm 799: revolve: an
+    implementation of checkpointing for the reverse or adjoint mode of
+    computational differentiation. ACM Transactions on Mathematical Software
+    (TOMS), 26(1), 19-45., doi: https://doi.org/10.1145/347837.347846
     """
 
     def __init__(self, max_n, snapshots_in_ram, uf=1, ub=1, wd=2, rd=2):
@@ -318,15 +324,17 @@ def _convert_action(action):
 
     Notes
     -----
-    The operations have `type` and `index` attributes. The `type` attribute is
-    a string that gives the operation name, which are listed at the
-    `checkpoint_schedules.schedule.basic_funtions.official_names`
-    dictionary. The `index` attribute is a tuple containing the time steps for
-    some operations or the storage level and time step for other operations.
-    For instance, if operation type is `Forward`, the operation index
-    that is a tuple `(n0, n1)`, which it read as the next action aims to
-    execute the forward solver from the step `n0` to step `n1`. If the
-    operation is `Write` type, the operation index is a tuple `(storage, n0)`.
+    The operations have `type` and `index` attributes.
+    
+    - The `type` attribute is a string specifying the name of the operation. 
+    Whereas, the `index` attribute takes the form of a tuple, having different 
+    components depending on the operation in question. 
+    
+    To exemplify, consider the case where the operation the `Forward` type. 
+    In this context, the operation index consists of a tuple of values that
+    indicates time steps `(n0, n1)`. On the other hand, if the operation is 
+    classified as `Write`, its operation index adopts the form of `(storage, n0)` 
+    in the tuple. The `storage` variable corresponds to `'RAM'` (0) or `'disk'` (1) storage.
 
     Returns
     -------

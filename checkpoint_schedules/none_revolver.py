@@ -20,10 +20,8 @@ __all__ = \
 
 
 class SingleMemoryStorageSchedule(CheckpointSchedule):
-    """A checkpointing schedule where forward data required 
-    for the adjoint computation.
-    This schedule can also store at every time step the forward
-    restart data.
+    """A checkpointing schedule where all adjoint dependencies
+    are stored in memory.
 
     Parameters
     ----------
@@ -36,11 +34,12 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
 
     Notes
     -----
-    This class has an aditional method only
+    Online, unlimited adjoint calculations permitted.
 
-    Notes
-    -----
-    Online, unlimited adjoint calculations permitted.   
+    `write_ics` is always `False` for this schedule by considering that storing
+    the forward restart data is unnecessary by this schedule, as there is no
+    need to recompute the forward solver while time advancing the adjoint
+    solver.
     """
 
     def __init__(self):
@@ -97,8 +96,8 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
     
 
 class SingleDiskStorageSchedule(CheckpointSchedule):
-    """A checkpointing schedule where all forward restart and non-linear
-    dependency data are stored in disk.
+    """A checkpointing schedule where all adjoint dependencies
+    are stored in disk.
 
     Notes
     -----
@@ -109,7 +108,15 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
     storage : enum
         Indicate that the execution should stores in memore all foward restart 
         data and non-linear dependency data.
-        
+
+    Notes
+    -----
+    Online, unlimited adjoint calculations permitted.
+
+    `write_ics` is always `False` for this schedule by considering that storing
+    the forward restart data is unnecessary by this schedule, as there is no
+    need to recompute the forward solver while time advancing the adjoint
+    solver.
     """
 
     def __init__(self, move_data=False):
@@ -118,7 +125,8 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
         super().__init__()
     
     def _iterator(self):
-        # Forward
+        """Schedule iterator.
+        """
 
         if self._max_n is not None:
             # Unexpected finalize
@@ -179,6 +187,7 @@ class NoneCheckpointSchedule(CheckpointSchedule):
     ----------
     _exhausted : bool
         Indicate that the execution is exhausted.
+
     Notes
     -----
     Online, zero adjoint calculations permitted.
@@ -215,8 +224,8 @@ class NoneCheckpointSchedule(CheckpointSchedule):
 
         Parameters
         ----------
-        storage_type : StorageType
-            Given storage type.
+        storage_type : enum
+            Storage type to check.
 
         Returns
         -------

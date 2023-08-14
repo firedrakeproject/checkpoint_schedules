@@ -16,11 +16,6 @@ except ImportError:
             return fn(*args, **kwargs)
         return wrapped_fn
 
-
-class InvalidRevolverAction(Exception):
-    "The action is not expected for this iterator."
-    pass
-
 @njit
 def n_advance(n, snapshots, *, trajectory="maximum"):
     """Return the number of steps to advance.
@@ -101,19 +96,6 @@ def n_advance(n, snapshots, *, trajectory="maximum"):
 
 
 def cache_step(fn):
-    """Cache the result of the function for a given number of steps and
-    snapshots.
-
-    Parameters
-    ----------
-    fn : callable
-        The function to cache.
-    
-    Returns
-    -------
-    callable
-        The wrapped function.
-    """
     _cache = {}
 
     @functools.wraps(fn)
@@ -129,20 +111,6 @@ def cache_step(fn):
 
 @cache_step
 def optimal_steps_mixed(n, s):
-    """Return the optimal number of steps for the mixed checkpointing.
-
-    Parameters
-    ----------
-    n : int
-        The number of forward steps.
-    s : int
-        The number of available checkpointing units.
-    
-    Returns
-    -------
-    int
-        The optimal number of steps.
-    """
     if n <= 0:
         raise ValueError("Invalid number of steps")
     if s < min(1, n - 1) or s > n - 1:
@@ -165,20 +133,6 @@ def optimal_steps_mixed(n, s):
 
 @cache_step
 def mixed_step_memoization(n, s):
-    """Return the optimal schedule for the mixed checkpointing.
-
-    Parameters
-    ----------
-    n : int
-        The number of forward steps.
-    s : int
-        The number of available checkpointing units.
-    
-    Returns
-    -------
-    tuple
-        The optimal schedule.
-    """
     if n <= 0:
         raise ValueError("Invalid number of steps")
     if s < min(1, n - 1) or s > n - 1:
@@ -215,7 +169,8 @@ _WRITE_ICS = int(StepType.WRITE_ICS)
 
 @njit
 def mixed_steps_tabulation(n, s):
-    """Return the optimal schedule for the mixed checkpointing.
+    """Compute the schedule of mixed checkpointing.
+    This schedule is used if the initial step is not available.
 
     Parameters
     ----------
@@ -227,7 +182,7 @@ def mixed_steps_tabulation(n, s):
     Returns
     -------
     ndarray
-        The optimal schedule.
+        The schedule of mixed checkpointing.
     """
     schedule = np.zeros((n + 1, s + 1, 3), dtype=np.int64)
     schedule[:, :, 0] = _NONE
@@ -263,19 +218,7 @@ def mixed_steps_tabulation(n, s):
 
 
 def cache_step_0(fn):
-    """Cache the result of the function for a given number of steps and
-    snapshots.
 
-    Parameters
-    ----------
-    fn : callable
-        The function to cache.
-    
-    Returns
-    -------
-    callable
-        The wrapped function.
-    """
     _cache = {}
 
     @functools.wraps(fn)
@@ -291,7 +234,8 @@ def cache_step_0(fn):
 
 @cache_step_0
 def mixed_step_memoization_0(n, s):
-    """Return the optimal schedule for the mixed checkpointing.
+    """Compute the schedule of mixed checkpointing.
+    This schedule is used if the initial step is available.
 
     Parameters
     ----------
@@ -303,7 +247,7 @@ def mixed_step_memoization_0(n, s):
     Returns
     -------
     tuple
-        The optimal schedule.
+        The schedule of mixed checkpointing.
     """
     if s < 0:
         raise ValueError("Invalid number of snapshots")
@@ -328,22 +272,6 @@ def mixed_step_memoization_0(n, s):
 
 @njit
 def mixed_steps_tabulation_0(n, s, schedule):
-    """Return the optimal schedule for the mixed checkpointing.
-
-    Parameters
-    ----------
-    n : int
-        The number of forward steps.
-    s : int
-        The number of available checkpointing units.
-    schedule : ndarray
-        The schedule array.
-    
-    Returns
-    -------
-    ndarray
-        The optimal schedule.
-    """
     schedule_0 = np.zeros((n + 1, s + 1, 3), dtype=np.int64)
     schedule_0[:, :, 0] = _NONE
     schedule_0[:, :, 1] = 0
@@ -411,7 +339,7 @@ def optimal_extra_steps(n, s):
 
 
 def optimal_steps_binomial(n, s):
-    """Return the optimal number of steps for the binomial checkpointing.
+    """Compute the total number of steps for the binomial checkpointing.
     
     Parameters
     ----------
@@ -423,6 +351,6 @@ def optimal_steps_binomial(n, s):
     Returns
     -------
     int
-        The optimal number of steps.
+        The optimal steps.
     """
     return n + optimal_extra_steps(n, s)
