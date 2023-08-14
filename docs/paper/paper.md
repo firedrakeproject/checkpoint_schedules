@@ -29,25 +29,10 @@ Adjoint-based gradient problems are commonly used to compute of sensitivity meas
 Storing the forward data at every time step in RAM (Random Access memory) is impractical for large systems due to the potential for high memory usage during extensive time executions. Techniques such as storing the forward data on disk or employing a checkpointing method can overcome this memory usage issue. Checkpointing strategies involve creating a sequence of schedules that coordinate the selective storage of forward data at specific time steps. During the adjoint computation, these schedules provide instructions for restarting the forward solver from the nearest time step where forward data was stored, in case the forward data is unavailable, until the step where the adjoint needs to be computed. 
 
 
-In order to optimise the checkpointing scheme, the revolvers algorithm aims to minimise the required forward recomputation for any allowed checkpoint storage and for any previously defined number of time steps [@griewank2000algorithm]. Also, when the number of time steps is a priori unknown [@wang2009minimal]. Optimal checkpointing strategies also take into consideration different storage types [@stumm2009multistage; @aupy2016optimal; @schanen2016asynchronous; @herrmann2020h].
+In order to optimise the checkpointing scheme, checkpoint strategies aims to minimise the required forward recomputation for any allowed checkpoint storage and for any previously defined number of time steps [@griewank2000algorithm]. Also, when the number of time steps is a priori unknown [@wang2009minimal]. Optimal checkpointing strategies also take into consideration different storage types [@stumm2009multistage; @aupy2016optimal; @schanen2016asynchronous; @herrmann2020h].
 
 # Statement of Need
-That accomodates cases where the user wants to store the forward checkpoint data of all time-steps and not apply any checkpointing strategy given by revolvers methods. These schedules are available to simplify the integration with a adjoint-based gradient solver not restricted to using a checkpointing based on revolver methods. 
-In general, the Revolve algorithms provide a schedule for the case where time-step for storing the required data to restart the forward solver. However, this approach does not fully address the general adjoint-based gradient problem since the data required to restart a forward calculation differs from the data used for the adjoint computation. *checkpoint_schedules* is a Python package that has been developed to tackle this issue, offering a schedule with a sequence of actions that provide functionalities of forward or adjoint advancement over the entire interval of steps, forward and adjoint data storage and retrieval. The schedule explicitly incorporates the data buffering in intermediate storage of the forward daya, ensuring that forward variables can be defined and computed by the forward solver before the storage. Furthermore, the schedule distinguishes between the storage of forward restart data and forward data required in the adjoint computation. 
-
-This package is designed to be flexible in interpreting and converting designs from various existing strategies. It is already functioning with the following checkpoint approaches:
-* Revolve [@griewank2000algorithm]; 
-* MultiStage checkpointing [@stumm2009multistage];
-* Disk revolve [@aupy2016optimal];
-* Periodic Disk Revolve [@aupy2017periodicity];
-* H-Revolve [@herrmann2020h];
-* two-level mixed periodic/binomial checkpointing [@goldberg2020bathymetric; @pringle2016providing]
-* Mixed storage of forward restart and non-linear dependency data [@maddison2023implementation];
-
-In addition to the checkpointing schedules mentioned above, checkpoint_schedules also offers two additional types of checkpointing schedules for the cases where no checkpointing strategy is used. In this case, the forward data is stored every time step, either in RAM or on disk. Also, there is a checkpointing schedule available for situations where no adjoint calculation is required.
-
-*checkpoint_schedules* provide generators, which enable easy iteration over the sequence of schedules for any above-mentioned checkpointing strategies. This allows users to efficiently access and use the desired checkpointing schedule based on their specific needs and computational requirements.
 
 # Acknowledgments
-
+This work was supported by the Engineering and Physical Sciences Research Council [grant numbers EP/W029731/1 and EP/W026066/1]. J. R. M. is funded by ... 
 # References
