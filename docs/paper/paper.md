@@ -36,9 +36,8 @@ Essentialy, *checkpointing_schedules* generate schedules with functionalities th
 
 In conclusion, integrating the *checkpoint_schedules* package with an adjoint-based gradient solver is effective due to its condition of a variety of checkpointing strategies. Moreover, it is flexible in hosting new checkpointing methods, and it was built to be easy for using and integrating with other codes.
 
-# Schedules
 
-In essence, the schedules have functionalities for time advancing the forward and adjoint solvers, data storage and retrieval, and indicate the solvers finalisation. 
+The *checkpoint_schedules* repository contains documentions and notebooks demos available at ...
 
 
 # Acknowledgments
