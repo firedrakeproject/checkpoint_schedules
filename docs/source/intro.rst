@@ -10,10 +10,10 @@ of *checkpoint_schedules* actions, namely: *Forward*, *Reverse*, *EndForward*, *
 forward and adjoint solvers, checkpoint data storage and retrieval, and indicate the solver 
 finalisations. 
 
-The *checkpoint_schedules* framework incorporates forward data buffering in an intermediate storage. 
-Furthermore, the schedule can distingue between the storage of forward restart data and 
-forward data required for the adjoint computation. The latter is here referred to as adjoint
-dependency.
+The *checkpoint_schedules* framework incorporates forward data buffering in an intermediate 
+storage. Furthermore, the schedule can distingue between the storage of forward restart 
+data and forward data required for the adjoint computation. The latter is here referred 
+to as adjoint dependency.
 
 This package is designed to be flexible in interpreting different checkpointing strategies. 
 It is ready working with the following checkpointing approaches:
@@ -26,7 +26,7 @@ It is ready working with the following checkpointing approaches:
 * Mixed storage of forward restart and adjoint dependency data [6];
 * Two-level binomial checkpointing [7] and [8];
 
-*checkpoint_schedules* extends to its capabilities to execute solvers through trivial checkpointing, 
+*checkpoint_schedules* is able to execute solvers through trivial checkpointing, 
 which entails the forward data storage of all time steps without any checkpointing method. 
 Furthermore, *checkpoint_schedules* provides an alternative for the cases where no adjoint 
 executions are needed, excluding any actions related to forward data storage and retrieval.
