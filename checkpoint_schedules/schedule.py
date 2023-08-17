@@ -2,11 +2,10 @@
 """
 from abc import ABC, abstractmethod
 import functools
-from enum import Enum, IntEnum
+from enum import IntEnum
 
 __all__ = \
     [
-        "StorageType",
         "CheckpointAction",
         "Forward",
         "Reverse",
@@ -16,40 +15,6 @@ __all__ = \
         "EndReverse",
         "CheckpointSchedule",
     ]
-
-
-class StorageType(Enum):
-    """ Enums memebers to indicate the storage type of the checkpoint data.
-
-    RAM : Indicate the storage of the forward data in memory.
-
-    DISK : Indicate the storage of the forward data on disk.
-
-    WORK : Indicate the storage of the forward data in a variable
-    (or variables) required to initilise the forward solver.
-
-    NONE : Indicate that there is no specific storage location
-    defined for the checkpoint data.
-
-    Notes
-    -----
-    To exemplify when to use RAM, DISK, WORK, and NONE, let us consider the
-    following cases:
-    1. We have a a parte of a schedule that is defined as:
-        `Copy(10, StorageType.RAM , StorageType.WORK)`
-        `Forward(10, 25, False, True, StorageType.WORK)`
-        `Forward(25, 26, False, False, StorageType.NONE)`
-        `Reverse(26, 25, True)`
-    Note that we have three storage types: RAM, WORK, and NONE. In `Copy`, the
-    `StorageType.RAM` indicates that the forward restart data is stored in
-    memory.
-
-
-    """
-    RAM = 0
-    DISK = 1
-    WORK = 2
-    NONE = None
 
 
 class StepType(IntEnum):
@@ -109,7 +74,7 @@ class CheckpointAction:
 
 class Forward(CheckpointAction):
     """This action indicates the forward advancement.
-    This action also configures the intermediate storage.
+    This action also set the storage of the forward data.
 
     Attributes
     ----------
@@ -132,7 +97,6 @@ class Forward(CheckpointAction):
         This action is read as:
             - Advance the forward solver from the step 10 to the start of the
             step 25.
-
             - Write the forward data (`write_ics` is `'True'`)
             required to initialise a forward solver from the step 10.
             - It is not required to store the forward data for the adjoint
@@ -322,12 +286,16 @@ class Move(CheckpointAction):
 class EndForward(CheckpointAction):
     """Indicate that the forward solver is finalised.
     """
+    def __init__(self):
+        super().__init__()
 
 
 class EndReverse(CheckpointAction):
     """A checkpointing action which indicates the end of an adjoint
     calculation.
     """
+    def __init__(self):
+        super().__init__()
 
 
 class CheckpointSchedule(ABC):
@@ -483,7 +451,7 @@ class CheckpointSchedule(ABC):
 
     @property
     def is_running(self):
-        """Return whether the schedule is `running`.
+        """Return whether at least one action has been yielded.
 
         Returns
         -------

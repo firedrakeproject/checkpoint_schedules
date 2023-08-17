@@ -5,9 +5,10 @@ Disk Revolve, Periodic Disk Revolve and Revolve algorithms.
 """
 
 from .schedule import CheckpointSchedule, Forward, Reverse, Copy, Move, \
-    EndForward, EndReverse, StorageType
+    EndForward, EndReverse
 from .hrevolve_sequences import hrevolve, disk_revolve, periodic_disk_revolve,\
       revolve
+from .utils import StorageType
 
 __all__ = \
     [
@@ -33,14 +34,20 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
 
     Notes
     -----
-    This Class is able to convert the revolver algorithmics to
+    This Class is able to convert the H-revolvers algorithmics to
     *checkpoint_schedules* actions and iterate over them.
     The revolver algorithmics are: H-Revolve, Disk Revolve,
-    Periodic Disk Revolve and Revolve.
+    Periodic Disk Revolve and Revolve. Theses algorithms produce a schedule
+    containing a sequence of operations that are converted to
+    *checkpoint_schedules* actions: *Forward*, *Reverse*, *Copy*, *Move*,
+    *EndForward* and *EndReverse*. The schedules are not able to create
+    schedules for `_snapshots_in_ram` equal to zero.
     """
 
     def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk, schedule):
         super().__init__(max_n)
+        assert snapshots_in_ram > 0
+        assert max_n > 0
         self._exhausted = False
         self._snapshots_on_disk = snapshots_on_disk
         self._snapshots_in_ram = snapshots_in_ram
@@ -154,19 +161,35 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         return self._exhausted
 
     def uses_storage_type(self, storage_type):
-        """Check if a given storage type is used in this schedule.
+        """Check if a given storage type is used to
+        store the forward data used to initialise the
+        forward solver.
+
+        Parameters
+        ----------
+        storage_type : StorageType
+            The storage type to check.
+
+        Notes
+        -----
+        This schedule uses two storage types to store the forward data
+        used to initialise the forward solver: `'RAM'` and `'disk'`.
+        `'RAM'` is always used in this schedule. Whereas `'disk'` is used only
+        if the `snapshots_on_disk` attribute is greater than zero. Therefore,
+        this method returns `True` if the given storage type is
+        `StorageType.RAM`.
 
         Returns
         -------
         bool
             Whether this schedule uses the given storage type.
         """
-        assert storage_type in StorageType
-
         if storage_type == StorageType.DISK:
             return self._snapshots_on_disk > 0
         elif storage_type == StorageType.RAM:
             return self._snapshots_in_ram > 0
+        else:
+            return False
 
 
 class HRevolve(RevolveCheckpointSchedule):
@@ -185,7 +208,7 @@ class HRevolve(RevolveCheckpointSchedule):
     ub : float
         The cost of advancing the adjoint over one step.
     wd : float
-        The cost of writing the checkpoint data in disk.
+        The cost of writing the checkpoint data on disk.
     rd : float
         The cost of reading the checkpoint data from disk.
 
@@ -222,7 +245,7 @@ class DiskRevolve(RevolveCheckpointSchedule):
     ub : float
         The cost of advancing the adjoint over one step.
     wd : float
-        The cost of writing the checkpoint data in disk.
+        The cost of writing the checkpoint data on disk.
     rd : float
         The cost of reading the checkpoint data from disk.
 
@@ -256,7 +279,7 @@ class PeriodicDiskRevolve(RevolveCheckpointSchedule):
     ub : float
         The cost of advancing the adjoint over one step.
     wd : float
-        The cost of writing the checkpoint data in disk.
+        The cost of writing the checkpoint data on disk.
     rd : float
         The cost of reading the checkpoint data from disk.
 
@@ -291,7 +314,7 @@ class Revolve(RevolveCheckpointSchedule):
     ub : float
         The cost of advancing the adjoint over one step.
     wd : float
-        The cost of writing the checkpoint data in disk.
+        The cost of writing the checkpoint data on disk.
     rd : float
         The cost of reading the checkpoint data from disk.
 
@@ -326,12 +349,13 @@ def _convert_action(action):
     Whereas, the `index` attribute takes the form of a tuple, having different
     components depending on the operation in question.
 
-    To exemplify, consider the case where the operation the `Forward` type.
-    In this context, the operation index consists of a tuple of values that
-    indicates time steps `(n0, n1)`. On the other hand, if the operation is
-    classified as `Write`, its operation index adopts the form of
-    `(storage, n0)` in the tuple. The `storage` variable corresponds to `'RAM'`
-    (0) or `'disk'` (1) storage.
+    To exemplify, let us consider the case where the operation the `'Forward'`
+    type. In this context, the operation `index` consists of a tuple of values
+    that indicates time steps `(n0, n1)`. On the other hand, if the operation
+    `type` is `'Write'`, its operation `index` adopts the form of
+    `(storage, n)` in the tuple. The `storage` variable corresponds to `'RAM'`
+    (0) or `'disk'` (1) storage.  Finally, the `n` variable indicates the time
+    step.
 
     Returns
     -------

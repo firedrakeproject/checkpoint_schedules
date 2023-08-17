@@ -1,5 +1,6 @@
 """Utilities for checkpointing schedules."""
 import functools
+from enum import Enum
 import numpy as np
 from .schedule import StepType
 
@@ -14,6 +15,35 @@ except ImportError:
         def wrapped_fn(*args, **kwargs):
             return fn(*args, **kwargs)
         return wrapped_fn
+
+
+class StorageType(Enum):
+    """This class provides the storage types used in the checkpoint schedules.
+
+    RAM : Indicate the storage of the forward data in memory. 
+
+    DISK : Indicate the storage of the forward data on disk.
+
+    WORK : Indicate the storage of forward data with the intend of immediate
+    usage or for a basis checkpointing strategy in memory.
+
+    NONE : Indicate that there is no specific storage location defined for the
+    checkpoint data.
+
+    Notes
+    -----
+    Basic checkpointing schedule in memory uses only `StorageType.WORK`, which
+    means to store all adjoint dependencies in a `'variable'` used for the
+    adjoint computation.
+
+    See Also
+    --------
+    :class:`SingleMemoryStorageSchedule`
+    """
+    RAM = 0
+    DISK = 1
+    WORK = -1
+    NONE = None
 
 
 @njit
@@ -36,8 +66,7 @@ def n_advance(n, snapshots, *, trajectory="maximum"):
     [1] Andreas Griewank and Andrea Walther, 'Algorithm 799: revolve: an
     implementation of checkpointing for the reverse or adjoint mode of
     computational differentiation', ACM Transactions on Mathematical
-    Software, 26(1), pp. 19--45, 2000, doi: 10.1145/347837.347846
-
+    Software, 26(1), pp. 19--45, 2000, doi: 10.1145/347837.347846.
     """
     if n < 1:
         raise ValueError("Require at least one block")

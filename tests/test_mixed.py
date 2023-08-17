@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-from checkpoint_schedules import MixedCheckpointSchedule, Copy,\
-     Forward, Reverse, EndForward, EndReverse, StorageType, Move
-from checkpoint_schedules.utils import mixed_step_memoization, \
-    optimal_steps_mixed
-
 import functools
 import pytest
+
+from checkpoint_schedules import MixedCheckpointSchedule, Copy,\
+     Forward, Reverse, EndForward, EndReverse, Move
+from checkpoint_schedules.utils import mixed_step_memoization, \
+    optimal_steps_mixed, StorageType
 
 
 @pytest.mark.parametrize("n, S", [
@@ -20,6 +19,7 @@ import pytest
                                   ])
 def test_mixed(n, S):
     cp_action_lists = []
+
     @functools.singledispatch
     def action(cp_action):
         raise TypeError("Unexpected action")
@@ -32,10 +32,10 @@ def test_mixed(n, S):
         store_data = cp_action.write_adj_deps
         ics.clear()
         data.clear()
-        
+
         # Start at the current location of the forward
         assert model_n is not None and model_n == cp_action.n0
-        
+
         if store_ics:
             assert cp_action.storage == StorageType.DISK
             assert cp_schedule.uses_storage_type(StorageType.DISK)
@@ -60,7 +60,7 @@ def test_mixed(n, S):
         if store_ics:
             ics.update(range(cp_action.n0, cp_action.n1))
             snapshots[cp_action.n0] = (set(ics), set(data))
-        
+
         if store_data:
             data.update(range(cp_action.n0, cp_action.n1))
             if cp_action.storage == StorageType.DISK:

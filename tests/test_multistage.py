@@ -3,8 +3,10 @@
 import functools
 import pytest
 from checkpoint_schedules import MultistageCheckpointSchedule, \
-    Copy, Move, Forward, Reverse, EndForward, EndReverse, StorageType
-from checkpoint_schedules.utils import optimal_steps_binomial
+    Copy, Move, Forward, Reverse, EndForward, EndReverse
+from checkpoint_schedules.utils import optimal_steps_binomial, \
+    StorageType
+
 
 @pytest.mark.parametrize("trajectory", ["revolve",
                                         "maximum"])
@@ -74,7 +76,7 @@ def test_multistage(trajectory, n, S):
 
         model_n = cp_action.n1
         model_steps += cp_action.n1 - cp_action.n0
-        
+
     @action.register(Reverse)
     def action_reverse(cp_action):
         nonlocal model_r
@@ -139,7 +141,7 @@ def test_multistage(trajectory, n, S):
     def action_end_reverse(cp_action):
         # The correct number of adjoint steps has been taken
         assert model_r == n
-  
+
     for s in S:
         print(f"{n=:d} {s=:d}")
 

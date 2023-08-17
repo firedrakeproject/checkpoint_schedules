@@ -1,6 +1,6 @@
 from .schedule import CheckpointSchedule, Forward, Reverse, Copy, Move,\
-    EndForward, EndReverse, StorageType
-from .utils import n_advance
+    EndForward, EndReverse
+from .utils import n_advance, StorageType
 
 __all__ = ["TwoLevelCheckpointSchedule"]
 
@@ -48,12 +48,11 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
     def __init__(self, period, binomial_snapshots, *,
                  binomial_storage=StorageType.DISK,
                  binomial_trajectory="maximum"):
+        super().__init__()
         if period < 1:
             raise ValueError("period must be positive")
         if binomial_storage not in [StorageType.RAM, StorageType.DISK]:
             raise ValueError("Invalid storage")
-
-        super().__init__()
 
         self._period = period
         self._binomial_snapshots = binomial_snapshots
@@ -148,7 +147,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
             # Reset for new reverse
 
             self._r = 0
-            yield EndReverse(False)
+            yield EndReverse()
 
     @property
     def is_exhausted(self):

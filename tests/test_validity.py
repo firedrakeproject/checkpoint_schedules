@@ -9,7 +9,6 @@
 # tlm_adjoint is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, version 3 of the License.
-#
 # tlm_adjoint is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,10 +20,11 @@
 import functools
 import pytest
 from checkpoint_schedules.schedule import \
-    Forward, Reverse, Copy, Move, EndForward, EndReverse, StorageType
+    Forward, Reverse, Copy, Move, EndForward, EndReverse
 from checkpoint_schedules import HRevolve, DiskRevolve, PeriodicDiskRevolve,\
     Revolve, MultistageCheckpointSchedule, TwoLevelCheckpointSchedule,\
     MixedCheckpointSchedule
+from checkpoint_schedules.utils import StorageType
 
 
 def h_revolve(n, s):
@@ -66,7 +66,6 @@ def periodic_disk(n, s):
                 {StorageType.RAM: 0, StorageType.DISK: 0}, 0)
     else:
         revolver = PeriodicDiskRevolve(n, s)
-        
         return (revolver,
                 {StorageType.RAM:  s, StorageType.DISK: n - s}, 1)
 
@@ -77,7 +76,6 @@ def revolve(n, s):
                 {StorageType.RAM: 0, StorageType.DISK: 0}, 0)
     else:
         revolver = Revolve(n, s)
-        
         return (revolver,
                 {StorageType.RAM:  s, StorageType.DISK: 0}, 1)
 
@@ -136,7 +134,7 @@ def test_validity(schedule, n, S):
             assert cp_action.n1 <= n - model_r
 
         n1 = min(cp_action.n1, n)
-        
+
         model_n = n1
         ics.clear()
         data.clear()
@@ -147,14 +145,14 @@ def test_validity(schedule, n, S):
             assert len(ics.intersection(range(cp_action.n0, n1))) == 0
             ics.update(range(cp_action.n0, n1))
             snapshots[cp_action.storage][cp_action.n0] = (set(ics), set(data))
-        
+
         if cp_action.write_adj_deps:
             # No non-linear dependency data for these steps is stored
             assert len(data.intersection(range(cp_action.n0, n1))) == 0
             data.update(range(cp_action.n0, n1))
             if cp_action.storage == StorageType.DISK:
-                snapshots[cp_action.storage][cp_action.n0] = (set(ics), set(data))
-        
+                snapshots[cp_action.storage][cp_action.n0] = (set(ics), set(data))  # noqa: E501
+
         if len(ics) > 0:
             if len(data) > 0:
                 assert cp_action.n0 == min(min(ics), min(data))
@@ -180,14 +178,14 @@ def test_validity(schedule, n, S):
         model_r += cp_action.n1 - cp_action.n0
         if cp_action.clear_adj_deps:
             data.clear()
-    
+
     @action.register(Copy)
     def action_copy(cp_action):
         nonlocal model_n
         # The checkpoint exists
         assert cp_action.n in snapshots[cp_action.from_storage]
         cp = snapshots[cp_action.from_storage][cp_action.n]
-        
+
         # No data is currently stored for this step
         assert cp_action.n not in ics
         assert cp_action.n not in data
@@ -197,7 +195,6 @@ def test_validity(schedule, n, S):
 
         # The checkpoint data is before the current location of the adjoint
         assert cp_action.n < n - model_r
-        
         model_n = None
         if len(cp[0]) > 0:
             ics.clear()
@@ -214,7 +211,6 @@ def test_validity(schedule, n, S):
         # The checkpoint exists
         assert cp_action.n in snapshots[cp_action.from_storage]
         cp = snapshots[cp_action.from_storage][cp_action.n]
-        
         # The checkpoint contains forward restart or non-linear dependency data
         assert len(cp[0]) > 0 or len(cp[1]) > 0
 
@@ -222,7 +218,7 @@ def test_validity(schedule, n, S):
         assert cp_action.n < n - model_r
 
         assert cp_action.n < n - model_r
-        
+
         model_n = None
         if len(cp[0]) > 0:
             ics.clear()
@@ -234,7 +230,6 @@ def test_validity(schedule, n, S):
             data.update(cp[1])
 
         del snapshots[cp_action.from_storage][cp_action.n]
-
 
     @action.register(EndForward)
     def action_end_forward(cp_action):
@@ -254,7 +249,6 @@ def test_validity(schedule, n, S):
 
     for s in S:
         print(f"{n=:d} {s=:d}")
-       
         model_n = 0
         model_r = 0
         ics = set()
@@ -267,7 +261,7 @@ def test_validity(schedule, n, S):
         assert cp_schedule.n == 0
         assert cp_schedule.r == 0
         assert cp_schedule.max_n is None or cp_schedule.max_n == n
-        
+
         for _, cp_action in enumerate(cp_schedule):
             action(cp_action)
             assert model_n is None or model_n == cp_schedule.n
@@ -276,12 +270,8 @@ def test_validity(schedule, n, S):
             # Checkpoint storage limits are not exceeded
             for storage_type, storage_limit in storage_limits.items():
                 assert len(snapshots[storage_type]) <= storage_limit
-                
             # Data storage limit is not exceeded
             assert min(1, len(ics)) + len(data) <= data_limit
 
             if isinstance(cp_action, EndReverse):
                 break
-            
-
-

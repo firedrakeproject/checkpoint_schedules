@@ -1,8 +1,8 @@
 import functools
 from operator import itemgetter
 from .schedule import CheckpointSchedule, Forward, Reverse, Copy, Move,\
-    EndForward, EndReverse, StorageType
-from .utils import n_advance
+    EndForward, EndReverse
+from .utils import n_advance, StorageType
 
 __all__ = \
     [
@@ -162,6 +162,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
 
     def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk, *,
                  trajectory="maximum"):
+        super().__init__(max_n=max_n)
         snapshots_in_ram = min(snapshots_in_ram, max_n - 1)
         snapshots_on_disk = min(snapshots_on_disk, max_n - 1)
         if snapshots_in_ram == 0:
@@ -175,8 +176,6 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
 
         snapshots_in_ram = storage.count(StorageType.RAM)
         snapshots_on_disk = storage.count(StorageType.DISK)
-
-        super().__init__(max_n=max_n)
         self._snapshots_in_ram = snapshots_in_ram
         self._snapshots_on_disk = snapshots_on_disk
         self._storage = storage
