@@ -20,7 +20,7 @@ except ImportError:
 class StorageType(Enum):
     """This class provides the storage types used in the checkpoint schedules.
 
-    RAM : Indicate the storage of the forward data in memory. 
+    RAM : Indicate the storage of the forward data in memory.
 
     DISK : Indicate the storage of the forward data on disk.
 
