@@ -22,22 +22,22 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
         restart checkpoints generated when advancing the adjoint between
         periodic disk checkpoints. Either `'RAM'` or `'disk'`.
     binomial_trajectory : str, optional
-        See the `trajectory` constructor argument for 
+        See the `trajectory` constructor argument for
         :class:`MultistageCheckpointSchedule`.
 
     Notes
     -----
     This schedule is described in:
-        - Pringle, G. C., Jones, D. C., Goswami, S., Narayanan, S. H. K., and 
-        Goldberg, D. (2016). Providing the ARCHER community with adjoint 
-        modelling tools for high-performance oceanographic and cryospheric 
+        - Pringle, G. C., Jones, D. C., Goswami, S., Narayanan, S. H. K., and
+        Goldberg, D. (2016). Providing the ARCHER community with adjoint
+        modelling tools for high-performance oceanographic and cryospheric
         computation. https://nora.nerc.ac.uk/id/eprint/516314.
 
     and in the supporting information for
 
-        - Goldberg, D. N., Smith, T. A., Narayanan, S. H., Heimbach, P., 
-        and Morlighem, M. (2020). Bathymetric Influences on Antarctic 
-        Ice‐Shelf Melt Rates. Journal of Geophysical Research: Oceans, 125(11), 
+        - Goldberg, D. N., Smith, T. A., Narayanan, S. H., Heimbach, P.,
+        and Morlighem, M. (2020). Bathymetric Influences on Antarctic
+        Ice‐Shelf Melt Rates. Journal of Geophysical Research: Oceans, 125(11),
         e2020JC016370. doi: https://doi.org/10.1029/2020JC016370.
 
 
@@ -93,15 +93,15 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                         snapshots.pop()
                         self._n = cp_n
                         if cp_n == n0s:
-                            yield Copy(cp_n, StorageType.DISK, StorageType.FWD_RESTART) # noqa: E501
+                            yield Copy(cp_n, StorageType.DISK, StorageType.WORK)  # noqa: E501
                         else:
-                            yield Move(cp_n, self._binomial_storage, StorageType.FWD_RESTART) # noqa: E501
+                            yield Move(cp_n, self._binomial_storage, StorageType.WORK)  # noqa: E501
                     else:
                         self._n = cp_n
                         if cp_n == n0s:
-                            yield Copy(cp_n, StorageType.DISK, StorageType.FWD_RESTART) # noqa: E501
+                            yield Copy(cp_n, StorageType.DISK, StorageType.WORK)  # noqa: E501
                         else:
-                            yield Copy(cp_n, self._binomial_storage, StorageType.FWD_RESTART) # noqa: E501
+                            yield Copy(cp_n, self._binomial_storage, StorageType.WORK)  # noqa: E501
 
                         n_snapshots = (self._binomial_snapshots + 1
                                        - len(snapshots) + 1)
@@ -111,7 +111,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                                             trajectory=self._trajectory)
                         assert n1 > n0
                         self._n = n1
-                        yield Forward(n0, n1, False, False, StorageType.FWD_RESTART)  # noqa: E501
+                        yield Forward(n0, n1, False, False, StorageType.WORK)  # noqa: E501
 
                         while self._n < self._max_n - self._r - 1:
                             n_snapshots = (self._binomial_snapshots + 1
@@ -122,7 +122,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                                                 trajectory=self._trajectory)
                             assert n1 > n0
                             self._n = n1
-                            yield Forward(n0, n1, True, False, self._binomial_storage)
+                            yield Forward(n0, n1, True, False, self._binomial_storage)  # noqa: E501
 
                             if len(snapshots) >= self._binomial_snapshots + 1:
                                 raise RuntimeError("Invalid checkpointing "
@@ -133,7 +133,7 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
                             raise RuntimeError("Invalid checkpointing state")
 
                     self._n += 1
-                    yield Forward(self._n - 1, self._n, False, True, StorageType.ADJ_DEPS)  # noqa: E501
+                    yield Forward(self._n - 1, self._n, False, True, StorageType.WORK)  # noqa: E501
 
                     self._r += 1
                     yield Reverse(self._n, self._n - 1, True)
@@ -168,4 +168,3 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
             Whether this schedule uses the given storage type.
         """
         return storage_type == self._binomial_storage
-

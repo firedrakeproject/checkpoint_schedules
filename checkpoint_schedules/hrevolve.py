@@ -53,7 +53,6 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         ------
         checkpoint_schedules.schedule.CheckpointScheduleAction
             The next action in the schedule.
-        
         """
         if self._max_n is None:
             raise RuntimeError("Invalid forward steps number.")
@@ -62,7 +61,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         w_storage = None
         write_ics = False
         adj_deps = False
-        
+
         i = 0
         while i < len(self._schedule):
             cp_action, (n_0, n_1, storage) = _convert_action(self._schedule[i])
@@ -70,16 +69,14 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 if n_0 != self._n:
                     raise InvalidForwardStep
                 self._n = n_1
-                w_cp_action, (w_n0, _, w_storage) = _convert_action(self._schedule[i - 1])
-                if (w_cp_action == "Write"
-                    or w_cp_action == "Write_disk"
-                    or w_cp_action == "Write_memory"):
+                w_cp_action, (w_n0, _, w_storage) = _convert_action(self._schedule[i - 1])  # noqa: E501
+                if (w_cp_action == "Write" or w_cp_action == "Write_disk" or w_cp_action == "Write_memory"):  # noqa: E501
                     if w_n0 != n_0:
                         raise InvalidActionIndex
                     write_ics = True
                     adj_deps = False
                     snapshots.add(w_n0)
-                elif (w_cp_action == "Write_Forward" 
+                elif (w_cp_action == "Write_Forward"
                       or w_cp_action == "Write_Forward_memory"):
                     if w_n0 != n_1:
                         raise InvalidActionIndex
@@ -88,7 +85,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                 else:
                     write_ics = False
                     adj_deps = False
-                    w_storage = StorageType.FWD_RESTART
+                    w_storage = StorageType.WORK
                 yield Forward(n_0, n_1, write_ics, adj_deps, w_storage)
                 if self._n == self._max_n:
                     if self._r != 0:
@@ -105,12 +102,11 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
                   or cp_action == "Read_memory"
                   or cp_action == "Read_disk"):
                 self._n = n_0
-                
                 if n_0 == self._max_n - self._r - 1:
                     snapshots.remove(n_0)
-                    yield Move(n_0, storage, StorageType.FWD_RESTART)
+                    yield Move(n_0, storage, StorageType.WORK)
                 else:
-                    yield Copy(n_0, storage, StorageType.FWD_RESTART)     
+                    yield Copy(n_0, storage, StorageType.WORK)
             elif (cp_action == "Write" or cp_action == "Write_disk"
                   or cp_action == "Write_memory"):
                 if n_0 != self._n:
@@ -118,9 +114,9 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             elif cp_action == "Write_Forward":
                 if n_0 != self._n + 1:
                     raise InvalidActionIndex
-                d_cp_action, (d_n0, _, w_storage) = _convert_action(self._schedule[i + 3])
-                if (d_cp_action != "Discard_Forward"
-                    or d_n0 != n_0 or w_storage != storage):
+                d_cp_action, (d_n0, _, w_storage) = _convert_action(
+                                                    self._schedule[i + 3])
+                if (d_cp_action != "Discard_Forward" or d_n0 != n_0 or w_storage != storage):  # noqa: E501
                     if w_n0 != n_0:
                         raise InvalidActionIndex
                     write_ics = True
@@ -128,15 +124,14 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             elif cp_action == "Write_Forward_memory":
                 if n_0 != self._n + 1:
                     raise InvalidActionIndex
-                d_cp_action, (d_n0, _, w_storage) = _convert_action(self._schedule[i + 3])
-                if (d_cp_action != "Discard_Forward_memory"
-                    or d_n0 != n_0 or w_storage != storage):
+                d_cp_action, (d_n0, _, w_storage) = _convert_action(self._schedule[i + 3])  # noqa: E501
+                if (d_cp_action != "Discard_Forward_memory" or d_n0 != n_0 or w_storage != storage):  # noqa: E501
                     if w_n0 != n_0:
                         raise InvalidActionIndex
             elif cp_action == "Discard" or cp_action == "Discard_memory":
                 if i < 2:
                     raise InvalidRevolverAction
-            elif cp_action == "Discard_Forward" or cp_action == "Discard_Forward_memory":
+            elif cp_action == "Discard_Forward" or cp_action == "Discard_Forward_memory":  # noqa: E501
                 if n_0 != self._n:
                     raise InvalidActionIndex
             else:
@@ -144,7 +139,6 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             i += 1
         if len(snapshots) > 0:
             raise RuntimeError("Unexpected snapshot number.")
-        
         self._exhausted = True
         yield EndReverse()
 
@@ -158,7 +152,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             End the reverse computation if ``True``.
         """
         return self._exhausted
- 
+
     def uses_storage_type(self, storage_type):
         """Check if a given storage type is used in this schedule.
 
@@ -173,7 +167,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
             return self._snapshots_on_disk > 0
         elif storage_type == StorageType.RAM:
             return self._snapshots_in_ram > 0
-     
+
 
 class HRevolve(RevolveCheckpointSchedule):
     """H-Revolve checkpointing schedule.
@@ -199,9 +193,9 @@ class HRevolve(RevolveCheckpointSchedule):
     -----
     The H-Revolve schedule is described in [1]:
 
-    [1] Herrmann, J. and Pallez (Aupy), G. (2020). H-Revolve: 
-    a framework for adjoint computation on synchronous hierarchical 
-    platforms. ACM Transactions on Mathematical Software (TOMS), 46(2), 
+    [1] Herrmann, J. and Pallez (Aupy), G. (2020). H-Revolve:
+    a framework for adjoint computation on synchronous hierarchical
+    platforms. ACM Transactions on Mathematical Software (TOMS), 46(2),
     1-25. DOI: https://doi.org/10.1145/3378672.
 
     """
@@ -212,7 +206,7 @@ class HRevolve(RevolveCheckpointSchedule):
         rc = [0, rd]
         schedule = list(hrevolve(max_n - 1, cvec, wc, rc, uf, ub))
         super().__init__(max_n, snapshots_in_ram, snapshots_on_disk, schedule)
-        
+
 
 class DiskRevolve(RevolveCheckpointSchedule):
     """Disk Revolve checkpointing schedule.
@@ -236,14 +230,15 @@ class DiskRevolve(RevolveCheckpointSchedule):
     -----
     The Disk schedule is described in [1].
 
-    [1] Aupy, G., Herrmann, J., Hovland, P., & Robert, Y. (2016). 
-    Optimal multistage algorithm for adjoint computation. SIAM 
-    Journal on Scientific Computing, 38(3), C232-C255. 
+    [1] Aupy, G., Herrmann, J., Hovland, P., & Robert, Y. (2016).
+    Optimal multistage algorithm for adjoint computation. SIAM
+    Journal on Scientific Computing, 38(3), C232-C255.
     DOI: https://doi.org/10.1145/347837.347846.
     """
 
     def __init__(self, max_n, snapshots_in_ram, uf=1, ub=1, wd=2, rd=2):
-        schedule = list(disk_revolve(max_n - 1, snapshots_in_ram, wd, rd, uf, ub))
+        schedule = list(disk_revolve(max_n - 1, snapshots_in_ram, wd, rd, uf,
+                                     ub))
         super().__init__(max_n, snapshots_in_ram, None, schedule)
 
 
@@ -277,7 +272,8 @@ class PeriodicDiskRevolve(RevolveCheckpointSchedule):
     """
 
     def __init__(self, max_n, snapshots_in_ram, uf=1, ub=1, wd=2, rd=2):
-        schedule = list(periodic_disk_revolve(max_n - 1, snapshots_in_ram, wd, rd, uf, ub))
+        schedule = list(periodic_disk_revolve(max_n - 1, snapshots_in_ram, wd,
+                                              rd, uf, ub))
         super().__init__(max_n, snapshots_in_ram, None, schedule)
 
 
@@ -313,7 +309,7 @@ class Revolve(RevolveCheckpointSchedule):
         schedule = list(revolve(max_n - 1, snapshots_in_ram, wd, rd, uf, ub))
         super().__init__(max_n, snapshots_in_ram, None, schedule)
 
-      
+
 def _convert_action(action):
     """Convert an operation to a `checkpoint_schedules` action.
 
@@ -325,21 +321,22 @@ def _convert_action(action):
     Notes
     -----
     The operations have `type` and `index` attributes.
-    
-    - The `type` attribute is a string specifying the name of the operation. 
-    Whereas, the `index` attribute takes the form of a tuple, having different 
-    components depending on the operation in question. 
-    
-    To exemplify, consider the case where the operation the `Forward` type. 
+
+    - The `type` attribute is a string specifying the name of the operation.
+    Whereas, the `index` attribute takes the form of a tuple, having different
+    components depending on the operation in question.
+
+    To exemplify, consider the case where the operation the `Forward` type.
     In this context, the operation index consists of a tuple of values that
-    indicates time steps `(n0, n1)`. On the other hand, if the operation is 
-    classified as `Write`, its operation index adopts the form of `(storage, n0)` 
-    in the tuple. The `storage` variable corresponds to `'RAM'` (0) or `'disk'` (1) storage.
+    indicates time steps `(n0, n1)`. On the other hand, if the operation is
+    classified as `Write`, its operation index adopts the form of
+    `(storage, n0)` in the tuple. The `storage` variable corresponds to `'RAM'`
+    (0) or `'disk'` (1) storage.
 
     Returns
     -------
     str, tuple(int, int , str)
-        Return the operation name, and a tuple containig the steps `n_0`, step 
+        Return the operation name, and a tuple containig the steps `n_0`, step
         `n_1` and the storage level (either RAM or disk).
 
     """
@@ -361,12 +358,12 @@ def _convert_action(action):
     elif cp_action in ["Write_Forward", "Discard_Forward"]:
         _, n_0 = action.index
         n_1 = None
-        storage = {0: StorageType.ADJ_DEPS}[0]
+        storage = {0: StorageType.WORK}[0]
     elif cp_action in ["Write_Forward_memory",
                        "Discard_Forward_memory"]:
         n_0 = action.index
         n_1 = None
-        storage = {0: StorageType.ADJ_DEPS}[0]
+        storage = {0: StorageType.WORK}[0]
     elif cp_action in ["Read_disk", "Write_disk", "Discard_disk"]:
         n_0 = action.index
         n_1 = None
@@ -384,19 +381,15 @@ def _convert_action(action):
 
 class InvalidForwardStep(IndexError):
     "The forward step is not correct."
-    pass
 
 
 class InvalidReverseStep(IndexError):
     "The reverse step is not correct."
-    pass
 
 
 class InvalidRevolverAction(Exception):
     "The action is not expected for this iterator."
-    pass
 
 
 class InvalidActionIndex(IndexError):
     "The index of the action is not correct."
-    pass

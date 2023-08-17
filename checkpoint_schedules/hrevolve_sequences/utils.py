@@ -2,7 +2,7 @@
 
 def revolver_parameters(wd, rd, uf, ub):
     """Parameter use to obtain the revolver sequences.
-    
+
     Parameters
     ----------
     wd : float

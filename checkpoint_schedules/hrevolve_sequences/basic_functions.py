@@ -38,11 +38,11 @@ def beta(x, y):
         The number of slots available in memory.
     y : int
         It is the unic inter satisfying the following inequality
-        
+
         .. math::
 
-            \\frac{(x+y)!}{x!y!} \leq l \leq \\frac{(x+y+1)!}{x!(y+1)!} 
-      
+            \\frac{(x+y)!}{x!y!} \\leq l \\leq \\frac{(x+y+1)!}{x!(y+1)!}
+
     Returns
     -------
     int
@@ -54,9 +54,9 @@ def beta(x, y):
     return math.factorial(x+y) / (math.factorial(x) * math.factorial(y))
 
 
-def argmin(l):
+def argmin(list):
     """Provide the index of the minimum value of the memory list.
-    It is used to compute operation index in the H-ReVolve 
+    It is used to compute operation index in the H-ReVolve
     schedule for K = 0 (level 0).
 
     Parameters
@@ -70,16 +70,16 @@ def argmin(l):
         Index of the minimum value in the memory list.
     """
     index = 0
-    m = l[0]
-    for i, _ in enumerate(l):
-        if l[i] <= m:
+    m = list[0]
+    for i, _ in enumerate(list):
+        if list[i] <= m:
             index = i
-            m = l[i]
+            m = list[i]
     return 1 + index
 
 
-def from_list_to_string(l):
-    """Convert a list to a string.
+def from_list_to_string(list):
+    """Convert a ist to a string.
 
     Parameters
     ----------
@@ -92,33 +92,34 @@ def from_list_to_string(l):
         The string representation of the list.
     """
     s = ""
-    for x in l[:-1]:
+    for x in list[:-1]:
         s += str(x) + ", "
-    s = s[:-2] + "; " + str(l[-1])
+    s = s[:-2] + "; " + str(list[-1])
     return "(" + s + ")"
 
 
 class Operation:
-    """This class represents the operations given by the checkpointing 
+    """This class represents the operations given by the checkpointing
     strategies.
 
     Attributes
     ----------
     type : str
-        The type of operation. 
+        The type of operation.
     index : int or list of int
         The index of the operation.
     params : dict
         It is dictionary of parameters.
-    
+
     Notes
     -----
-    If it is an H-Revolve schedule, the index is a list of two integers. 
-    The first integer represents the storage hierarchical level, and the 
-    second integer represents the time step. Otherwise, the index is an integer 
+    If it is an H-Revolve schedule, the index is a list of two integers.
+    The first integer represents the storage hierarchical level, and the
+    second integer represents the time step. Otherwise, the index is an integer
     representing the time step.
     The possible types of operations are listed in `official_names`.
-    The dictionary of parameters is defined in :py:func:`utils.revolver_parameters`.
+    The dictionary of parameters is defined in
+    :py:func:`utils.revolver_parameters`.
 
     See Also
     --------
@@ -141,11 +142,14 @@ class Operation:
         elif isinstance(self.index, list):
             # type(self.index) is list:
             if self.type == "Forward" or self.type == "Backward":
-                return official_names[self.type] + "_" + str(self.index[0]) + "->" + str(self.index[1])
+                return official_names[self.type] + "_" + str(self.index[0]) + \
+                    "->" + str(self.index[1])
             elif self.type == "Forward_branch":
-                return official_names[self.type] + "^" + str(self.index[0]) + "_" + str(self.index[1]) + "->" + str(self.index[2])
+                return official_names[self.type] + "^" + str(self.index[0]) + \
+                    "_" + str(self.index[1]) + "->" + str(self.index[2])
             else:
-                return official_names[self.type] + "^" + str(self.index[0]) + "_" + str(self.index[1])
+                return official_names[self.type] + "^" + str(self.index[0]) + \
+                    "_" + str(self.index[1])
 
     def cost(self):
         """Cost of the operations.
@@ -212,7 +216,7 @@ class Operation:
             The index size to shift.
         branch : int, optional
             The operation branch.
-        
+
         Notes
         -----
         The shift is applied to the index that represents the time step of the
@@ -228,8 +232,8 @@ class Operation:
                 self.index[1] += size
                 self.index[2] += size
             elif self.type in ["Forward_branch", "Discard_branch",
-                               "Discard_Forward_branch", 
-                                "Checkpoint_branch", "Backward_branch"]:
+                               "Discard_Forward_branch",
+                               "Checkpoint_branch", "Backward_branch"]:
                 if self.index[0] == branch:
                     for i in range(1, len(self.index)):
                         self.index[i] += size
@@ -248,25 +252,27 @@ class Function:
         The storage type of the function.
     index : int or list
         The index of the function.  If is a H-ReVolve schedule, the index is a
-        list of two integers. The first integer is the storage type (either RAM or disk),
-        and the second integer is the the time step. Otherwise, the index is an integer 
-        representing the time step.
+        list of two integers. The first integer is the storage type
+        (either `'RAM'` or `'disk'`),
+        and the second integer is the the time step. Otherwise, the index is
+        an integer representing the time step.
     """
-    def __init__(self, name, l, index):
+    def __init__(self, name, list, index):
         self.name = name
-        self.l = l
+        self.list = list
         self.index = index
 
     def __repr__(self):
         if self.name == "HRevolve" or self.name == "hrevolve_aux":
-            return self.name + "_" + str(self.index[0]) + "(" + str(self.l) + ", " + str(self.index[1]) + ")"
+            return self.name + "_" + str(self.index[0]) + "(" + str(self.list)\
+                + ", " + str(self.index[1]) + ")"
         else:
-            return self.name + "(" + str(self.l) + ", " + str(self.index) + ")"
+            return self.name + "(" + str(self.list) + ", " + str(self.index) + ")"   # noqa: E501
 
 
 class Sequence:
     """This class creates the Revolve sequences.
-    
+
     Attributes
     ----------
     sequence : list
@@ -287,27 +293,27 @@ class Sequence:
         List of disk checkpoints.
     type : str
         Type of the sequence.
-    
+
     Notes
     -----
     The possible types are listed in :attr:`official_names`.
 
     """
     def __init__(self, function, levels=None, concat=0):
-        self.sequence = []  
-        self.function = function 
+        self.sequence = []
+        self.function = function
         self.levels = levels
         self.concat = concat
-        self.makespan = 0 
-        if (self.function.name == "HRevolve" or self.function.name == "hrevolve_aux"):
-            self.storage = [[] for _ in range(self.levels)] 
+        self.makespan = 0
+        if (self.function.name == "HRevolve" or self.function.name == "hrevolve_aux"):  # noqa: E501
+            self.storage = [[] for _ in range(self.levels)]
         else:
             self.memory = []
-            self.disk = [] 
+            self.disk = []
         self.type = "Function"
 
     def __repr__(self):
-        if self.function.name == "HRevolve" or self.function.name == "hrevolve_aux":
+        if self.function.name == "HRevolve" or self.function.name == "hrevolve_aux":  # noqa: E501
             return self.concat_sequence_hierarchic(self.concat).__repr__()
         else:
             if self.concat == 3:
@@ -323,13 +329,12 @@ class Sequence:
         """
         if self.function.name == "Disk-Revolve":
             concat = 2
-        if self.function.name == "1D-Revolve" or self.function.name == "Revolve":
+        if self.function.name == "1D-Revolve" or self.function.name == "Revolve":  # noqa: E501
             concat = 1
-        l = [x.l + 1
-             for x in self.concat_sequence(concat=concat)
-             if x.__class__.__name__ == "Function"]
-        l.reverse()
-        return l
+        list = [x.l + 1 for x in self.concat_sequence(concat=concat)
+                if x.__class__.__name__ == "Function"]
+        list.reverse()
+        return list
 
     def concat_sequence(self, concat):
         """Concatenate the sequence.
@@ -344,28 +349,28 @@ class Sequence:
         list
             The concatenated sequence.
         """
-        l = []
+        list = []
         for x in self.sequence:
             if x.__class__.__name__ == "Operation":
-                l.append(x)
+                list.append(x)
             elif x.__class__.__name__ == "Sequence":
                 if self.concat == 0:
-                    l += x.concat_sequence(concat=concat)
+                    list += x.concat_sequence(concat=concat)
                 elif concat == 1:
                     if x.function.name == "Revolve":
-                        l.append(x.function)
+                        list.append(x.function)
                     else:
-                        l += x.concat_sequence(concat=concat)
+                        list += x.concat_sequence(concat=concat)
                 elif concat == 2:
-                    if x.function.name == "Revolve" or x.function.name == "1D-Revolve":
-                        l.append(x.function)
+                    if x.function.name == "Revolve" or x.function.name == "1D-Revolve":  # noqa: E501
+                        list.append(x.function)
                     else:
-                        l += x.concat_sequence(concat=concat)
+                        list += x.concat_sequence(concat=concat)
                 else:
                     raise ValueError("Unknown concat value: " + str(concat))
             else:
                 raise ValueError("Unknown class name: " + x.__class__.__name__)
-        return l
+        return list
 
     def concat_sequence_hierarchic(self, concat):
         """Concatenate the sequence in hierarchical storage.
@@ -380,20 +385,20 @@ class Sequence:
         list
             The concatenated sequence.
         """
-        l = []
+        list = []
         for x in self.sequence:
             if x.__class__.__name__ == "Operation":
-                l.append(x)
+                list.append(x)
             elif x.__class__.__name__ == "Sequence":
                 if concat == 0:
-                    l += x.concat_sequence_hierarchic(concat=concat)
-                elif x.function.name == "HRevolve" and x.function.index[0] <= concat-1:
-                    l.append(x.function)
+                    list += x.concat_sequence_hierarchic(concat=concat)
+                elif x.function.name == "HRevolve" and x.function.index[0] <= concat-1:  # noqa: E501
+                    list.append(x.function)
                 else:
-                    l += x.concat_sequence_hierarchic(concat=concat)
+                    list += x.concat_sequence_hierarchic(concat=concat)
             else:
                 raise ValueError("Unknown class name: " + x.__class__.__name__)
-        return l
+        return list
 
     def insert(self, operation):
         """Insert an operation in the sequence.
@@ -434,7 +439,8 @@ class Sequence:
         if self.sequence[operation_index].type == "Write_disk":
             self.disk.remove(self.sequence[operation_index].index)
         if self.sequence[operation_index].type == "Write":
-            self.storage[self.sequence[operation_index].index[0]].remove(self.sequence[operation_index].index[1])
+            self.storage[self.sequence[operation_index].index[0]].remove(
+                self.sequence[operation_index].index[1])
         if self.sequence[operation_index].type == "Checkpoint":
             self.memory.remove(self.sequence[operation_index].index)
         del self.sequence[operation_index]
@@ -449,7 +455,7 @@ class Sequence:
         """
         self.sequence.append(sequence)
         self.makespan += sequence.makespan
-        if self.function.name == "HRevolve" or self.function.name == "hrevolve_aux":
+        if self.function.name == "HRevolve" or self.function.name == "hrevolve_aux":  # noqa: E501
             for i in range(len(self.storage)):
                 self.storage[i] += sequence.storage[i]
         else:
@@ -473,12 +479,16 @@ class Sequence:
         """
         for x in self.sequence:
             x.shift(size, branch=branch)
-        if self.function.name == "HRevolve" or self.function.name == "hrevolve_aux":
+        if self.function.name == "HRevolve" or self.function.name == "hrevolve_aux":  # noqa: E501
             for i in range(len(self.storage)):
                 self.storage[i] = [x + size for x in self.storage[i]]
         else:
-            self.memory = [x + size if type(x) is int else (x[0], x[1] + size) if x[0] == branch else (x[0], x[1]) for x in self.memory]
-            self.disk = [x + size if type(x) is int else (x[0], x[1] + size) if x[0] == branch else (x[0], x[1]) for x in self.disk]
+            self.memory = [x + size if type(x) is int else (x[0], x[1] + size)
+                           if x[0] == branch else (x[0], x[1])
+                           for x in self.memory]
+            self.disk = [x + size if type(x) is int else (x[0], x[1] + size)
+                         if x[0] == branch else (x[0], x[1])
+                         for x in self.disk]
         return self
 
     def remove_useless_wm(self, K=-1):
@@ -495,7 +505,7 @@ class Sequence:
             The updated sequence without useless write in-memory operations.
         """
         if len(self.sequence) > 0:
-            if self.sequence[0].type == "Write_memory" or self.sequence[0].type == "Checkpoint":
+            if self.sequence[0].type == "Write_memory" or self.sequence[0].type == "Checkpoint":  # noqa: E501
                 self.remove(0)
                 return self
         if len(self.sequence) > 0:
@@ -510,7 +520,8 @@ class Sequence:
         """
         if self.sequence[-1].type == "Function":
             self.sequence[-1].remove_last_discard()
-        if self.sequence[-1].type in ["Discard_memory", "Discard_disk", "Discard", "Discard_branch"]:
+        if self.sequence[-1].type in ["Discard_memory", "Discard_disk",
+                                      "Discard", "Discard_branch"]:
             self.remove(-1)
 
     def first_operation(self):
@@ -563,7 +574,7 @@ class Sequence:
         to_remove = []
         for (i, op) in enumerate(self.sequence):
             if op.type == "Function":
-                self.sequence[i] = self.sequence[i].convert_old_to_branch(index)
+                self.sequence[i] = self.sequence[i].convert_old_to_branch(index)  # noqa: E501
             elif op.type == "Forward":
                 op.type = "Forward_branch"
                 op.index = [index] + op.index
@@ -593,13 +604,15 @@ class Sequence:
             elif op.type == "Discard_memory":
                 to_remove.append(i)
             elif op.type in ["Read_disk", "Write_disk", "Discard_disk"]:
-                ValueError("Cannot use convert_old_to_branch on sequences from two-memory architecture")
+                raise ValueError("Cannot use convert_old_to_branch on \
+                                 sequences from two-memory architecture")
             else:
-                ValueError("Unknown data type %s in convert_old_to_branch" % op.type)
+                raise ValueError("Unknown data type %s in \
+                                 convert_old_to_branch" + op.type)
         for (i, index) in enumerate(to_remove):
             self.remove(index-i)
         return self
-    
+
     def convert_new_to_branch(self, index):
         """Convert a new operation to a branch operation.
 
@@ -619,7 +632,7 @@ class Sequence:
         to_remove = []
         for (i, op) in enumerate(self.sequence):
             if op.type == "Function":
-                self.sequence[i] = self.sequence[i].convert_new_to_branch(index)
+                self.sequence[i] = self.sequence[i].convert_new_to_branch(index)  # noqa: E501
             elif op.type == "Forward":
                 op.type = "Forward_branch"
                 op.index = [index] + op.index
@@ -629,12 +642,14 @@ class Sequence:
             elif op.type == "Checkpoint":
                 op.type = "Checkpoint_branch"
                 op.index = [index, op.index]
-            elif op.type in ["Forward_branch", "Turn", "Discard_branch", "Checkpoint", "Backward_branch"]:
+            elif op.type in ["Forward_branch", "Turn", "Discard_branch",
+                             "Checkpoint", "Backward_branch"]:
                 continue
             elif op.type in ["Read_disk", "Write_disk", "Discard_disk"]:
-                ValueError("Cannot use convert_new_to_branch on sequences from two-memory architecture")
+                raise ValueError("Cannot use convert_new_to_branch on \
+                                  sequences from two-memory architecture")
             else:
-                ValueError("Unknown data type %s in convert_new_to_branch" % op.type)
+                raise ValueError("Unknown data type: " + op.type)
         for (i, index) in enumerate(to_remove):
             self.remove(index-i)
         return self
@@ -693,7 +708,7 @@ class Table:
 
         Parameters
         ----------
-        x : 
+        x : ..
             The element to remove.
         """
         self.content.remove(x)
@@ -703,9 +718,8 @@ class Table:
         if i < 0 or i >= len(self):
             raise IndexError("Index out of range. Table length: " +
                              str(len(self)) + "," + "Index: " + str(i))
-        
         return self.content[i]
-    
+
     def __repr__(self):
         return self.content.__repr__()
 

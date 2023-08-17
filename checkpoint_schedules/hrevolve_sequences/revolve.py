@@ -1,7 +1,9 @@
 #!/usr/bin/python
-"""This module contains the functions used to compute the revolver sequences."""
+"""This module contains the functions used to compute the revolver sequences.
+"""
 from functools import partial
-from .basic_functions import (Operation as Op, Sequence, Function, Table, argmin)
+from .basic_functions import (Operation as Op, Sequence, Function, Table,
+                              argmin)
 from .utils import revolver_parameters
 
 
@@ -39,18 +41,18 @@ def get_opt_0_table(lmax, mmax, uf, ub, print_table=None):
         opt[m].append(ub)
     for m in range(1, mmax + 1):
         opt[m].append(uf + 2 * ub)
-    for l in range(2, lmax + 1):
+    for l in range(2, lmax + 1):  # noqa: E741
         opt[1].append((l+1) * ub + l * (l + 1) / 2 * uf)
     # Compute everything
     for m in range(2, mmax + 1):
-        for l in range(2, lmax + 1):
-            value = min([j * uf + opt[m-1][l - j] + opt[m][j-1] 
+        for l in range(2, lmax + 1):  # noqa: E741
+            value = min([j * uf + opt[m-1][l - j] + opt[m][j-1]
                          for j in range(1, l)])
             opt[m].append(value)
     return opt
 
 
-def revolve(l, cm, rd, wd, fwd_cost, bwd_cost, opt_0=None):
+def revolve(l, cm, rd, wd, fwd_cost, bwd_cost, opt_0=None):  # noqa: E741
     """Return a revolve sequence.
 
     Parameters
@@ -71,10 +73,10 @@ def revolve(l, cm, rd, wd, fwd_cost, bwd_cost, opt_0=None):
     parameters = dict(params)
     if opt_0 is None:
         opt_0 = get_opt_0_table(l, cm, fwd_cost, bwd_cost)
-    sequence = Sequence(Function("Revolve", l, cm), 
+    sequence = Sequence(Function("Revolve", l, cm),
                         concat=parameters["concat"])
     operation = partial(Op, params=parameters)
-    if l == 0:
+    if l == 0:  # noqa: E741
         sequence.insert(operation("Write_Forward_memory", 1))
         sequence.insert(operation("Forward", [0, 1]))
         sequence.insert(operation("Backward", [1, 0]))
@@ -82,8 +84,9 @@ def revolve(l, cm, rd, wd, fwd_cost, bwd_cost, opt_0=None):
         sequence.insert(operation("Discard_memory", 0))
         return sequence
     elif cm == 0:
-        raise ValueError("It's impossible to execute an AC graph without memory")
-    elif l == 1:
+        raise ValueError("It's impossible to execute an AC graph without\
+                         memory")
+    elif l == 1:  # noqa: E741
         sequence.insert(operation("Write_memory", 0))
         sequence.insert(operation("Forward", [0, 1]))
         sequence.insert(operation("Write_Forward_memory", 2))
@@ -115,13 +118,13 @@ def revolve(l, cm, rd, wd, fwd_cost, bwd_cost, opt_0=None):
         sequence.insert(operation("Discard_Forward_memory", 1))
         sequence.insert(operation("Discard_memory", 0))
         return sequence
-    list_mem = [j*parameters["uf"] + opt_0[cm-1][l-j] + opt_0[cm][j-1] 
+    list_mem = [j*parameters["uf"] + opt_0[cm-1][l-j] + opt_0[cm][j-1]
                 for j in range(1, l)]
     jmin = argmin(list_mem)
     sequence.insert(operation("Write_memory", 0))
     sequence.insert(operation("Forward", [0, jmin]))
     sequence.insert_sequence(
-        revolve(l - jmin, cm - 1, wd, rd, fwd_cost, bwd_cost, 
+        revolve(l - jmin, cm - 1, wd, rd, fwd_cost, bwd_cost,
                 opt_0=opt_0).shift(jmin)
     )
     sequence.insert(operation("Read_memory", 0))

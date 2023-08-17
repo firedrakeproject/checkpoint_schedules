@@ -14,7 +14,7 @@ def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
                        write_weight=1.0, read_weight=1.0, delete_weight=0.0,
                        trajectory="maximum"):
     """Allocate snapshots.
-    
+
     Parameters
     ----------
     max_n : int
@@ -30,8 +30,8 @@ def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
     delete_weight : float, optional
         The weight (cost?) of deleting a checkpoint.
     trajectory : str, optional
-        The trajectory to use for allocating checkpoints. 
-    
+        The trajectory to use for allocating checkpoints.
+
     """
     snapshots_in_ram = min(snapshots_in_ram, max_n - 1)
     snapshots_on_disk = min(snapshots_on_disk, max_n - 1)
@@ -54,7 +54,7 @@ def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
         if snapshot_i < 0:
             raise RuntimeError("Invalid checkpointing state")
         weights[snapshot_i] += read_weight
-        
+
     @action.register(Move)
     def action_move(cp_action):
         nonlocal snapshot_i
@@ -64,9 +64,9 @@ def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
         weights[snapshot_i] += read_weight
         if snapshot_i < 0:
             raise RuntimeError("Invalid checkpointing state")
-        
-        if cp_action.to_storage == StorageType.FWD_RESTART or \
-                cp_action.to_storage == StorageType.ADJ_DEPS:
+
+        if cp_action.to_storage == StorageType.WORK or \
+                cp_action.to_storage == StorageType.WORK:
             weights[snapshot_i] += delete_weight
             snapshot_i -= 1
 
@@ -113,14 +113,15 @@ def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
 
 
 class MultistageCheckpointSchedule(CheckpointSchedule):
-    """A binomial checkpointing schedule. 
+    """A binomial checkpointing schedule.
 
     Attributes
     ----------
     max_n : int
         The number of forward steps in the initial forward calculation.
     snapshots_in_ram : int
-        The maximum number of forward restart checkpoints to store in memory (`'RAM'`).
+        The maximum number of forward restart checkpoints to store in memory
+        (`'RAM'`).
     snapshots_on_disk : int
         The maximum number of forward restart checkpoints to store on `'disk'`.
     trajectory : str
@@ -135,11 +136,12 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
             - `'maximum'`: The maximum possible number of steps, corresponding
                 to the maximum step size compatible with the optimal region in
                 Fig. 4 of GW2000.
-    
+
     Notes
     -----
     This checkpointing approach is described in [1].
-    Uses a 'MultiStage' distribution of checkpoints between `'RAM'` and `'disk'`
+    Uses a 'MultiStage' distribution of checkpoints between `'RAM'` and
+    `'disk'`
     equivalent to that described in [2].
     The distribution between RAM and disk is determined using an initial run of
     the schedule. Offline, one adjoint calculation permitted.
@@ -154,9 +156,8 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
     Software (TOMS), 26(1), 19-45., doi: https://doi.org/10.1145/347837.347846
 
     [2] Stumm, P., & Walther, A. (2009). Multistage approaches for optimal
-    offline checkpointing. SIAM Journal on Scientific Computing, 31(3), 
+    offline checkpointing. SIAM Journal on Scientific Computing, 31(3),
     1946-1967. https://doi.org/10.1137/080718036
-    
     """
 
     def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk, *,
@@ -211,7 +212,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
 
         # Forward -> reverse
         self._n += 1
-        yield Forward(self._n - 1, self._n, False, True, StorageType.ADJ_DEPS)
+        yield Forward(self._n - 1, self._n, False, True, StorageType.WORK)
 
         yield EndForward()
 
@@ -227,10 +228,10 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
             if cp_n == self._max_n - self._r - 1:
                 snapshots.pop()
                 self._n = cp_n
-                yield Move(cp_n, cp_storage, StorageType.FWD_RESTART)
+                yield Move(cp_n, cp_storage, StorageType.WORK)
             else:
                 self._n = cp_n
-                yield Copy(cp_n, cp_storage, StorageType.FWD_RESTART)
+                yield Copy(cp_n, cp_storage, StorageType.WORK)
                 n_snapshots = (self._snapshots_in_ram
                                + self._snapshots_on_disk
                                - len(snapshots) + 1)
@@ -240,7 +241,7 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
                                     trajectory=self._trajectory)
                 assert n1 > n0
                 self._n = n1
-                yield Forward(n0, n1, False, False, StorageType.FWD_RESTART)
+                yield Forward(n0, n1, False, False, StorageType.WORK)
 
                 while self._n < self._max_n - self._r - 1:
                     n_snapshots = (self._snapshots_in_ram
@@ -257,9 +258,9 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
 
                 if self._n != self._max_n - self._r - 1:
                     raise RuntimeError("Invalid checkpointing state")
-                
+
             self._n += 1
-            yield Forward(self._n - 1, self._n, False, True, StorageType.ADJ_DEPS)  # noqa: E501
+            yield Forward(self._n - 1, self._n, False, True, StorageType.WORK)  # noqa: E501
             self._r += 1
             yield Reverse(self._n, self._n - 1, True)
         if self._r != self._max_n:
@@ -288,4 +289,3 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
             return self._snapshots_on_disk > 0
         elif storage_type == StorageType.RAM:
             return self._snapshots_in_ram > 0
- 

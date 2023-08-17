@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+"""Utilities for checkpointing schedules."""
 import functools
 import numpy as np
 from .schedule import StepType
@@ -16,10 +15,11 @@ except ImportError:
             return fn(*args, **kwargs)
         return wrapped_fn
 
+
 @njit
 def n_advance(n, snapshots, *, trajectory="maximum"):
     """Return the number of steps to advance.
-    
+
     Parameters
     ----------
     n : int
@@ -32,7 +32,7 @@ def n_advance(n, snapshots, *, trajectory="maximum"):
     Notes
     -----
     This function implements the algorithm described in [1].
-    
+
     [1] Andreas Griewank and Andrea Walther, 'Algorithm 799: revolve: an
     implementation of checkpointing for the reverse or adjoint mode of
     computational differentiation', ACM Transactions on Mathematical
@@ -167,6 +167,7 @@ _FORWARD_REVERSE = int(StepType.FORWARD_REVERSE)
 _WRITE_ADJ_DEPS = int(StepType.WRITE_ADJ_DEPS)
 _WRITE_ICS = int(StepType.WRITE_ICS)
 
+
 @njit
 def mixed_steps_tabulation(n, s):
     """Compute the schedule of mixed checkpointing.
@@ -178,7 +179,7 @@ def mixed_steps_tabulation(n, s):
         The number of forward steps.
     s : int
         The number of available checkpointing units.
-    
+
     Returns
     -------
     ndarray
@@ -243,7 +244,7 @@ def mixed_step_memoization_0(n, s):
         The number of forward steps.
     s : int
         The number of available checkpointing units.
-    
+
     Returns
     -------
     tuple
@@ -295,17 +296,18 @@ def mixed_steps_tabulation_0(n, s, schedule):
                                    "steps")
     return schedule_0
 
+
 @cache_step
 def optimal_extra_steps(n, s):
     """Return the optimal number of extra steps for the binomial checkpointing.
-    
+
     Parameters
     ----------
     n : int
         The number of forward steps.
     s : int
         The number of available checkpointing units.
-    
+
     Returns
     -------
     int
@@ -340,14 +342,14 @@ def optimal_extra_steps(n, s):
 
 def optimal_steps_binomial(n, s):
     """Compute the total number of steps for the binomial checkpointing.
-    
+
     Parameters
     ----------
     n : int
         The number of forward steps.
     s : int
         The number of available checkpointing units.
-    
+
     Returns
     -------
     int

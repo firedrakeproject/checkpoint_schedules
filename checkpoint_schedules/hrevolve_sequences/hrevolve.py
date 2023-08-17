@@ -8,7 +8,7 @@ from .utils import revolver_parameters
 def get_hopt_table(lmax, cvect, wvect, rvect, ub, uf):
     """ Compute the optimal hierarchical execution time
     for the H-Revolve algorithm.
-    
+
     Parameters
     ----------
     lmax : int
@@ -32,7 +32,8 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub, uf):
     K is the number of levels in the hierarchy.
     The *checkpoint_schedules* uses two storage levels: RAM and disk.
     Thus, K = 2.
-    For more details on execution time, refer to the work presented in [1], at section 3.1.
+    For more details on execution time, refer to the work presented in [1],
+    at section 3.1.
 
     [1] Herrmann, J. and Pallez (Aupy), G.. "H-Revolve: a framework
     for adjoint computation on synchronous hierarchical platforms."
@@ -47,9 +48,9 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub, uf):
     """
     K = len(cvect)
     assert len(wvect) == len(rvect) == len(cvect)
-    opt = [[[float("inf")] * (cvect[i] + 1) 
+    opt = [[[float("inf")] * (cvect[i] + 1)
             for _ in range(lmax + 1)] for i in range(K)]
-    optp = [[[float("inf")] * (cvect[i] + 1) 
+    optp = [[[float("inf")] * (cvect[i] + 1)
              for _ in range(lmax + 1)] for i in range(K)]
     # Initialize borders of the table
     for k in range(K):
@@ -64,48 +65,53 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub, uf):
             opt[k][1][m] = wvect[0] + optp[k][1][m]
     # Fill K = 0
     mmax = cvect[0]
-    for l in range(2, lmax + 1):
+    for l in range(2, lmax + 1):  # noqa: E741
         optp[0][l][1] = (l + 1) * ub + l * (l + 1) / 2 * uf + l * rvect[0]
         opt[0][l][1] = wvect[0] + optp[0][l][1]
     for m in range(2, mmax + 1):
-        for l in range(2, lmax + 1):
-            optp[0][l][m] = min([j * uf + opt[0][l - j][m - 1] + rvect[0] + optp[0][j - 1][m] for j in range(1, l)] + [optp[0][l][1]])
+        for l in range(2, lmax + 1):  # noqa: E741
+            optp[0][l][m] = min([j * uf + opt[0][l - j][m - 1] + rvect[0] +
+                                 optp[0][j - 1][m] for j in range(1, l)] + [optp[0][l][1]])  # noqa: E501
             opt[0][l][m] = wvect[0] + optp[0][l][m]
     # Fill K > 0
     for k in range(1, K):
         mmax = cvect[k]
-        for l in range(2, lmax+1):
+        for l in range(2, lmax+1):  # noqa: E741
             opt[k][l][0] = opt[k-1][l][cvect[k-1]]
         for m in range(1, mmax + 1):
-            for l in range(1, lmax + 1):
-                optp[k][l][m] = min([opt[k-1][l][cvect[k-1]]] + [j * uf + opt[k][l - j][m - 1] + rvect[k] + optp[k][j - 1][m] for j in range(1, l)])
-                opt[k][l][m] = min(opt[k-1][l][cvect[k-1]], wvect[k] + optp[k][l][m])
+            for l in range(1, lmax + 1):  # noqa: E741
+                optp[k][l][m] = min([opt[k-1][l][cvect[k-1]]] +
+                                    [j * uf + opt[k][l - j][m - 1] + rvect[k]
+                                     + optp[k][j - 1][m] for j in range(1, l)])
+                opt[k][l][m] = min(opt[k-1][l][cvect[k-1]], wvect[k] + optp[k][l][m])  # noqa: E501
     return (optp, opt)
 
 
-def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, 
-                 **params):
+def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None,  # noqa: E741
+                 hopt=None, **params):
     """Auxiliary function to compute the H-Revolve sequence of operations.
 
     Parameters
     ----------
     l : int
-        The number of forward steps to use in the AC(Adjoint Computation) graph.
+        The number of forward steps to use in the AC(Adjoint Computation)
+        graph.
     K : int
         Memory level, where `K = 0` represents RAM and `K = 1` represents disk.
     cmem : int
         Number of available slots in the K-th level of memory.
     cvect : tuple
-        A tuple containing the maximal number of slots that must be stored in 
+        A tuple containing the maximal number of slots that must be stored in
         each level.
     wvect : tuple
-        A tuple containing the cost of writing the checkpoint data in each 
+        A tuple containing the cost of writing the checkpoint data in each
         level.
     rvect : tuple
-        A tuple containing the cost of reading the checkpoint data in each level.
+        A tuple containing the cost of reading the checkpoint data in each
+        level.
     hoptp : list
-        Execution time for a optimal solution in which the data at step 0 is stored
-        in the top K-th level of storage.
+        Execution time for a optimal solution in which the data at step 0 is
+        stored in the top K-th level of storage.
     hopt : list
         Execution time for general hierarchical AC problem.
     params : dict
@@ -116,8 +122,6 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None,
     Sequence
         A sequence of operations.
     """
-
-    
     uf = params["uf"]
     ub = params["ub"]
     if (hoptp is None) or (hopt is None):
@@ -126,14 +130,15 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None,
                         levels=len(cvect), concat=params["concat"])
     operation = partial(Op, params=params)
     if cmem == 0:
-        raise KeyError("hrevolve_aux should not be call with cmem = 0. Contact developers.")
-    if l == 0:
+        raise KeyError("hrevolve_aux should not be call with cmem = 0. Contact\
+                       developers.")
+    if l == 0:  # noqa: E741
         sequence.insert(operation("Write_Forward", [0, 1]))
         sequence.insert(operation("Forward", [0, 1]))
         sequence.insert(operation("Backward", [1, 0]))
         sequence.insert(operation("Discard_Forward", [0, 1]))
         return sequence
-    if l == 1:
+    if l == 1:  # noqa: E741
         if wvect[0] + rvect[0] < rvect[K]:
             sequence.insert(operation("Write", [0, 0]))
         sequence.insert(operation("Forward", [0, 1]))
@@ -169,7 +174,8 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None,
         sequence.insert(operation("Discard", [0, 0]))
         return sequence
     if K == 0:
-        list_mem = [j * uf + hopt[0][l - j][cmem - 1] + rvect[0] + hoptp[0][j - 1][cmem] for j in range(1, l)]
+        list_mem = [j * uf + hopt[0][l - j][cmem - 1] + rvect[0] +
+                    hoptp[0][j - 1][cmem] for j in range(1, l)]
         if min(list_mem) < hoptp[0][l][1]:
             jmin = argmin(list_mem)
             sequence.insert(operation("Forward", [0, jmin]))
@@ -194,7 +200,8 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None,
                              hoptp=hoptp, hopt=hopt, **params)
             )
             return sequence
-    list_mem = [j * uf + hopt[K][l - j][cmem - 1] + rvect[K] + hoptp[K][j - 1][cmem] for j in range(1, l)]
+    list_mem = [j * uf + hopt[K][l - j][cmem - 1] + rvect[K] +
+                hoptp[K][j - 1][cmem] for j in range(1, l)]
     if min(list_mem) < hopt[K-1][l][cvect[K-1]]:
         jmin = argmin(list_mem)
         sequence.insert(operation("Forward", [0, jmin]))
@@ -217,9 +224,9 @@ def hrevolve_aux(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None,
         return sequence
 
 
-def hrevolve(l, cvect, wvect, rvect, fwd_cost, bwd_cost):
+def hrevolve(l, cvect, wvect, rvect, fwd_cost, bwd_cost):  # noqa: E741
     """H-Revolve algorithm.
-    
+
     Parameters
     ----------
     l : int
@@ -230,17 +237,20 @@ def hrevolve(l, cvect, wvect, rvect, fwd_cost, bwd_cost):
         A tuple containing the cost of writing the checkpoint data in each
         storage level.
     rvect : tuple
-        A tuple containing the cost of reading the checkpoint data in each 
+        A tuple containing the cost of reading the checkpoint data in each
         storage level.
 
     Notes
     -----
-    K is the number of levels in the hierarchy, where K = 2 for the two storage levels: RAM and disk.
-    For more details on H-Revolve and its schedules, refer to the work presented in [1].
+    K is the number of levels in the hierarchy, where K = 2 for the two
+    storage levels: `'RAM'` and `'disk'`.
+    For more details on H-Revolve and its schedules, refer to the work
+    presented in [1].
 
     [1] Herrmann, J. and Pallez (Aupy), G.. "H-Revolve: a framework for adjoint
-    computation on synchronous hierarchical platforms." ACM Transactions on 
-    Mathematical Software (TOMS) 46.2 (2020): 1-25. DOI: https://doi.org/10.1145/3378672.
+    computation on synchronous hierarchical platforms." ACM Transactions on
+    Mathematical Software (TOMS) 46.2 (2020): 1-25.
+    DOI: https://doi.org/10.1145/3378672.
 
     Returns
     -------
@@ -248,15 +258,14 @@ def hrevolve(l, cvect, wvect, rvect, fwd_cost, bwd_cost):
         H-Revolve schedules.
     """
     params = revolver_parameters(wvect, rvect, fwd_cost, bwd_cost)
-    
     h_rev = hrevolve_recurse(l, len(cvect)-1, cvect[-1], cvect, wvect, rvect,
                              hoptp=None, hopt=None, **params)
 
     return h_rev
 
 
-def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None, 
-                     **params):
+def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None,  # noqa: E741
+                     hopt=None, **params):
     """Hrevolve recurse schedule.
 
     Parameters
@@ -264,11 +273,11 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None,
     l : int
         Total number of forward step.
     K : int
-        The level of memory. In a two-level memory (RAM and disk) setup, 
+        The level of memory. In a two-level memory (RAM and disk) setup,
         `K = 1` represents disk, and `K = 0` represents RAM.
     cmem : int
-        Number of available slots in the K-th level of memory. For two-level 
-        memory, `cmem` represents the number of checkpoints that should be 
+        Number of available slots in the K-th level of memory. For two-level
+        memory, `cmem` represents the number of checkpoints that should be
         stored in disk.
     cvect : tuple
         The number of slots in each level of memory.
@@ -277,9 +286,9 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None,
     rvect : tuple
         The cost of reading from each level of memory.
     hoptp : list, optional
-     
+
     hopt : list, optional
-    
+
     Returns
     -------
     Sequence
@@ -293,15 +302,16 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None, hopt=None,
     sequence = Sequence(Function("HRevolve", l, [K, cmem]),
                         levels=len(cvect), concat=parameters["concat"])
     operation = partial(Op, params=parameters)
-    if l == 0:
+    if l == 0:  # noqa: E741
         sequence.insert(operation("Write_Forward", [0, 1]))
         sequence.insert(operation("Forward", [0, 1]))
         sequence.insert(operation("Backward", [1, 0]))
         sequence.insert(operation("Discard_Forward", [0, 1]))
         return sequence
     if K == 0 and cmem == 0:
-        raise KeyError("It's impossible to execute an AC graph of size > 0 with no memory.")
-    if l == 1:
+        raise KeyError("It's impossible to execute an AC graph of size > 0\
+                       with no memory.")
+    if l == 1:  # noqa: E741
         sequence.insert(operation("Write", [0, 0]))
         sequence.insert(operation("Forward", [0, 1]))
         sequence.insert(operation("Write_Forward", [0, 2]))

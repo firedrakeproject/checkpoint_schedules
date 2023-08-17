@@ -1,7 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-"""This module contains the checkpointing schedules for the cases where no 
+"""This module contains the checkpointing schedules for the cases where no
 revolver algorithm are used.
 """
 
@@ -15,7 +12,6 @@ __all__ = \
         "SingleMemoryStorageSchedule",
         "SingleDiskStorageSchedule",
         "NoneCheckpointSchedule",
-        
     ]
 
 
@@ -28,8 +24,8 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
     write_ics : bool
         Indicate whether to store the forward restart data for all steps.
     storage_ics: enum
-        Indicate the storage type of the forward restart data. 
-        This atributte is checked only if the user desires to save the forward 
+        Indicate the storage type of the forward restart data.
+        This atributte is checked only if the user desires to save the forward
         restart.
 
     Notes
@@ -43,9 +39,9 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
     """
 
     def __init__(self):
-        self._storage = StorageType.ADJ_DEPS
+        self._storage = StorageType.WORK
         super().__init__()
-    
+
     def _iterator(self):
         # Forward
 
@@ -57,7 +53,7 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
             n0 = self._n
             n1 = n0 + sys.maxsize
             self._n = n1
-            yield Forward(n0, n1, False, True, StorageType.ADJ_DEPS)
+            yield Forward(n0, n1, False, True, StorageType.WORK)
 
         yield EndForward()
 
@@ -93,7 +89,7 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
         """
 
         return storage_type == self._storage
-    
+
 
 class SingleDiskStorageSchedule(CheckpointSchedule):
     """A checkpointing schedule where all adjoint dependencies
@@ -106,7 +102,7 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
     Parameters
     ----------
     storage : enum
-        Indicate that the execution should stores in memore all foward restart 
+        Indicate that the execution should stores in memore all foward restart
         data and non-linear dependency data.
 
     Notes
@@ -121,9 +117,9 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
 
     def __init__(self, move_data=False):
         self._move_data = move_data
-        self._storage = StorageType.ADJ_DEPS
+        self._storage = StorageType.WORK
         super().__init__()
-    
+
     def _iterator(self):
         """Schedule iterator.
         """
@@ -144,9 +140,9 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
             if self._r < self._max_n:
                 # Reverse
                 if self._move_data is True:
-                    yield Move(i, StorageType.DISK, StorageType.ADJ_DEPS)
+                    yield Move(i, StorageType.DISK, StorageType.WORK)
                 else:
-                    yield Copy(i, StorageType.DISK, StorageType.ADJ_DEPS)
+                    yield Copy(i, StorageType.DISK, StorageType.WORK)
 
                 yield Reverse(i, i - 1, True)
             elif self._r == self._max_n:
@@ -233,4 +229,3 @@ class NoneCheckpointSchedule(CheckpointSchedule):
             Whether this schedule uses the given storage type.
         """
         return storage_type == StorageType.NONE
-

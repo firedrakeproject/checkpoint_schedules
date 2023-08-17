@@ -15,8 +15,8 @@ __all__ = ["MixedCheckpointSchedule"]
 
 class MixedCheckpointSchedule(CheckpointSchedule):
     """A checkpointing schedule which mixes storage of forward restart data and
-    non-linear dependency data in checkpointing units. 
-    
+    non-linear dependency data in checkpointing units.
+
     Attributes
     ----------
     max_n : int
@@ -29,16 +29,15 @@ class MixedCheckpointSchedule(CheckpointSchedule):
 
     Notes
     -----
-    Assumes that the data required to restart the forward has the same size as 
-    the data required to advance the adjoint over a step. Additionall details 
+    Assumes that the data required to restart the forward has the same size as
+    the data required to advance the adjoint over a step. Additionall details
     about the mixed checkpointing schedule is avaiable in [1].
-    This is a offline checkpointing strategy, one adjoint calculation 
+    This is a offline checkpointing strategy, one adjoint calculation
     permitted.
 
     [1] Maddison, J. R. (2023). On the implementation of checkpointing with
     high-level algorithmic differentiation. arXiv preprint arXiv:2305.09568.
     https://doi.org/10.48550/arXiv.2305.09568
- 
     """
 
     def __init__(self, max_n, snapshots, *, storage=StorageType.DISK):
@@ -95,16 +94,16 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                 if step_type == StepType.FORWARD_REVERSE:
                     if n1 > n0 + 1:
                         self._n = n1 - 1
-                        yield Forward(n0, n1 - 1, False, False, StorageType.FWD_RESTART)  # noqa: E501
+                        yield Forward(n0, n1 - 1, False, False, StorageType.WORK)  # noqa: E501
                     elif n1 <= n0:
                         raise InvalidForwardStep
                     self._n += 1
-                    yield Forward(n1 - 1, n1, False, True, StorageType.ADJ_DEPS)  # noqa: E501
+                    yield Forward(n1 - 1, n1, False, True, StorageType.WORK)  # noqa: E501
                 elif step_type == StepType.FORWARD:
                     if n1 <= n0:
                         raise InvalidForwardStep
                     self._n = n1
-                    yield Forward(n0, n1, False, False, StorageType.FWD_RESTART)  # noqa: E501
+                    yield Forward(n0, n1, False, False, StorageType.WORK)  # noqa: E501
                 elif step_type == StepType.WRITE_ADJ_DEPS:
                     if n1 != n0 + 1:
                         raise InvalidForwardStep
@@ -131,7 +130,8 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                     raise RuntimeError("Unexpected step type")
             if self._n != self._max_n - self._r:
                 raise InvalidForwardStep
-            if step_type not in (StepType.FORWARD_REVERSE, StepType.READ_ADJ_DEPS):
+            if step_type not in (StepType.FORWARD_REVERSE,
+                                 StepType.READ_ADJ_DEPS):
                 raise RuntimeError("Invalid checkpointing state")
 
             if self._r == 0:
@@ -165,10 +165,9 @@ class MixedCheckpointSchedule(CheckpointSchedule):
             elif step_type != StepType.READ_ICS:
                 raise RuntimeError("Invalid checkpointing state")
             if step_type == StepType.READ_ADJ_DEPS:
-                storage_type = StorageType.ADJ_DEPS
+                storage_type = StorageType.WORK
             elif step_type == StepType.READ_ICS:
-                storage_type = StorageType.FWD_RESTART
-            
+                storage_type = StorageType.WORK
             if cp_delete:
                 yield Move(cp_n, self._storage, storage_type)
             else:
@@ -203,19 +202,15 @@ class MixedCheckpointSchedule(CheckpointSchedule):
 
 class InvalidForwardStep(IndexError):
     "The forward step is not correct."
-    pass
 
 
 class InvalidReverseStep(IndexError):
     "The reverse step is not correct."
-    pass
 
 
 class InvalidRevolverAction(Exception):
     "The action is not expected for this iterator."
-    pass
 
 
 class InvalidActionIndex(IndexError):
     "The index of the action is not correct."
-    pass
