@@ -41,4 +41,4 @@ jobs:
         pytest
     - name: Test jupyter notebooks
       run: |
-        pytest --nbval-lax demos
+        pytest --nbval-lax docs/notebooks/
