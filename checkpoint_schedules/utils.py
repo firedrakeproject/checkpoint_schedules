@@ -25,20 +25,18 @@ class StorageType(Enum):
     DISK : Indicate the storage of the forward data on disk.
 
     WORK : Indicate the storage of forward data with the intend of immediate
-    usage or for a basis checkpointing strategy in memory.
+    usage or for a basic checkpointing strategy in memory.
 
     NONE : Indicate that there is no specific storage location defined for the
     checkpoint data.
 
     Notes
     -----
-    Basic checkpointing schedule in memory uses only `StorageType.WORK`, which
-    means to store all adjoint dependencies in a `'variable'` used for the
-    adjoint computation.
-
-    See Also
-    --------
-    :class:`SingleMemoryStorageSchedule`
+    The data stored in `RAM` or on `DISK` should not be immediately available
+    for restarting the forward solver or for use in the adjoint computation.
+    The data stored in the `WORK` is readily accessible for immediate usage in
+    the subsequent action involving the forward solver recomputations or the
+    adjoint advancing in time.
     """
     RAM = 0
     DISK = 1

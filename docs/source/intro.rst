@@ -12,12 +12,19 @@ finalisations.
 
 This package is designed to be flexible in interpreting different checkpointing strategies. 
 It is ready working with the following checkpointing approaches:
+
 * Revolve [1];
+
 * MultiStage checkpointing [2];
+
 * Disk revolve [3];
+
 * Periodic Disk Revolve [4];
+
 * H-Revolve[5];
+
 * Mixed storage of forward restart and adjoint dependency data [6];
+
 * Two-level binomial checkpointing [7] and [8];
 
 *checkpoint_schedules* is able to execute solvers through trivial checkpointing, 

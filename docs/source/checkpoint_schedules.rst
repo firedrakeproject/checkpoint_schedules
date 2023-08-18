@@ -17,13 +17,7 @@ Schedules
    :show-inheritance:
 
 
-.. automodule:: checkpoint_schedules.none_revolver
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-.. automodule:: checkpoint_schedules.schedule
+.. automodule:: checkpoint_schedules.basic_schedules
    :members:
    :undoc-members:
    :show-inheritance:
@@ -33,7 +27,15 @@ Schedules
    :undoc-members:
    :show-inheritance:
 
+Base Classes to build new schedules
+===================================
+.. automodule:: checkpoint_schedules.schedule
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
+Utils
+=====
 .. automodule:: checkpoint_schedules.utils
    :members:
    :undoc-members:

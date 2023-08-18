@@ -23,7 +23,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
         The number of forward steps in the initial forward calculation.
     snapshots: int
         The number of available checkpointing units.
-    storage : enum
+    storage : StorageType
         Indicate the checkpointing unit storage location. Either `'RAM'` or
         `'disk'`.
 
@@ -188,7 +188,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
 
         Parameters
         ----------
-        storage_type : enum
+        storage_type : StorageType
             Storage type to check.
 
         Returns
