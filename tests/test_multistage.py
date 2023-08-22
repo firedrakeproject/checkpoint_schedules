@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-from checkpoint_schedules import MultistageCheckpointSchedule, \
-    Copy, Move, Forward, Reverse, EndForward, EndReverse, StorageType
-from checkpoint_schedules.utils import optimal_steps_binomial
-
 import functools
 import pytest
+from checkpoint_schedules import MultistageCheckpointSchedule, \
+    Copy, Move, Forward, Reverse, EndForward, EndReverse
+from checkpoint_schedules.utils import optimal_steps_binomial, \
+    StorageType
 
 
 @pytest.mark.parametrize("trajectory", ["revolve",
@@ -18,8 +17,7 @@ import pytest
                                   (100, tuple(range(1, 100))),
                                   (250, tuple(range(25, 250, 25)))
                                   ])
-def test_multistage(trajectory,
-                                      n, S):
+def test_multistage(trajectory, n, S):
     """Test the multistage checkpointing schedule.
 
     Parameters
@@ -28,13 +26,12 @@ def test_multistage(trajectory,
         The trajectory to use. Either `'revolve'` or `'maximum'`.
     n : int
         The number of forward steps.
-    S : tuple of int    
-        ...
+    S : int
+        The number of snapshots saved in disk.
     """
     @functools.singledispatch
     def action(cp_action):
         raise TypeError("Unexpected action")
-
 
     @action.register(Forward)
     def action_forward(cp_action):
@@ -68,7 +65,6 @@ def test_multistage(trajectory,
             assert cp_action.n0 == min(ics)
             snapshots[cp_action.n0] = (set(ics), set(data))
 
-
         if store_data:
             # Advance exactly one step when storing non-linear dependency data
             assert cp_action.n1 == cp_action.n0 + 1
@@ -78,10 +74,9 @@ def test_multistage(trajectory,
             assert len(data.intersection(range(cp_action.n0, cp_action.n1))) == 0  # noqa: E501
             data.update(range(cp_action.n0, cp_action.n1))
 
-
         model_n = cp_action.n1
         model_steps += cp_action.n1 - cp_action.n0
-        
+
     @action.register(Reverse)
     def action_reverse(cp_action):
         nonlocal model_r
@@ -103,7 +98,6 @@ def test_multistage(trajectory,
         # The checkpoint exists
         assert cp_action.n in snapshots
         assert cp_action.from_storage == StorageType.DISK
-        assert cp_action.to_storage == StorageType.WORK
         cp = snapshots[cp_action.n]
 
         # No data is currently stored for this step
@@ -121,7 +115,6 @@ def test_multistage(trajectory,
         ics.update(cp[0])
         model_n = cp_action.n
 
-
     @action.register(Move)
     def action_move(cp_action):
         nonlocal model_n
@@ -133,10 +126,11 @@ def test_multistage(trajectory,
 
         assert len(cp[0]) > 0 or len(cp[1]) > 0
 
-        if cp_action.to_storage == StorageType.NONE:
-            assert (cp_action.n == n - model_r - 1)
-            del snapshots[cp_action.n]
-
+        ics.clear()
+        ics.update(cp[0])
+        model_n = cp_action.n
+        assert (cp_action.n == n - model_r - 1)
+        del snapshots[cp_action.n]
 
     @action.register(EndForward)
     def action_end_forward(cp_action):
@@ -147,7 +141,7 @@ def test_multistage(trajectory,
     def action_end_reverse(cp_action):
         # The correct number of adjoint steps has been taken
         assert model_r == n
-  
+
     for s in S:
         print(f"{n=:d} {s=:d}")
 

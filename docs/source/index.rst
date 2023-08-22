@@ -19,7 +19,7 @@ If you want to quickly get up and running with *checkpoint_schedules* your adjoi
   $  pip install checkpoint_schedule
 
 * Familiarise with *checkpoint_schedules* by acessing the :ref:`introduction <introduction>`.
-* Go through to a basic :ref:`example <example_checkpoint_schedules>` that explain how *checkpoint_schedule* works in a first illustration of a adjoint problem.
+* Go through to a basic :ref:`example <example_checkpoint_schedules>` that explain how *checkpoint_schedule* works in a adjoint problem.
   Whereas :ref:`tutorial <tutorial_checkpoint_schedules>` shows application of the *checkpoint_schedules* package in a adjoint-based gradient problem 
   involving burger's equation.
 

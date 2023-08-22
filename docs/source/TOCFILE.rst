@@ -1,4 +1,5 @@
 .. _checkpoint_schedules-api-reference:
+
 checkpoint_schedules
 ====================
 
@@ -6,3 +7,5 @@ checkpoint_schedules
    :maxdepth: 4
 
    checkpoint_schedules
+
+

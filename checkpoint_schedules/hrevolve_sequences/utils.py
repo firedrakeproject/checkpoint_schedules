@@ -1,20 +1,23 @@
 #!/usr/bin/python
 
-def revolver_parameters(wd, rd, uf, ub, mx=2):
-    """Set default revolver parameters.
-    
+def revolver_parameters(wd, rd, uf, ub):
+    """Parameter use to obtain the revolver sequences.
+
     Parameters
     ----------
-    wd : float|tuple
-        ....
-    rd : float|tuple
-        ....
+    wd : float
+        Cost of writing to disk.
+    rd : float
+        Cost of reading from disk.
+    uf : float
+        Measure of the forward cost related to one time-step execution.
+    ub : float
+        Measure of the backward cost related to one time-step execution.
 
-    Notes
-    -----
-
-    Returns:
-        dict: Revolver parameters.
+    Returns
+    -------
+    dict
+        Dictionary of parameters used in the revolver algorithm.
     """
 
     params = {

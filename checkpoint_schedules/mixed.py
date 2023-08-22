@@ -1,9 +1,9 @@
 import warnings
 from .schedule import CheckpointSchedule, Forward, Reverse, Copy, Move,\
-    EndForward, EndReverse, StorageType, StepType
+    EndForward, EndReverse, StepType
 
 from .utils import mixed_step_memoization, mixed_step_memoization_0,\
-     mixed_steps_tabulation, mixed_steps_tabulation_0
+     mixed_steps_tabulation, mixed_steps_tabulation_0, StorageType
 
 try:
     import numba
@@ -12,24 +12,32 @@ except ImportError:
 
 __all__ = ["MixedCheckpointSchedule"]
 
+
 class MixedCheckpointSchedule(CheckpointSchedule):
     """A checkpointing schedule which mixes storage of forward restart data and
-    non-linear dependency data in checkpointing units. Assumes that the data
-    required to restart the forward has the same size as the data required to
-    advance the adjoint over a step.
+    non-linear dependency data in checkpointing units.
 
-    Described in
-
-        - James R. Maddison, 'On the implementation of checkpointing with
-          high-level algorithmic differentiation',
-          https://arxiv.org/abs/2305.09568v1, 2023
-
-    Offline, one adjoint calculation permitted.
-
-    :arg max_n: The number of forward steps in the initial forward calculation.
-    :arg snapshots: The number of available checkpointing units.
-    :arg storage: Checkpointing unit storage location. Either `'RAM'` or
+    Attributes
+    ----------
+    max_n : int
+        The number of forward steps in the initial forward calculation.
+    snapshots: int
+        The number of available checkpointing units.
+    storage : StorageType
+        Indicate the checkpointing unit storage location. Either `'RAM'` or
         `'disk'`.
+
+    Notes
+    -----
+    Assumes that the data required to restart the forward has the same size as
+    the data required to advance the adjoint over a step. Additionall details
+    about the mixed checkpointing schedule is avaiable in [1].
+    This is a offline checkpointing strategy, one adjoint calculation
+    permitted.
+
+    [1] Maddison, J. R. (2023). On the implementation of checkpointing with
+    high-level algorithmic differentiation. arXiv preprint arXiv:2305.09568.
+    https://doi.org/10.48550/arXiv.2305.09568
     """
 
     def __init__(self, max_n, snapshots, *, storage=StorageType.DISK):
@@ -86,17 +94,17 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                 if step_type == StepType.FORWARD_REVERSE:
                     if n1 > n0 + 1:
                         self._n = n1 - 1
-                        yield Forward(n0, n1 - 1, False, False, StorageType.NONE)
+                        yield Forward(n0, n1 - 1, False, False, StorageType.WORK)  # noqa: E501
                     elif n1 <= n0:
                         raise InvalidForwardStep
                     self._n += 1
-                    yield Forward(n1 - 1, n1, False, True, StorageType.WORK)
+                    yield Forward(n1 - 1, n1, False, True, StorageType.WORK)  # noqa: E501
                 elif step_type == StepType.FORWARD:
                     if n1 <= n0:
                         raise InvalidForwardStep
                     self._n = n1
-                    yield Forward(n0, n1, False, False, StorageType.NONE)
-                elif step_type == StepType.WRITE_DATA:
+                    yield Forward(n0, n1, False, False, StorageType.WORK)  # noqa: E501
+                elif step_type == StepType.WRITE_ADJ_DEPS:
                     if n1 != n0 + 1:
                         raise InvalidForwardStep
                     self._n = n1
@@ -106,7 +114,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                     elif len(snapshots) > self._snapshots - 1:
                         raise RuntimeError("Invalid checkpointing state")
                     snapshot_n.add(n0)
-                    snapshots.append((StepType.READ_DATA, n0))
+                    snapshots.append((StepType.READ_ADJ_DEPS, n0))
                 elif step_type == StepType.WRITE_ICS:
                     if n1 <= n0 + 1:
                         raise InvalidActionIndex
@@ -122,14 +130,15 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                     raise RuntimeError("Unexpected step type")
             if self._n != self._max_n - self._r:
                 raise InvalidForwardStep
-            if step_type not in (StepType.FORWARD_REVERSE, StepType.READ_DATA):
+            if step_type not in (StepType.FORWARD_REVERSE,
+                                 StepType.READ_ADJ_DEPS):
                 raise RuntimeError("Invalid checkpointing state")
 
             if self._r == 0:
                 yield EndForward()
 
             self._r += 1
-            yield Reverse(self._max_n - self._r + 1, self._max_n - self._r, True)
+            yield Reverse(self._max_n - self._r + 1, self._max_n - self._r, True)  # noqa: E501
 
             if self._r == self._max_n:
                 break
@@ -145,7 +154,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                 snapshots.pop()
 
             self._n = cp_n
-            if step_type == StepType.READ_DATA:
+            if step_type == StepType.READ_ADJ_DEPS:
                 # Non-linear dependency data checkpoint
                 if not cp_delete:
                     # We cannot advance from a loaded non-linear dependency
@@ -155,9 +164,14 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                 self._n += 1
             elif step_type != StepType.READ_ICS:
                 raise RuntimeError("Invalid checkpointing state")
-            yield Copy(cp_n, self._storage, StorageType.WORK)
+            if step_type == StepType.READ_ADJ_DEPS:
+                storage_type = StorageType.WORK
+            elif step_type == StepType.READ_ICS:
+                storage_type = StorageType.WORK
             if cp_delete:
-                yield Move(cp_n, self._storage, StorageType.NONE)
+                yield Move(cp_n, self._storage, storage_type)
+            else:
+                yield Copy(cp_n, self._storage, storage_type)
 
         if len(snapshot_n) > 0 or len(snapshots) > 0:
             raise RuntimeError("Invalid checkpointing state")
@@ -174,8 +188,8 @@ class MixedCheckpointSchedule(CheckpointSchedule):
 
         Parameters
         ----------
-        storage_type : StorageType.RAM or StorageType.DISK
-            Given storage type.
+        storage_type : StorageType
+            Storage type to check.
 
         Returns
         -------
@@ -188,19 +202,15 @@ class MixedCheckpointSchedule(CheckpointSchedule):
 
 class InvalidForwardStep(IndexError):
     "The forward step is not correct."
-    pass
 
 
 class InvalidReverseStep(IndexError):
     "The reverse step is not correct."
-    pass
 
 
 class InvalidRevolverAction(Exception):
     "The action is not expected for this iterator."
-    pass
 
 
 class InvalidActionIndex(IndexError):
     "The index of the action is not correct."
-    pass
