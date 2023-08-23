@@ -122,30 +122,32 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
 
         yield EndForward()
 
-        for i in range(self._max_n, 0, -1):
-            if self._r < self._max_n:
-                # Reverse
+        while True:
+            while self._r < self._max_n:
+                n1 = self._max_n - self._r
+                n0 = ((n1 - 1) // sys.maxsize) * sys.maxsize
+
+                self._n = n0
                 if self._move_data:
-                    yield Move(i, StorageType.DISK, StorageType.WORK)
+                    yield Move(self._n, StorageType.DISK, StorageType.WORK)
                 else:
-                    yield Copy(i, StorageType.DISK, StorageType.WORK)
+                    yield Copy(self._n, StorageType.DISK, StorageType.WORK)
 
-                yield Reverse(i, i - 1, True)
-            elif self._r == self._max_n:
-                # Reset for new reverse
-
-                self._r = 0
-                yield EndReverse()
-            else:
+                self._r = self._max_n - n0
+                yield Reverse(n1, n0, True)
+            if self._r > self._max_n:
                 raise RuntimeError("Invalid checkpointing state")
-            self._r += 1
+            self._r = 0
+            yield EndReverse()
+
+            if self._move_data:
+                break
 
     @property
     def is_exhausted(self):
-        if self._move_data:
-            return True
-        else:
-            return False
+        return (self._move_data
+                and self._max_n is not None
+                and self._r == self._max_n)
 
     def uses_storage_type(self, storage_type):
         """Check if a given storage type is used by this schedule.
