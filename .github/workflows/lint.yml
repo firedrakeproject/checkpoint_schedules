@@ -31,4 +31,4 @@ jobs:
           pip install flake8 pylint
       - name: Lint codebase
         run: |
-          flake8: true
+          flake8 .
