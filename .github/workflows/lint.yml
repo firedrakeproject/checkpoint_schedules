@@ -31,4 +31,4 @@ jobs:
           pip install flake8 pylint
       - name: Lint codebase
         run: |
-          make lint GITHUB_ACTIONS_FORMATTING=1
+          flake8: true
