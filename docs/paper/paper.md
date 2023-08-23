@@ -29,12 +29,13 @@ Storing forward data at each time step in memory can be impractical for large sy
 
 <!-- Statement of need -->
 Integrating a single checkpoint strategy in an adjoint-based gradient solver that performs for distinct applications may not yield sufficient arrangement for every case. However, either writing or adapting different checkpointing approaches can lead to substantial effort since their implementations are usually originating from different codes sources. *checkpointing_schedules* package aims to overcome this issue with the flexibility to include different checkpointing strategies. This package can generate schedules based on the checkpointings for a variety of requirements, such as for mixed storage, for the cases where the forward time steps are a priori unknown, and for unlimited adjoint executions (online checkpointing). 
+<!-- checkp enables model authors to switch checkpoint strategies without recoding. Conversely, it provides a plataform which to directly  -->
 
 Essentialy, *checkpointing_schedules* generate schedules with functionalities that indicate the time advancing the forward and adjoint solvers, data storage and retrieval, and the solver finalisations. This package is able to provide schedules for the Revolve checkpointing [@griewank2000algorithm], and the checkpointing strategies with mixed storage: multistage checkpointing [@stumm2009multistage]; disk-revolve checkpointing [@aupy2016optimal]; periodic-disk revolve checkpointing [@aupy2017periodicity]; two-level checkpointing [@pringle2016providing], H-Revolve checkpointing [@herrmann2020]; and mixed storage checkpointing [@maddison2023]. 
-
+<!-- checkpoint_schedules is indepent of any checkpointing strategy -->
 *checkpointing_schedules* extends to its capabilities for the trivial checkpointing, which entails the forward data storage of all time steps without any checkpointing strategy. Furthermore, the package provides an alternative for the cases where no adjoint executions are needed. 
 
-In conclusion, integrating the *checkpoint_schedules* package with an adjoint-based gradient solver is effective due to its condition of a variety of checkpointing strategies. Moreover, it is flexible in hosting new checkpointing methods, and it was built to be easy for using and integrating with other codes.
+In conclusion, integrating the *checkpoint_schedules* package with an adjoint-based gradient solver is effective due to its condition of a variety of checkpointing strategies. Moreover, it is flexible in hosting new checkpointing methods, and it was built to be easy for using and integrating with other codes of checkpoint strategies (new proposal of check strategies).
 
 
 The *checkpoint_schedules* repository contains documentions and notebooks demos available at ...

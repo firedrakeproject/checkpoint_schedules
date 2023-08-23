@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 import functools
 from enum import IntEnum
+import sys
 
 __all__ = \
     [
@@ -60,7 +61,10 @@ class CheckpointAction:
         self.args = args
 
     def __repr__(self):
-        return f"{type(self).__name__}{self.args!r}"
+
+        strargs = tuple("sys.maxsize" if arg == sys.maxsize else repr(arg)
+                        for arg in self.args)
+        return f"{type(self).__name__}({', '.join(strargs)})"
 
     def __eq__(self, other):
         return isinstance(self, other) and self.args == other.args

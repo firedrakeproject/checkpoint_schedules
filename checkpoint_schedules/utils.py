@@ -43,6 +43,9 @@ class StorageType(Enum):
     WORK = -1
     NONE = None
 
+    def __repr__(self):
+        return type(self).__name__ + "." + self.name
+
 
 @njit
 def n_advance(n, snapshots, *, trajectory="maximum"):
