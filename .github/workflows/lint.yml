@@ -1,0 +1,34 @@
+name: Lint
+
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the main branch
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  run-linters:
+    name: Run linters
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+
+      - name: Setup flake8 annotations
+        uses: rbialon/flake8-annotations@v1
+      - name: Install linter
+        run: |
+          pip install flake8 pylint
+      - name: Lint codebase
+        run: |
+          make lint GITHUB_ACTIONS_FORMATTING=1
