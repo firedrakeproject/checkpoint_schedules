@@ -2,8 +2,8 @@
 revolver algorithm are used.
 """
 import sys
-from .schedule import CheckpointSchedule, Forward, Reverse,\
-    EndForward, EndReverse, Move, Copy
+from .schedule import (
+    CheckpointSchedule, Forward, Reverse, EndForward, EndReverse, Move, Copy)
 from .utils import StorageType
 
 
@@ -11,7 +11,7 @@ __all__ = \
     [
         "SingleMemoryStorageSchedule",
         "SingleDiskStorageSchedule",
-        "NoneCheckpointSchedule",
+        "NoneCheckpointSchedule"
     ]
 
 
@@ -225,12 +225,12 @@ class NoneCheckpointSchedule(CheckpointSchedule):
         -----
         This schedule is employed if there is no adjoint calculation,
         which leads no requirements for forward data (adjoint dependency)
-        storage. Therefore, this method returns `True` only if
-        `storage_type == StorageType.NONE`. Otherwise, it returns `False`.
+        storage. Therefore this method always returns `False`.
 
         Returns
         -------
         bool
             Whether this schedule uses the given storage type.
         """
-        return storage_type == StorageType.NONE
+
+        return False
