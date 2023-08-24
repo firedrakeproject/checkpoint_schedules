@@ -9,7 +9,7 @@ packages = ["checkpoint_schedules"]
 
 [project]
 name = "checkpoint_schedules"
-version = "0.0.1"
+version = "0.0.8"
 # authors = [
 #   {email = "....."},
 #   {name = "....."}
