@@ -1,6 +1,6 @@
-"""This module contains the checkpointing schedules for the cases where no
-revolver algorithm are used.
+"""This module contains basic checkpointing schedules.
 """
+
 import sys
 from .schedule import CheckpointSchedule, Forward, Reverse, \
     EndForward, EndReverse, Move, Copy
@@ -16,8 +16,8 @@ __all__ = \
 
 
 class SingleMemoryStorageSchedule(CheckpointSchedule):
-    """A checkpointing schedule where all adjoint dependencies
-    are stored in memory.
+    """A checkpointing schedule where all adjoint dependencies are stored in
+    memory.
 
     Notes
     -----
@@ -61,7 +61,7 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
         return False
 
     def uses_storage_type(self, storage_type):
-        """Check if a given storage type is used in this schedule.
+        """Return whether a given storage type is used in this schedule.
 
         Parameters
         ----------
@@ -70,10 +70,7 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
 
         Notes
         -----
-        This schedule uses only `StorageType.WORK`, which means to store all
-        adjoint dependencies in a `'variable'` used for the adjoint
-        computation. Thus, this method returns `True` only if
-        `storage_type == StorageType.WORK`. Otherwise, it returns `False`.
+        This schedule uses only `StorageType.WORK`.
 
         Returns
         -------
@@ -85,8 +82,8 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
 
 
 class SingleDiskStorageSchedule(CheckpointSchedule):
-    """A checkpointing schedule where all adjoint dependencies
-    are stored on disk.
+    """A checkpointing schedule where all adjoint dependencies are stored on
+    disk.
 
     Notes
     -----
@@ -96,11 +93,12 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
     ----------
     move_data : bool
         Indicate whether the execution should move the data from
-        `StorageType.DISK` to `StorageType.WORK`.
+        `StorageType.DISK` to `StorageType.WORK`, rather than copy the data.
 
     Notes
     -----
-    Online, unlimited adjoint calculations permitted.
+    Online, unlimited adjoint calculations permitted if `move_data` is `False`,
+    one adjoint calculation permitted if `move_data` is `True`.
     """
 
     def __init__(self, move_data=False):
@@ -150,7 +148,7 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
             return False
 
     def uses_storage_type(self, storage_type):
-        """Check if a given storage type is used in this schedule.
+        """Check if a given storage type is used by this schedule.
 
         Parameters
         ----------
@@ -159,10 +157,7 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
 
         Notes
         -----
-        This schedule uses only `StorageType.DISK`, i.e, store all
-        adjoint dependencies in `'disk'`. Thus, this method returns `True`
-        only if `storage_type == StorageType.DISK`. Otherwise, it returns
-        `False`.
+        This schedule uses only `StorageType.DISK` and `StorageType.WORK`.
 
         Returns
         -------
@@ -170,17 +165,12 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
             Whether this schedule uses a given storage type.
         """
 
-        return storage_type == self._storage
+        return storage_type in {self._storage, StorageType.WORK}
 
 
 class NoneCheckpointSchedule(CheckpointSchedule):
     """A checkpointing schedule for the case where no adjoint calculation is
     performed.
-
-    Attributes
-    ----------
-    _exhausted : bool
-        Indicate that the execution is exhausted.
 
     Notes
     -----
@@ -209,28 +199,23 @@ class NoneCheckpointSchedule(CheckpointSchedule):
 
     @property
     def is_exhausted(self):
-        """Check if the execution is exhausted.
-        """
         return self._exhausted
 
     def uses_storage_type(self, storage_type):
-        """Check if a given storage type is used in this schedule.
+        """Check if a given storage type is used by this schedule.
 
         Parameters
         ----------
-        storage_type : enum
-            Storage type to check.
+        storage_type : StorageType
+            Given storage type.
 
         Notes
         -----
-        This schedule is employed if there is no adjoint calculation,
-        which leads no requirements for forward data (adjoint dependency)
-        storage. Therefore, this method returns `True` only if
-        `storage_type == StorageType.NONE`. Otherwise, it returns `False`.
+        This schedule uses no storage.
 
         Returns
         -------
         bool
-            Whether this schedule uses the given storage type.
+            Whether this schedule uses a given storage type.
         """
         return storage_type == StorageType.NONE
