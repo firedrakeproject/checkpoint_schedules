@@ -21,8 +21,8 @@ import functools
 import pytest
 from checkpoint_schedules.schedule import \
     Forward, Reverse, Copy, Move, EndForward, EndReverse
-from checkpoint_schedules import HRevolve, DiskRevolve, PeriodicDiskRevolve,\
-    Revolve, MultistageCheckpointSchedule, TwoLevelCheckpointSchedule,\
+from checkpoint_schedules import HRevolve, DiskRevolve, PeriodicDiskRevolve, \
+    Revolve, MultistageCheckpointSchedule, TwoLevelCheckpointSchedule, \
     MixedCheckpointSchedule
 from checkpoint_schedules.utils import StorageType
 

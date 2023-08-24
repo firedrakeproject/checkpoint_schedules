@@ -3,7 +3,7 @@
 import functools
 import pytest
 
-from checkpoint_schedules import MixedCheckpointSchedule, Copy,\
+from checkpoint_schedules import MixedCheckpointSchedule, Copy, \
      Forward, Reverse, EndForward, EndReverse, Move
 from checkpoint_schedules.utils import mixed_step_memoization, \
     optimal_steps_mixed, StorageType
