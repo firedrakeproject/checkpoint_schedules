@@ -1,8 +1,8 @@
 import warnings
-from .schedule import CheckpointSchedule, Forward, Reverse, Copy, Move,\
+from .schedule import CheckpointSchedule, Forward, Reverse, Copy, Move, \
     EndForward, EndReverse, StepType
 
-from .utils import mixed_step_memoization, mixed_step_memoization_0,\
+from .utils import mixed_step_memoization, mixed_step_memoization_0, \
      mixed_steps_tabulation, mixed_steps_tabulation_0, StorageType
 
 try:
