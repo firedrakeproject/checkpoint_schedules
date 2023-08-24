@@ -1,6 +1,6 @@
 import functools
 from operator import itemgetter
-from .schedule import CheckpointSchedule, Forward, Reverse, Copy, Move,\
+from .schedule import CheckpointSchedule, Forward, Reverse, Copy, Move, \
     EndForward, EndReverse
 from .utils import n_advance, StorageType
 

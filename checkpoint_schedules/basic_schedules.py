@@ -2,7 +2,7 @@
 revolver algorithm are used.
 """
 import sys
-from .schedule import CheckpointSchedule, Forward, Reverse,\
+from .schedule import CheckpointSchedule, Forward, Reverse, \
     EndForward, EndReverse, Move, Copy
 from .utils import StorageType
 
