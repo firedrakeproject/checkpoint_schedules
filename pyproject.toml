@@ -1,55 +1,34 @@
-[tool.poetry]
-name = "checkpoint_schedules"
-version = "0.0.8"
-description = "Schedules for incremental checkpointing of adjoint simulations."
-license = "LGPL-3.0 license"
-authors = [
-    "Dr Daiane I. Dolci <ddolci@eimperial.ic.ac.uk>",
-    "Dr James R. Maddison <j.r.maddison@ed.ac.uk>",
-    "Dr David A. Ham <david.ham@imperial.ac.uk>",
-]
-readme = "README.md"
-# homepage = "https://www.firedrakeproject.org/checkpoint_schedules/"
-repository = "https://github.com/firedrakeproject/checkpoint_schedules"
-# documentation = ""
-keywords = ["schedules", "adjoint based-gradient", "checkpointing methods"]
-
-packages = [
-    { include = "checkpoint_schedules" },
-]
-
-[tool.poetry.dependencies]
-numpy = "1.*"
-python = ">=3.9"
-
-[tool.poetry.group.test.dependencies]
-pytest = "*"
-
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-sphinx = "7.*"
-nbsphinx = "0.9.*"
-nbsphinx_link = "1.3.*"
-sphinx-rtd-theme = "1.3.*"
-ipython = "8.14.*"
-
-[tool.poetry.group.numba]
-optional = true
-
-[tool.poetry.group.numba.dependencies]
-numba = "0.57.*"
-
-[tool.poetry.group.notebooks]
-optional = true
-
-[tool.poetry.group.notebooks.dependencies]
-jupyter = "1.0.*"
-scipy = "1.11.*"
-tabulate = "0.9.*"
 
 [build-system]
-requires = ["poetry-core>=1.5.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "checkpoint_schedules"
+version = "0.0.81"
+authors = [
+  { name="Daiane I. Dolci ", email="ddolci@eimperial.ic.ac.uk" },
+    { name="James R. Maddison", email="j.r.maddison@ed.ac.uk" },
+    { name="David A. Ham", email="david.ham@imperial.ac.uk" },
+]
+description = "Schedules for incremental checkpointing of adjoint simulations."
+readme = "README.md"
+license = {text = "LGPL-3.0"}
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+
+dependencies = ["numpy"]
+
+[project.optional-dependencies]
+numba = ["numba"]
+docs = ["sphinx", "nbsphinx", "nbsphinx_link", "sphinx-rtd-theme", "ipython"]
+notebooks = ["jupyter", "scipy", "tabulate"]
+
+[project.urls]
+# "Homepage" = "https://www.firedrakeproject.org/checkpoint_schedules/"
+"repository" = "https://github.com/firedrakeproject/checkpoint_schedules"
+"Bug Tracker" = "https://github.com/firedrakeproject/checkpoint_schedules/issues"
+
 
