@@ -3,8 +3,8 @@
 
 import sys
 from .schedule import (
-    CheckpointSchedule, Forward, Reverse, EndForward, EndReverse, Move, Copy)
-from .utils import StorageType
+    CheckpointSchedule, Forward, Reverse, EndForward, EndReverse, Move,
+    Copy, StorageType)
 
 
 __all__ = \

@@ -5,10 +5,9 @@ Disk Revolve, Periodic Disk Revolve and Revolve algorithms.
 """
 
 from .schedule import CheckpointSchedule, Forward, Reverse, Copy, Move, \
-    EndForward, EndReverse
+    EndForward, EndReverse, StorageType
 from .hrevolve_sequences import hrevolve, disk_revolve, \
     periodic_disk_revolve, revolve
-from .utils import StorageType
 
 __all__ = \
     [

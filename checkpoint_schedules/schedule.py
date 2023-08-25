@@ -2,7 +2,7 @@
 """
 from abc import ABC, abstractmethod
 import functools
-from enum import IntEnum
+from enum import IntEnum, Enum
 import sys
 
 __all__ = \
@@ -15,7 +15,38 @@ __all__ = \
         "EndForward",
         "EndReverse",
         "CheckpointSchedule",
+        "StorageType"
     ]
+
+
+class StorageType(Enum):
+    """This class provides the storage types used in the checkpoint schedules.
+
+    RAM : Indicate the storage of the forward data in memory.
+
+    DISK : Indicate the storage of the forward data on disk.
+
+    WORK : Indicate the storage of forward data with the intend of immediate
+    usage or for a basic checkpointing strategy in memory.
+
+    NONE : Indicate that there is no specific storage location defined for the
+    checkpoint data.
+
+    Notes
+    -----
+    The data stored in `RAM` or on `DISK` should not be immediately available
+    for restarting the forward solver or for use in the adjoint computation.
+    The data stored in the `WORK` is readily accessible for immediate usage in
+    the subsequent action involving the forward solver recomputations or the
+    adjoint advancing in time.
+    """
+    RAM = 0
+    DISK = 1
+    WORK = -1
+    NONE = None
+
+    def __repr__(self):
+        return type(self).__name__ + "." + self.name
 
 
 class StepType(IntEnum):

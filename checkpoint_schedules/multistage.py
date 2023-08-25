@@ -1,13 +1,25 @@
 import functools
 from operator import itemgetter
 from .schedule import CheckpointSchedule, Forward, Reverse, Copy, Move, \
-    EndForward, EndReverse
-from .utils import n_advance, StorageType
+    EndForward, EndReverse, StorageType
 
 __all__ = \
     [
-        "MultistageCheckpointSchedule"
+        "MultistageCheckpointSchedule",
+        "optimal_steps_binomial"
     ]
+
+try:
+    import numba
+    from numba import njit
+except ImportError:
+    numba = None
+
+    def njit(fn):
+        @functools.wraps(fn)
+        def wrapped_fn(*args, **kwargs):
+            return fn(*args, **kwargs)
+        return wrapped_fn
 
 
 def allocate_snapshots(max_n, snapshots_in_ram, snapshots_on_disk, *,
@@ -288,3 +300,156 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
             return self._snapshots_on_disk > 0
         elif storage_type == StorageType.RAM:
             return self._snapshots_in_ram > 0
+
+
+def optimal_steps_binomial(n, s):
+    """Compute the total number of steps for the binomial checkpointing.
+
+    Parameters
+    ----------
+    n : int
+        The number of forward steps.
+    s : int
+        The number of available checkpointing units.
+
+    Returns
+    -------
+    int
+        The optimal steps.
+    """
+    return n + optimal_extra_steps(n, s)
+
+
+def cache_step(fn):
+    _cache = {}
+
+    @functools.wraps(fn)
+    def wrapped_fn(n, s):
+        # Avoid some cache misses
+        s = min(s, n - 1)
+        if (n, s) not in _cache:
+            _cache[(n, s)] = fn(n, s)
+        return _cache[(n, s)]
+
+    return wrapped_fn
+
+
+@cache_step
+def optimal_extra_steps(n, s):
+    """Return the optimal number of extra steps for the binomial checkpointing.
+
+    Parameters
+    ----------
+    n : int
+        The number of forward steps.
+    s : int
+        The number of available checkpointing units.
+
+    Returns
+    -------
+    int
+        The optimal number of extra steps.
+    """
+    if n <= 0:
+        raise ValueError("Invalid number of steps")
+    if s < min(1, n - 1) or s > n - 1:
+        raise ValueError("Invalid number of snapshots")
+
+    if n == 1:
+        return 0
+    # Equation (2) of
+    #   A. Griewank and A. Walther, "Algorithm 799: Revolve: An implementation
+    #   of checkpointing for the reverse or adjoint mode of computational
+    #   differentiation", ACM Transactions on Mathematical Software, 26(1), pp.
+    #   19--45, 2000
+    elif s == 1:
+        return n * (n - 1) // 2
+    else:
+        m = None
+        for i in range(1, n):
+            m1 = (i
+                  + optimal_extra_steps(i, s)
+                  + optimal_extra_steps(n - i, s - 1))
+            if m is None or m1 < m:
+                m = m1
+        if m is None:
+            raise RuntimeError("Failed to determine number of extra steps")
+        return m
+
+
+@njit
+def n_advance(n, snapshots, *, trajectory="maximum"):
+    """Return the number of steps to advance.
+
+    Parameters
+    ----------
+    n : int
+        The number of steps to advance.
+    snapshots : int
+        The number of available snapshots.
+    trajectory : str, optional
+        The trajectory to use. Can be `'maximum'` or `'revolve'`.
+
+    Notes
+    -----
+    This function implements the algorithm described in [1].
+
+    [1] Andreas Griewank and Andrea Walther, 'Algorithm 799: revolve: an
+    implementation of checkpointing for the reverse or adjoint mode of
+    computational differentiation', ACM Transactions on Mathematical
+    Software, 26(1), pp. 19--45, 2000, doi: 10.1145/347837.347846.
+    """
+    if n < 1:
+        raise ValueError("Require at least one block")
+    if snapshots <= 0:
+        raise ValueError("Require at least one snapshot")
+
+    # Discard excess snapshots
+    snapshots = max(min(snapshots, n - 1), 1)
+    # Handle limiting cases
+    if snapshots == 1:
+        return n - 1  # Minimal storage
+    elif snapshots == n - 1:
+        return 1  # Maximal storage
+
+    # Find t as in [1] Proposition 1 (note 'm' in [1] is 'n' here, and
+    # 's' in [1] is 'snapshots' here). Compute values of beta as in equation
+    # (1) of [1] as a side effect. We must have a minimal rerun of at least
+    # 2 (the minimal rerun of 1 case is maximal storage, handled above) so we
+    # start from t = 2.
+    t = 2
+    b_s_tm2 = 1
+    b_s_tm1 = snapshots + 1
+    b_s_t = ((snapshots + 1) * (snapshots + 2)) // 2
+    while b_s_tm1 >= n or n > b_s_t:
+        t += 1
+        b_s_tm2 = b_s_tm1
+        b_s_tm1 = b_s_t
+        b_s_t = (b_s_t * (snapshots + t)) // t
+
+    if trajectory == "maximum":
+        # Return the maximal step size compatible with Fig. 4 of [1]
+        b_sm1_tm2 = (b_s_tm2 * snapshots) // (snapshots + t - 2)
+        if n <= b_s_tm1 + b_sm1_tm2:
+            return n - b_s_tm1 + b_s_tm2
+        b_sm1_tm1 = (b_s_tm1 * snapshots) // (snapshots + t - 1)
+        b_sm2_tm1 = (b_sm1_tm1 * (snapshots - 1)) // (snapshots + t - 2)
+        if n <= b_s_tm1 + b_sm2_tm1 + b_sm1_tm2:
+            return b_s_tm2 + b_sm1_tm2
+        elif n <= b_s_tm1 + b_sm1_tm1 + b_sm2_tm1:
+            return n - b_sm1_tm1 - b_sm2_tm1
+        else:
+            return b_s_tm1
+    elif trajectory == "revolve":
+        # [1], equation at the bottom of p. 34
+        b_sm1_tm1 = (b_s_tm1 * snapshots) // (snapshots + t - 1)
+        b_sm2_tm1 = (b_sm1_tm1 * (snapshots - 1)) // (snapshots + t - 2)
+        if n <= b_s_tm1 + b_sm2_tm1:
+            return b_s_tm2
+        elif n < b_s_tm1 + b_sm1_tm1 + b_sm2_tm1:
+            return n - b_sm1_tm1 - b_sm2_tm1
+        else:
+            return b_s_tm1
+    else:
+        print(trajectory)
+        raise ValueError("Unexpected trajectory: '{trajectory:s}'")
