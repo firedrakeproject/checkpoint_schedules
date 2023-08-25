@@ -20,8 +20,8 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-requests = "numpy"
-python = python = ">=3.9,<=3.11"
+numpy = ">=1.20.0"
+python = ">=3.9,<=3.11.2"
 
 [tool.poetry.group.test.dependencies]
 pytest = "*"
@@ -30,7 +30,10 @@ pytest = "*"
 optional = true
 
 [tool.poetry.group.docs.dependencies]
-docs = ["sphinx.ext.autodoc", "sphinx.ext.viewcode", "nbsphinx", "nbsphinx_link"]
+sphinx.ext.autodoc = ""
+sphinx.ext.viewcode = ""
+nbsphinx = ""
+nbsphinx_link = ""
 
 [tool.poetry.group.numba]
 optional = true
