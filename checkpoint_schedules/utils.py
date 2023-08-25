@@ -1,4 +1,5 @@
 """Utilities for checkpointing schedules."""
+
 import functools
 from enum import Enum
 import numpy as np
@@ -18,26 +19,23 @@ except ImportError:
 
 
 class StorageType(Enum):
-    """This class provides the storage types used in the checkpoint schedules.
+    """Storage types.
 
-    RAM : Indicate the storage of the forward data in memory.
+    RAM : Memory.
 
-    DISK : Indicate the storage of the forward data on disk.
+    DISK : Disk.
 
-    WORK : Indicate the storage of forward data with the intend of immediate
-    usage or for a basic checkpointing strategy in memory.
+    WORK : Working memory location for the forward or adjoint.
 
-    NONE : Indicate that there is no specific storage location defined for the
-    checkpoint data.
+    NONE : No storage. Used e.g. to indicate delete actions.
 
     Notes
     -----
-    The data stored in `RAM` or on `DISK` should not be immediately available
-    for restarting the forward solver or for use in the adjoint computation.
-    The data stored in the `WORK` is readily accessible for immediate usage in
-    the subsequent action involving the forward solver recomputations or the
-    adjoint advancing in time.
+    The data stored in `RAM` or on `DISK` should not be directly accessed by
+    the forward or the adjoint, but should instead be copied or moved to `WORK`
+    before usage.
     """
+
     RAM = 0
     DISK = 1
     WORK = -1
@@ -49,14 +47,14 @@ class StorageType(Enum):
 
 @njit
 def n_advance(n, snapshots, *, trajectory="maximum"):
-    """Return the number of steps to advance.
+    """Return the number of steps to advance in a Revolve schedule.
 
     Parameters
     ----------
     n : int
-        The number of steps to advance.
+        The number of forward steps.
     snapshots : int
-        The number of available snapshots.
+        The number of checkpointing units.
     trajectory : str, optional
         The trajectory to use. Can be `'maximum'` or `'revolve'`.
 
@@ -69,6 +67,7 @@ def n_advance(n, snapshots, *, trajectory="maximum"):
     computational differentiation', ACM Transactions on Mathematical
     Software, 26(1), pp. 19--45, 2000, doi: 10.1145/347837.347846.
     """
+
     if n < 1:
         raise ValueError("Require at least one block")
     if snapshots <= 0:
@@ -200,21 +199,26 @@ _WRITE_ICS = int(StepType.WRITE_ICS)
 
 @njit
 def mixed_steps_tabulation(n, s):
-    """Compute the schedule of mixed checkpointing.
-    This schedule is used if the initial step is not available.
+    """Tabulate actions for a 'mixed' schedule, for the case where no forward
+    restart checkpoint is stored at the start of the first step.
 
     Parameters
     ----------
     n : int
         The number of forward steps.
     s : int
-        The number of available checkpointing units.
+        The number of checkpointing units.
 
     Returns
     -------
     ndarray
-        The schedule of mixed checkpointing.
+        Defines the schedule. `schedule[n_i, s_i, :]` indicates the action for
+        the case of `n_i` steps and `s_i` checkpointing units. `schedule[n_i,
+        s_i, 0]` defines the actions, `schedule[n_i, s_i, 1]` defines the
+        number of forward steps to advance, and `schedule[n_i, s_i, 2]` defines
+        the cost.
     """
+
     schedule = np.zeros((n + 1, s + 1, 3), dtype=np.int64)
     schedule[:, :, 0] = _NONE
     schedule[:, :, 1] = 0
@@ -249,7 +253,6 @@ def mixed_steps_tabulation(n, s):
 
 
 def cache_step_0(fn):
-
     _cache = {}
 
     @functools.wraps(fn)
@@ -265,21 +268,6 @@ def cache_step_0(fn):
 
 @cache_step_0
 def mixed_step_memoization_0(n, s):
-    """Compute the schedule of mixed checkpointing.
-    This schedule is used if the initial step is available.
-
-    Parameters
-    ----------
-    n : int
-        The number of forward steps.
-    s : int
-        The number of available checkpointing units.
-
-    Returns
-    -------
-    tuple
-        The schedule of mixed checkpointing.
-    """
     if s < 0:
         raise ValueError("Invalid number of snapshots")
     if n < s + 2:
@@ -303,6 +291,28 @@ def mixed_step_memoization_0(n, s):
 
 @njit
 def mixed_steps_tabulation_0(n, s, schedule):
+    """Tabulate actions for a 'mixed' schedule, for the case where a forward
+    restart checkpoint is stored at the start of the first step.
+
+    Parameters
+    ----------
+    n : int
+        The number of forward steps.
+    s : int
+        The number of checkpointing units.
+    schedule: ndarray
+        As returned by `mixed_steps_tabulation`.
+
+    Returns
+    -------
+    ndarray
+        Defines the schedule. `schedule[n_i, s_i, :]` indicates the action for
+        the case of `n_i` steps and `s_i` checkpointing units. `schedule[n_i,
+        s_i, 0]` defines the actions, `schedule[n_i, s_i, 1]` defines the
+        number of forward steps to advance, and `schedule[n_i, s_i, 2]` defines
+        the cost.
+    """
+
     schedule_0 = np.zeros((n + 1, s + 1, 3), dtype=np.int64)
     schedule_0[:, :, 0] = _NONE
     schedule_0[:, :, 1] = 0
@@ -329,20 +339,21 @@ def mixed_steps_tabulation_0(n, s, schedule):
 
 @cache_step
 def optimal_extra_steps(n, s):
-    """Return the optimal number of extra steps for the binomial checkpointing.
+    """Return the optimal number of extra steps for binomial checkpointing.
 
     Parameters
     ----------
     n : int
         The number of forward steps.
     s : int
-        The number of available checkpointing units.
+        The number of checkpointing units.
 
     Returns
     -------
     int
         The optimal number of extra steps.
     """
+
     if n <= 0:
         raise ValueError("Invalid number of steps")
     if s < min(1, n - 1) or s > n - 1:
@@ -371,18 +382,19 @@ def optimal_extra_steps(n, s):
 
 
 def optimal_steps_binomial(n, s):
-    """Compute the total number of steps for the binomial checkpointing.
+    """Return the optimal total number of steps for binomial checkpointing.
 
     Parameters
     ----------
     n : int
         The number of forward steps.
     s : int
-        The number of available checkpointing units.
+        The number of checkpointing units.
 
     Returns
     -------
     int
-        The optimal steps.
+        The optimal total number of steps.
     """
+
     return n + optimal_extra_steps(n, s)

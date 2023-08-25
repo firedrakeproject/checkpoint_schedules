@@ -14,7 +14,6 @@ repository = "https://github.com/firedrakeproject/checkpoint_schedules"
 # documentation = ""
 keywords = ["schedules", "adjoint based-gradient", "checkpointing methods"]
 
-
 packages = [
     { include = "checkpoint_schedules" },
 ]
