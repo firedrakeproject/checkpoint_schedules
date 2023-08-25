@@ -20,8 +20,8 @@ dependencies = ["numpy"]
 
 [project.optional-dependencies]
 numba = ["numba"]
-docs = ["sphinx.ext.autodoc", "sphinx.ext.viewcode", "nbsphinx", "nbsphinx_link"]
-notebooks = ["jupyter", "scipy", "pickle"]
+docs = ["sphinx", "nbsphinx", "nbsphinx_link", "sphinx-rtd-theme", "ipython"]
+notebooks = ["jupyter", "scipy", "tabulate"]
 
 # requires-python = ">=3.7"
 # keywords = ["checkpointing", "adjoint"]
