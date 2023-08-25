@@ -1,36 +1,51 @@
-[build-system]
-requires = [
-    "setuptools",
-]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools]
-packages = ["checkpoint_schedules"]
-
-[project]
+[tool.poetry]
 name = "checkpoint_schedules"
 version = "0.0.8"
-# authors = [
-#   {email = "....."},
-#   {name = "....."}
-# ]
 description = "Schedules for incremental checkpointing of adjoint simulations."
+license = "LGPL-3.0 license"
+authors = [
+    "Dr Daiane I. Dolci <ddolci@eimperial.ic.ac.uk>",
+    "Dr James R. Maddison <j.r.maddison@ed.ac.uk>",
+    "Dr David A. Ham <david.ham@imperial.ac.uk>",
+]
 readme = "README.md"
-dependencies = ["numpy"]
+# homepage = "https://www.firedrakeproject.org/checkpoint_schedules/"
+repository = "https://github.com/firedrakeproject/checkpoint_schedules"
+# documentation = ""
+keywords = ["schedules", "adjoint based-gradient", "checkpointing methods"]
 
-[project.optional-dependencies]
-numba = ["numba"]
+
+packages = [
+    { include = "checkpoint_schedules" },
+]
+
+[tool.poetry.dependencies]
+requests = "numpy"
+python = python = ">=3.9,<=3.11"
+
+[tool.poetry.group.test.dependencies]
+pytest = "*"
+
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
 docs = ["sphinx.ext.autodoc", "sphinx.ext.viewcode", "nbsphinx", "nbsphinx_link"]
-notebooks = ["jupyter", "scipy", "pickle"]
 
-# requires-python = ">=3.7"
-# keywords = ["checkpointing", "adjoint"]
-# license = {text = "BSD-3-Clause"}
-# classifiers = [
-#     "Programming Language :: Python :: 3",
-# ]
-#[project.urls]
-# homepage = "https://example.com"
-# documentation = "https://readthedocs.org"
-# repository = "https://github.com/firedrakeproject/checkpoint_schedules"
-# changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
+[tool.poetry.group.numba]
+optional = true
+
+[tool.poetry.group.numba.dependencies]
+numba = ["numba"]
+
+[tool.poetry.group.notebooks]
+optional = true
+
+[tool.poetry.group.notebooks.dependencies]
+notebooks = ["jupyter", "scipy"]
+
+
+[build-system]
+requires = ["poetry-core>=1.5.0"]
+build-backend = "poetry.core.masonry.api"
+
