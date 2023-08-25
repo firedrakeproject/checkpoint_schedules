@@ -1,5 +1,7 @@
-""" Essentials class used in the scheduling of the checkpointing actions.
+"""Classes used to define checkpointing schedules and actions in checkpointing
+schedules.
 """
+
 from abc import ABC, abstractmethod
 import functools
 from enum import IntEnum
@@ -19,25 +21,25 @@ __all__ = \
 
 
 class StepType(IntEnum):
-    """indicate which execution is being executed in such step.
+    """Used when generating schedules, particularly when solving a dynamic
+    programming problem, to indicate the next actions to perform.
 
-    FORWARD : Indicate the Forward execution is such step.
+    `FORWARD` : Forward advancement with no forward data saved.
 
-    FORWARD_REVERSE : Indicate the foward and adjoint execution in
-    such step.
+    `FORWARD_REVERSE` : Forward advancement, followed by adjoint advancement of
+    one step.
 
-    WRITE_ADJ_DEPS : Indicate that the storage of the forward data
-    required for the adjoint computation is such step.
+    `WRITE_ADJ_DEPS` : Forward advancement with saving of forward data required
+    to advance the adjoint.
 
-    WRITE_ICS : Indicate that the storage of the forward data
-    required for the the forward solver restarting.
+    `WRITE_ICS` : Forward advancement with saving of forward data required to
+    restart and advance the forward.
 
-    READ_ADJ_DEPS : Indicate that the read of the forward data
-    required for the adjoint computation is such step.
+    `READ_ADJ_DEPS` : Loading of adjoint dependency data.
 
-    READ_ICS : Indicate that the read of the forward data required
-    for the the forward solver restarting.
+    `READ_ICS` : Loading of forward restart data.
     """
+
     NONE = 0
     FORWARD = 1
     FORWARD_REVERSE = 2
@@ -48,15 +50,14 @@ class StepType(IntEnum):
 
 
 class CheckpointAction:
-    """A checkpoint action base class.
+    """Checkpointing action base class.
 
     Attributes
     ----------
     *args : Any
-        The *args correspond to the arguments of the checkpoint scheduled
-        actions: `Forward`, `Reverse`, `Copy`, `Move` `EndForward`, and
-        `EndReverse`.
+        Action parameters.
     """
+
     def __init__(self, *args):
         self.args = args
 
@@ -71,8 +72,8 @@ class CheckpointAction:
 
 
 class Forward(CheckpointAction):
-    """This action indicates the forward advancement.
-    In addition, it indicates the storage of the forward data.
+    """Forward advancement action. Indicates which data should be stored, and
+    the storage type.
 
     Attributes
     ----------
@@ -83,28 +84,33 @@ class Forward(CheckpointAction):
     write_ics : bool
         Whether to store forward restart data.
     write_adj_deps : bool
-        Whether to store forward data required for the adjoint compuations.
+        Whether to store forward data required by the adjoint.
     storage : StorageType
-        Indicate the storage type of the checkpoint data.
+        The storage type for the data.
 
-    Notes
-    -----
-    To exemplify this action, let us consider a particular case:
+    Example
+    -------
 
-    * `Forward(10, 25, True, False, StorageType.RAM)`
-        This action is read as:
-            - Advance the forward solver from the step 10 to the start of the
-            step 25.
+    .. code-block ::
 
-            - Write the forward data (`write_ics` is `'True'`)
-            required to initialise a forward solver from the step 10.
+        Forward(10, 25, True, False, StorageType.RAM)
 
-            - It is not required to store the forward data for the adjoint
-            computation once `write_adj_deps` is False.
+    This action is read as:
 
-            - The forward data storage is in memory (`storage` is `
-            StorageType.RAM`).
+        - Advance the forward from the start of step 10 to the start of the
+          step 25 (i.e over steps 10 to 24 inclusive).
+
+        - Store forward data (`write_ics` is `True`) required to initialize the
+          forward at the start of step 10 and to advance to the start of step
+          25.
+
+        - It is not necessary to store the forward data for the adjoint
+          (`write_adj_deps` is `False`).
+
+        - The forward data should be stored in memory (`storage` is `
+          StorageType.RAM`).
     """
+
     def __init__(self, n0, n1, write_ics, write_adj_deps, storage):
         super().__init__(n0, n1, write_ics, write_adj_deps, storage)
 
@@ -139,7 +145,7 @@ class Forward(CheckpointAction):
 
 
 class Reverse(CheckpointAction):
-    """This action indicates the adjoint advancement.
+    """Adjoint advancement action.
 
     Attributes
     ----------
@@ -148,22 +154,23 @@ class Reverse(CheckpointAction):
     n0 : int
         The adjoint should advance to the start of this step.
     clear_adj_deps : bool
-        Indicate whether to clear the forward data used for the adjoint
-        computation.
+        Whether to clear the forward data used by the adjoint.
 
-    Notes
-    -----
-    To exemplify this action, let us consider the following case:
+    Example
+    -------
 
-    * `Reverse(3, 2, True)`
-        This action is read as:
+    .. code-block ::
 
-            - Advance the adjoint solver from the step 3 to the start of the
-            step 2.
+        Reverse(3, 2, True)
 
-            - Clear the forward data (`clear_adj_deps` is `'True'`) used for
-            the adjoint computation.
+    This action is read as:
+
+        - Advance the adjoint from the start of step 3 to the start of the step
+          2 (i.e. over step 2).
+        - Clear the forward data used by the adjoint (`clear_adj_deps` is
+          `'True'`).
     """
+
     def __init__(self, n1, n0, clear_adj_deps):
 
         super().__init__(n1, n0, clear_adj_deps)
@@ -191,40 +198,48 @@ class Reverse(CheckpointAction):
 
 
 class Copy(CheckpointAction):
-    """Indicate the action of copying from a storage type
-    to another storage type.
+    """Copy action. Indicates copying of data from one storage type to another.
 
     Attributes
     ----------
     n : int
         The step with which the copied data is associated.
     from_storage : StorageType
-        Indicate the storage type from which the data should be copied.
+        The storage type from which the data should be copied.
     to_storage : StorageType
-        Indicate the storage type to which the data should be copied.
+        The storage type to which the data should be copied.
 
     Notes
     -----
-    To exemplify this action, let us consider a particular cases:
+    The data, once copied, remains accessible in the original storage type.
 
-        * `Copy(10, StorageType.RAM, StorageType.WORK)`
-            This action is read as:
+    Examples
+    --------
 
-            - Copy the forward checkpoint data of the step 10 which is
-            stored in `StorageType.RAM` to a variable/local directly used
-            for the forward solver restarting from the step 10.
+    .. code-block ::
 
-        * `Copy(10, StorageType.DISK, StorageType.WORK)`
-            This action is read as:
+        Copy(10, StorageType.DISK, StorageType.RAM)
 
-            - Copy the forward checkpoint data of the step 10 which is
-            stored in `StorageType.DISK` to the local/variable directly
-            used for the adjoint computation.
+    This action is read as:
+
+        - Copy the data associated with step 10, which is stored on
+          `StorageType.DISK`, to `StorageType.RAM`.
+
+    .. code-block ::
+
+        Copy(10, StorageType.RAM, StorageType.WORK)
+
+    This action is read as:
+
+        - Copy the data associated with step 10, which is stored in
+          `StorageType.RAM`, to working storage for use by the forward or
+          adjoint.
 
     See Also
     --------
     :class:`StorageType`
     """
+
     def __init__(self, n, from_storage, to_storage):
         super().__init__(n, from_storage, to_storage)
 
@@ -242,34 +257,46 @@ class Copy(CheckpointAction):
 
 
 class Move(CheckpointAction):
-    """Indicate the action of moving from a storage type
-    to another storage type.
+    """Move action. Indicates moving of data from one storage type to another.
 
     Attributes
     ----------
     n : int
-        The step with which the copied data is associated.
+        The step with which the moved data is associated.
     from_storage : StorageType
-        Indicate the storage type from which the data should be copied.
+        The storage type from which the data should be moved.
     to_storage : StorageType
-        Indicate the storage type to which the data should be copied.
+        The storage type to which the data should be moved.
 
     Notes
     -----
-    The Move action entails that the data, once moved, becomes no longer
-    accessible in the original storage type. Whereas the Copy action means
-    that the copied data remains available in the original storage type.
+    The data, once moved, is no longer accessible in the original storage type.
 
-    To exemplify this action, let us consider a particular case:
+    Examples
+    --------
 
-    * `Move(10, StorageType.RAM, StorageType.WORK)`
-        Interpreted as:
+    .. code-block ::
 
-        - Move the data associated with the step ``10``.
+        Move(10, StorageType.DISK, StorageType.RAM)
 
-        - The forward data is moved from ``'disk'`` storage to a storage used
-        for the adjoint computation.
+    This action is read as:
+
+        - Move the data associated with step 10, which is stored on
+          `StorageType.DISK`, to `StorageType.RAM`.
+
+    .. code-block ::
+
+        Move(5, StorageType.DISK, StorageType.NONE)
+
+    This action is read as:
+
+        - Delete the data associated with step 5 from `StorageType.DISK`.
+
+    See Also
+    --------
+    :class:`StorageType`
     """
+
     def __init__(self, n, from_storage, to_storage):
         super().__init__(n, from_storage, to_storage)
 
@@ -288,16 +315,17 @@ class Move(CheckpointAction):
 
 
 class EndForward(CheckpointAction):
-    """Indicate that the forward solver is finalised.
+    """Indicates that the forward calculation has concluded.
     """
+
     def __init__(self):
         super().__init__()
 
 
 class EndReverse(CheckpointAction):
-    """A checkpointing action which indicates the end of an adjoint
-    calculation.
+    """Indicates that an adjoint calculation has concluded.
     """
+
     def __init__(self):
         super().__init__()
 
@@ -333,18 +361,6 @@ class CheckpointSchedule(ABC):
             action(cp_action)
             if isinstance(cp_action, EndReverse):
                 break
-
-    Schedules control an intermediate storage, which buffers forward restart
-    data for forward restart checkpoints, and which stores the adjoint
-    dependency either for storage in checkpointing units or for immediate
-    use by the adjoint. The storage is accessed using the :class:`StorageType`.
-
-    This schedule is able to execute in two modes: `'offline'` and `'online'`.
-    In 'offline' schedules, where the number of steps in the forward
-    calculation is initially known, this should be provided using the `max_n`
-    argument on instantiation. In 'online' schedules, where the number of steps
-    in the forward calculation is initially unknown, the number of forward
-    steps should later be provided using the :meth:`finalize` method.
     """
 
     def __init__(self, max_n=None):
@@ -362,14 +378,6 @@ class CheckpointSchedule(ABC):
 
         @functools.wraps(cls_iter)
         def _iterator(self):
-            """Abstract checkpoint schedule iterator.
-
-            Returns
-            -------
-            self._iter : generator
-                Return an iterator object used to iterate the action that is
-                given by the revolve schedule.
-            """
             if not hasattr(self, "iter"):
                 self.iter = cls_iter(self)
             return self.iter
@@ -387,17 +395,19 @@ class CheckpointSchedule(ABC):
         """A generator which should be overridden in derived classes in order
         to define a checkpointing schedule.
         """
+
         raise NotImplementedError
 
     @property
     def is_exhausted(self):
-        """Return whether the schedule has concluded.
+        """Whether the schedule has concluded.
 
         Notes
         -----
-        Note that some schedules permit multiple adjoint calculation,
-        and may never conclude.
+        Some schedules permit multiple adjoint calculation, and may never
+        conclude.
         """
+
         raise NotImplementedError
 
     @abstractmethod
@@ -408,62 +418,41 @@ class CheckpointSchedule(ABC):
         ----------
         storage_type : StorageType
             The storage type to check.
+
+        Returns
+        -------
+        bool
+            Whether this schedule uses a given storage type.
         """
+
         raise NotImplementedError
 
     @property
     def n(self):
-        """Return the forward step location.
-
-        Notes
-        -----
-        After executing all actions defined so far in the schedule the forward
-        is at the start of this step.
-
-        Returns
-        -------
-        int
-            The forward step location.
+        """The current location of the forward.
         """
+
         return self._n
 
     @property
     def r(self):
-        """Return the reverse step.
-
-        Notes
-        -----
-        The reverse step means the number of adjoint steps advancement.
-
-        Returns
-        -------
-        self._r : int
-            The reverse step.
+        """The number of adjoint steps advanced.
         """
+
         return self._r
 
     @property
     def max_n(self):
         """The number of forward steps in the initial forward calculation.
-
-        Returns
-        -------
-        self._max_n : int
-            The number of forward steps.
         """
+
         return self._max_n
 
     @property
     def is_running(self):
-        """Return whether at least one action has been yielded.
-
-        Returns
-        -------
-        bool
-            Indicate whether the :class:`CheckpointSchedule` schedule has an
-            iterator object. Do not finalise the checkpoint schedule if
-            `'True'`.
+        """Whether at least one action has been yielded.
         """
+
         return hasattr(self, "_iter")
 
     def finalize(self, n):
@@ -475,6 +464,7 @@ class CheckpointSchedule(ABC):
         n : int
             The number of steps in the initial forward calculation.
         """
+
         if n < 1:
             raise ValueError("n must be positive")
         if self._max_n is None:
