@@ -2,6 +2,7 @@ import functools
 from operator import itemgetter
 from .schedule import CheckpointSchedule, Forward, Reverse, Copy, Move, \
     EndForward, EndReverse, StorageType
+from .mixed import cache_step
 
 __all__ = \
     [
@@ -318,20 +319,6 @@ def optimal_steps_binomial(n, s):
         The optimal steps.
     """
     return n + optimal_extra_steps(n, s)
-
-
-def cache_step(fn):
-    _cache = {}
-
-    @functools.wraps(fn)
-    def wrapped_fn(n, s):
-        # Avoid some cache misses
-        s = min(s, n - 1)
-        if (n, s) not in _cache:
-            _cache[(n, s)] = fn(n, s)
-        return _cache[(n, s)]
-
-    return wrapped_fn
 
 
 @cache_step
