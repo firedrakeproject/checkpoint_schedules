@@ -1,4 +1,3 @@
-import functools
 from .schedule import CheckpointSchedule, Forward, Reverse, Copy, Move, \
     EndForward, EndReverse, StorageType
 from .multistage import n_advance
