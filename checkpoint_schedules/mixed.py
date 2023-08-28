@@ -224,6 +224,28 @@ def cache_step(fn):
 
 
 @cache_step
+def optimal_steps_mixed(n, s):
+    if n <= 0:
+        raise ValueError("Invalid number of steps")
+    if s < min(1, n - 1) or s > n - 1:
+        raise ValueError("Invalid number of snapshots")
+
+    if n <= s + 1:
+        return n
+    elif s == 1:
+        return n * (n + 1) // 2 - 1
+    else:
+        m = 1 + optimal_steps_mixed(n - 1, s - 1)
+        for i in range(2, n):
+            m = min(
+                m,
+                i
+                + optimal_steps_mixed(i, s)
+                + optimal_steps_mixed(n - i, s - 1))
+        return m
+
+
+@cache_step
 def mixed_step_memoization(n, s):
     if n <= 0:
         raise ValueError("Invalid number of steps")
@@ -262,21 +284,26 @@ _WRITE_ICS = int(StepType.WRITE_ICS)
 
 @njit
 def mixed_steps_tabulation(n, s):
-    """Compute the schedule of mixed checkpointing.
-    This schedule is used if the initial step is not available.
+    """Tabulate actions for a 'mixed' schedule, for the case where no forward
+    restart checkpoint is stored at the start of the first step.
 
     Parameters
     ----------
     n : int
         The number of forward steps.
     s : int
-        The number of available checkpointing units.
+        The number of checkpointing units.
 
     Returns
     -------
     ndarray
-        The schedule of mixed checkpointing.
+        Defines the schedule. `schedule[n_i, s_i, :]` indicates the action for
+        the case of `n_i` steps and `s_i` checkpointing units. `schedule[n_i,
+        s_i, 0]` defines the actions, `schedule[n_i, s_i, 1]` defines the
+        number of forward steps to advance, and `schedule[n_i, s_i, 2]` defines
+        the cost.
     """
+
     schedule = np.zeros((n + 1, s + 1, 3), dtype=np.int64)
     schedule[:, :, 0] = _NONE
     schedule[:, :, 1] = 0
@@ -311,7 +338,6 @@ def mixed_steps_tabulation(n, s):
 
 
 def cache_step_0(fn):
-
     _cache = {}
 
     @functools.wraps(fn)
@@ -327,21 +353,6 @@ def cache_step_0(fn):
 
 @cache_step_0
 def mixed_step_memoization_0(n, s):
-    """Compute the schedule of mixed checkpointing.
-    This schedule is used if the initial step is available.
-
-    Parameters
-    ----------
-    n : int
-        The number of forward steps.
-    s : int
-        The number of available checkpointing units.
-
-    Returns
-    -------
-    tuple
-        The schedule of mixed checkpointing.
-    """
     if s < 0:
         raise ValueError("Invalid number of snapshots")
     if n < s + 2:
@@ -365,6 +376,28 @@ def mixed_step_memoization_0(n, s):
 
 @njit
 def mixed_steps_tabulation_0(n, s, schedule):
+    """Tabulate actions for a 'mixed' schedule, for the case where a forward
+    restart checkpoint is stored at the start of the first step.
+
+    Parameters
+    ----------
+    n : int
+        The number of forward steps.
+    s : int
+        The number of checkpointing units.
+    schedule: ndarray
+        As returned by `mixed_steps_tabulation`.
+
+    Returns
+    -------
+    ndarray
+        Defines the schedule. `schedule[n_i, s_i, :]` indicates the action for
+        the case of `n_i` steps and `s_i` checkpointing units. `schedule[n_i,
+        s_i, 0]` defines the actions, `schedule[n_i, s_i, 1]` defines the
+        number of forward steps to advance, and `schedule[n_i, s_i, 2]` defines
+        the cost.
+    """
+
     schedule_0 = np.zeros((n + 1, s + 1, 3), dtype=np.int64)
     schedule_0[:, :, 0] = _NONE
     schedule_0[:, :, 1] = 0
@@ -387,28 +420,6 @@ def mixed_steps_tabulation_0(n, s, schedule):
                 raise RuntimeError("Failed to determine total number of "
                                    "steps")
     return schedule_0
-
-
-@cache_step
-def optimal_steps_mixed(n, s):
-    if n <= 0:
-        raise ValueError("Invalid number of steps")
-    if s < min(1, n - 1) or s > n - 1:
-        raise ValueError("Invalid number of snapshots")
-
-    if n <= s + 1:
-        return n
-    elif s == 1:
-        return n * (n + 1) // 2 - 1
-    else:
-        m = 1 + optimal_steps_mixed(n - 1, s - 1)
-        for i in range(2, n):
-            m = min(
-                m,
-                i
-                + optimal_steps_mixed(i, s)
-                + optimal_steps_mixed(n - i, s - 1))
-        return m
 
 
 class InvalidForwardStep(IndexError):

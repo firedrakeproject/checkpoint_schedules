@@ -22,26 +22,23 @@ __all__ = \
 
 
 class StorageType(Enum):
-    """This class provides the storage types used in the checkpoint schedules.
+    """Storage types.
 
-    RAM : Indicate the storage of the forward data in memory.
+    RAM : Memory.
 
-    DISK : Indicate the storage of the forward data on disk.
+    DISK : Disk.
 
-    WORK : Indicate the storage of forward data with the intend of immediate
-    usage or for a basic checkpointing strategy in memory.
+    WORK : Working memory location for the forward or adjoint.
 
-    NONE : Indicate that there is no specific storage location defined for the
-    checkpoint data.
+    NONE : No storage. Used e.g. to indicate delete actions.
 
     Notes
     -----
-    The data stored in `RAM` or on `DISK` should not be immediately available
-    for restarting the forward solver or for use in the adjoint computation.
-    The data stored in the `WORK` is readily accessible for immediate usage in
-    the subsequent action involving the forward solver recomputations or the
-    adjoint advancing in time.
+    The data stored in `RAM` or on `DISK` should not be directly accessed by
+    the forward or the adjoint, but should instead be copied or moved to `WORK`
+    before usage.
     """
+
     RAM = 0
     DISK = 1
     WORK = -1

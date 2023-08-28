@@ -303,40 +303,23 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
             return self._snapshots_in_ram > 0
 
 
-def optimal_steps_binomial(n, s):
-    """Compute the total number of steps for the binomial checkpointing.
-
-    Parameters
-    ----------
-    n : int
-        The number of forward steps.
-    s : int
-        The number of available checkpointing units.
-
-    Returns
-    -------
-    int
-        The optimal steps.
-    """
-    return n + optimal_extra_steps(n, s)
-
-
 @cache_step
 def optimal_extra_steps(n, s):
-    """Return the optimal number of extra steps for the binomial checkpointing.
+    """Return the optimal number of extra steps for binomial checkpointing.
 
     Parameters
     ----------
     n : int
         The number of forward steps.
     s : int
-        The number of available checkpointing units.
+        The number of checkpointing units.
 
     Returns
     -------
     int
         The optimal number of extra steps.
     """
+
     if n <= 0:
         raise ValueError("Invalid number of steps")
     if s < min(1, n - 1) or s > n - 1:
@@ -364,16 +347,35 @@ def optimal_extra_steps(n, s):
         return m
 
 
-@njit
-def n_advance(n, snapshots, *, trajectory="maximum"):
-    """Return the number of steps to advance.
+def optimal_steps_binomial(n, s):
+    """Return the optimal total number of steps for binomial checkpointing.
 
     Parameters
     ----------
     n : int
-        The number of steps to advance.
+        The number of forward steps.
+    s : int
+        The number of checkpointing units.
+
+    Returns
+    -------
+    int
+        The optimal total number of steps.
+    """
+
+    return n + optimal_extra_steps(n, s)
+
+
+@njit
+def n_advance(n, snapshots, *, trajectory="maximum"):
+    """Return the number of steps to advance in a Revolve schedule.
+
+    Parameters
+    ----------
+    n : int
+        The number of forward steps.
     snapshots : int
-        The number of available snapshots.
+        The number of checkpointing units.
     trajectory : str, optional
         The trajectory to use. Can be `'maximum'` or `'revolve'`.
 
@@ -386,6 +388,7 @@ def n_advance(n, snapshots, *, trajectory="maximum"):
     computational differentiation', ACM Transactions on Mathematical
     Software, 26(1), pp. 19--45, 2000, doi: 10.1145/347837.347846.
     """
+
     if n < 1:
         raise ValueError("Require at least one block")
     if snapshots <= 0:
