@@ -4,7 +4,7 @@ schedules.
 
 from abc import ABC, abstractmethod
 import functools
-from enum import IntEnum
+from enum import IntEnum, Enum
 import sys
 
 __all__ = \
@@ -17,7 +17,35 @@ __all__ = \
         "EndForward",
         "EndReverse",
         "CheckpointSchedule",
+        "StorageType"
     ]
+
+
+class StorageType(Enum):
+    """Storage types.
+
+    RAM : Memory.
+
+    DISK : Disk.
+
+    WORK : Working memory location for the forward or adjoint.
+
+    NONE : No storage. Used e.g. to indicate delete actions.
+
+    Notes
+    -----
+    The data stored in `RAM` or on `DISK` should not be directly accessed by
+    the forward or the adjoint, but should instead be copied or moved to `WORK`
+    before usage.
+    """
+
+    RAM = 0
+    DISK = 1
+    WORK = -1
+    NONE = None
+
+    def __repr__(self):
+        return type(self).__name__ + "." + self.name
 
 
 class StepType(IntEnum):

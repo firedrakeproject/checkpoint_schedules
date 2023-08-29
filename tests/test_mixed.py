@@ -4,9 +4,9 @@ import functools
 import pytest
 
 from checkpoint_schedules import MixedCheckpointSchedule, Copy, \
-     Forward, Reverse, EndForward, EndReverse, Move
-from checkpoint_schedules.utils import mixed_step_memoization, \
-    optimal_steps_mixed, StorageType
+     Forward, Reverse, EndForward, EndReverse, Move, StorageType
+from checkpoint_schedules.mixed import optimal_steps_mixed, \
+    mixed_step_memoization
 
 
 @pytest.mark.parametrize("n, S", [

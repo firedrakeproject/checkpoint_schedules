@@ -3,9 +3,9 @@
 import functools
 import pytest
 from checkpoint_schedules import MultistageCheckpointSchedule, \
-    Copy, Move, Forward, Reverse, EndForward, EndReverse
-from checkpoint_schedules.utils import optimal_steps_binomial, \
+    Copy, Move, Forward, Reverse, EndForward, EndReverse, \
     StorageType
+from checkpoint_schedules.multistage import optimal_steps_binomial
 
 
 @pytest.mark.parametrize("trajectory", ["revolve",
