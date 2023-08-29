@@ -4,10 +4,7 @@ import numpy as np
 from .schedule import CheckpointSchedule, Forward, Reverse, Copy, Move, \
     EndForward, EndReverse, StepType, StorageType
 
-__all__ = ["MixedCheckpointSchedule",
-           "optimal_steps_mixed",
-           "mixed_step_memoization",
-           ]
+__all__ = ["MixedCheckpointSchedule"]
 
 try:
     import numba
