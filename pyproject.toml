@@ -1,21 +1,24 @@
-[build-system]
-requires = [
-    "setuptools",
-]
-build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["checkpoint_schedules"]
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "checkpoint_schedules"
-version = "0.0.8"
-# authors = [
-#   {email = "....."},
-#   {name = "....."}
-# ]
+version = "0.0.81"
+authors = [
+  { name="Daiane I. Dolci ", email="ddolci@eimperial.ic.ac.uk" },
+    { name="James R. Maddison", email="j.r.maddison@ed.ac.uk" },
+    { name="David A. Ham", email="david.ham@imperial.ac.uk" },
+]
 description = "Schedules for incremental checkpointing of adjoint simulations."
 readme = "README.md"
+license = {text = "LGPL-3.0"}
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+
 dependencies = ["numpy"]
 
 [project.optional-dependencies]
@@ -23,14 +26,9 @@ numba = ["numba"]
 docs = ["sphinx", "nbsphinx", "nbsphinx_link", "sphinx-rtd-theme", "ipython"]
 notebooks = ["jupyter", "scipy", "tabulate"]
 
-# requires-python = ">=3.7"
-# keywords = ["checkpointing", "adjoint"]
-# license = {text = "BSD-3-Clause"}
-# classifiers = [
-#     "Programming Language :: Python :: 3",
-# ]
-#[project.urls]
-# homepage = "https://example.com"
-# documentation = "https://readthedocs.org"
-# repository = "https://github.com/firedrakeproject/checkpoint_schedules"
-# changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
+[project.urls]
+# "Homepage" = "https://www.firedrakeproject.org/checkpoint_schedules/"
+"repository" = "https://github.com/firedrakeproject/checkpoint_schedules"
+"Bug Tracker" = "https://github.com/firedrakeproject/checkpoint_schedules/issues"
+
+
