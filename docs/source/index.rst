@@ -4,7 +4,7 @@
 ********************
 checkpoint_schedules
 ********************
-:Authors:       Daiane I. Dolci ...
+:Authors:       Daiane I. Dolci ..
 :Contact:      d.dolci@imperial.ac.uk
 :GitHub:       https://github.com/firedrakeproject/checkpoint_schedules
 :Date:         |today|
