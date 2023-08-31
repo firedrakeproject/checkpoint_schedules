@@ -1,14 +1,21 @@
 name: Lint
 
+# on:
+#   # Trigger the workflow on push or pull request,
+#   # but only for the main branch
+#   push:
+#     branches:
+#       - build_docs
+#   pull_request:
+#     branches:
+#       - build_docs
+
 on:
-  # Trigger the workflow on push or pull request,
-  # but only for the main branch
-  push:
-    branches:
-      - build_docs
   pull_request:
+    types:
+      - opened
     branches:
-      - build_docs
+      - 'dolci/build_docs'
 
 jobs:
   run-linters:

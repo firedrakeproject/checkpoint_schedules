@@ -1,13 +1,19 @@
 name: Check docs build cleanly
 
-on:
-  # Run on pushes to main
-  push:
-    branches:
-      - build_docs
-  # And all pull requests
-  pull_request:
+# on:
+#   # Run on pushes to main
+#   push:
+#     branches:
+#       - build_docs
+#   # And all pull requests
+#   pull_request:
 
+on:
+  pull_request:
+    types:
+      - opened
+    branches:
+      - 'dolci/build_docs'
 concurrency:
   # Cancels jobs running if new commits are pushed
   group: >
