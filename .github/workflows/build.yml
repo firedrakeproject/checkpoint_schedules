@@ -5,9 +5,9 @@ name: Python package
 
 on:
   push:
-    branches: [ "build_docs" ]
+    branches: [ "dolci/build_docs" ]
   pull_request:
-    branches: [ "build_docs" ]
+    branches: [ "dolci/build_docs" ]
 
 jobs:
   build:

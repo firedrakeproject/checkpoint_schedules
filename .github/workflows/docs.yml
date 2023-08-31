@@ -4,7 +4,7 @@ on:
   # Run on pushes to main
   push:
     branches:
-      - build_docs
+      - dolci/build_docs
   # And all pull requests
   pull_request:
 
@@ -38,7 +38,7 @@ jobs:
           cd docs
           make validate-bibtex
       - name: Check documentation links
-        if: ${{ github.ref == 'refs/heads/build_docs' }}
+        if: ${{ github.ref == 'refs/heads/dolci/build_docs' }}
         run: |
           cd docs
           make linkcheck
@@ -61,7 +61,7 @@ jobs:
   deploy:
     name: Deploy Github pages
     needs: build_docs
-    if: ${{ github.ref == 'refs/heads/build_docs' }}
+    if: ${{ github.ref == 'refs/heads/dolci/build_docs' }}
     permissions:
       pages: write
       id-token: write

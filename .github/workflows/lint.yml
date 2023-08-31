@@ -5,10 +5,10 @@ on:
   # but only for the main branch
   push:
     branches:
-      - build_docs
+      - dolci/build_docs
   pull_request:
     branches:
-      - build_docs
+      - dolci/build_docs
 
 jobs:
   run-linters:
