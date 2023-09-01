@@ -53,10 +53,10 @@ instructions are independent of the model implementation, which enables the
 model authors to switch between checkpointing algorithms without recoding.
 Conversely, *checkpointing_schedules* provides developers of checkpointing
 algorithms a direct mechanism to convey their work to model authors.
-*checkpointing_schedules* has been integrated into **tlm_adjoint** [@citation],
+*checkpointing_schedules* has been integrated into **tlm_adjoint** [@Maddison2014],
 a Python library designed for the automated derivation of higher-order
 tangent-linear and adjoint models and work is ongoing to integrate it with
-**pyadjoint** [@citation]. This package can be incorporated into other gradient
+**pyadjoint** [@Mitusch2019]. This package can be incorporated into other gradient
 solvers based on adjoint methods, regardless of the specific approach taken to
 generate the adjoint model.
 
@@ -65,7 +65,7 @@ interest resulting from the solution of a system of partial differential
 equations (PDEs) is widespread and well-established. The resulting gradient may
 be employed for many purposes, include topology
 optimisation [@papadopoulos2021computing], inverse problems [@Plessix2006],
-flow control [@jansen2011]. 
+flow control [@Jansen2011]. 
 
 Solving the adjoint to a non-linear time-dependent PDE requires the forward PDE
 to be solved first. The adjoint PDE is then solved in a reverse time
@@ -86,7 +86,7 @@ equal access cost. Subsequent authors have produced checkpointing algorithms
 that relax these requirements in various ways, such as by accounting for
 different types of storage (e.g. RAM and disk) or by not requiring the number
 of steps to be known in advance, for example [@stumm2009multistage;
-@aupy2016optimal; @schanen2016asynchronous; @aupy2017periodicity;
+@aupy2016optimal; @schanen2016; @aupy2017periodicity;
 @herrmann2020; @maddison2023; @Zhang_2023]. 
 
 # Statement of need
