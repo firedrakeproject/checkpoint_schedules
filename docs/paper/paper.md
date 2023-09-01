@@ -5,19 +5,19 @@ tags:
   - Python
   - Checkpointing methods
   - Adjoint-based gradient
-# authors:
-#   - name: 
-#     affiliation: 1
-#   - name: 
-#     affiliation: 1
-#   - name: 
-#     affiliation: 2
+authors:
+  - name: D
+    affiliation: 1
+  - name: 
+    affiliation: 1
+  - name: 
+    affiliation: 2
 affiliations:
-#  - name: .
-#    index: 1
-#  - name:  
-#    index: 2
-date:  August 2023
+ - name: .
+   index: 1
+ - name: Imperial College London 
+   index: 2
+date:  September 2023
 bibliography: paper.bib
 
 ---
