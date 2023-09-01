@@ -45,33 +45,89 @@ bibliography: paper.bib
 
 ---
 # Summary
-The *checkpointing_schedules* provides schedules for step based incremental checkpointing of the adjoints to computer models. The schedules contain instructions indicating the sequence of forward and adjoint steps to be executed, and the data storage and retrieval to be performed. These instructions are independent of the model implementation, which enables the model authors to switch between checkpointing algorithms without recoding. Conversely, *checkpointing_schedules* provides developers of checkpointing algorithms a direct mechanism to convey their work to model authors. *checkpointing_schedules* has been integrated into **tlm_adjoint**, a Python library designed for the automated derivation of higher-order tangent-linear and adjoint models and work is ongoing to integrate it with **pyadjoint**. This package can be incorporated into other gradient solvers based on adjoint methods, regardless of the specific approach taken to generate the adjoint model.
+The *checkpointing_schedules* provides schedules for step based incremental
+checkpointing of the adjoints to computer models. The schedules contain
+instructions indicating the sequence of forward and adjoint steps to be
+executed, and the data storage and retrieval to be performed. These
+instructions are independent of the model implementation, which enables the
+model authors to switch between checkpointing algorithms without recoding.
+Conversely, *checkpointing_schedules* provides developers of checkpointing
+algorithms a direct mechanism to convey their work to model authors.
+*checkpointing_schedules* has been integrated into **tlm_adjoint** [@citation],
+a Python library designed for the automated derivation of higher-order
+tangent-linear and adjoint models and work is ongoing to integrate it with
+**pyadjoint** [@citation]. This package can be incorporated into other gradient
+solvers based on adjoint methods, regardless of the specific approach taken to
+generate the adjoint model.
 
+The use of adjoint calculations to compute the gradient of a quantity of
+interest resulting from the solution of a system of partial differential
+equations (PDEs) is widespread and well-established. The resulting gradient may
+be employed for many purposes, include topology
+optimisation [@papadopoulos2021computing], inverse problems [@Plessix2006],
+flow control [@jansen2011]. 
+
+Solving the adjoint to a non-linear time-dependent PDE requires the forward PDE
+to be solved first. The adjoint PDE is then solved in a reverse time
+order, but depends on the forward state. Storing the entire forward state in
+preparation for the adjoint calculation has a memory footprint linear in the
+number of time steps. For sufficiently large problems this will exhaust the
+memory of any computer system. 
+
+In contrast, checkpointing approaches store only the state required to restart
+the forward calculation from a limited set of steps. As the adjoint
+calculation progresses, the forward computation is progressively rerun from the
+latest available stored state up to the current adjoint step. This enables less
+forward state to be stored, at the expense of a higher computational cost as
+forward steps are run more than once. [@griewank2000algorithm] proposed a
+checkpointing algorithm which is optimal under certain assumptions, including
+that the number of steps is known in advance, and that all the storage has
+equal access cost. Subsequent authors have produced checkpointing algorithms
+that relax these requirements in various ways, such as by accounting for
+different types of storage (e.g. RAM and disk) or by not requiring the number
+of steps to be known in advance, for example [@stumm2009multistage;
+@aupy2016optimal; @schanen2016asynchronous; @aupy2017periodicity;
+@herrmann2020; @maddison2023; @Zhang_2023]. 
 
 # Statement of need
-Adjoint-based gradient is a method employed for a variety of applications as topology optimisation [@papadopoulos2021computing], inverse problems [@Plessix2006], flow control [@jansen2011]. In such applications, it is usual deal with time-dependent partial differential equations (PDEs) to model the the physical problem, e.g., fluid flow, wave propagation. In this context, to compute the adjoint-based gradient requires solving an adjoint equation characterised by their backward time advancing and their dependence on the data obtained from the physcial govern equations, which in the current text is referred to as forward solvers.
 
-Storing forward data at each time step in memory can be impractical for large systems, given the potential for high memory usage during the computational execution. Strategies of employing checkpointing aims to address this memory challenge. Optimal checkpointing strategies aim minimising the forward solver recomputation for a given number of steps to store the forward data (number of checkpoint storage). [@griewank2000algorithm] proposed an optimal strategy for any checkpoint storage and pre-defined time steps. Checkpointing strategies have also presented for mixing the storage, i. e., checkpoint storage in memory or disk [@stumm2009multistage; @aupy2016optimal; @schanen2016asynchronous; @aupy2017periodicity; @herrmann2020; @maddison2023]. Furthermore, in the context of multi-stage time step discretisation [@Zhang_2023].
+This is situation typical across computational mathematics: there exists a
+diversity of algorithms whose applicability and optimality depends on the
+nature and parameters of the problem to be solved. From the perspective of
+users who wish to construct adjoint solvers this creates the need to swap out
+different checkpointing algorithms in response to changes in the equations,
+discretisations, and computer systems with which they work. Those users will
+often lack the expertise or the time to continually reimplement additional
+algorithms in their framework. Further, such reimplementation work is wasteful
+and error-prone. 
 
+*checkpointing_schedules* provides a number of checkpointing algorithms
+accessible through a common interface and interchangeable without recoding.
+This can be used in conjunction with an adjoint framework such as tlm_adjoint
+or pyadjoint and a compatible PDE framework, such as Firedrake [@citation] or
+FEniCS [@citation] to enable users to create adjoint solvers for their choice
+of PDE, numerical methods, and checkpointing algorithm all without recoding the
+underlying algorithms.
 
-Integrating a checkpointing strategies in an adjoint-based gradient solver performing for distinct applications may not yield sufficient arrangement for every case. However, either writing or adapting different checkpointing approaches can lead to substantial effort since their implementations are usually originating from different codes sources. *checkpointing_schedules* package aims to overcome this issue with the flexibility to include different checkpointing strategies. This package can generate schedules based on the checkpointings for a variety of requirements, such as for mixed storage, for the cases where the forward time steps are a priori unknown, and for unlimited adjoint executions (online checkpointing). 
-
-Integrating the *checkpoint_schedules* package with an adjoint-based gradient solver is effective due to its condition of a variety of checkpointing strategies. Moreover, it is flexible in hosting new checkpointing methods.
+Some of the algorithms supported by *checkpointing_schedules* have been
+implemented many times, while for others, such as H-Revolve the only previously
+published implementation was a simple proof of concept in the original paper
+[@herrmann2020]. The checkpoint schedule API provided by *checkpoint_schedules*
+further provides a toolkit for the implementation of further checkpoint
+schedules, thereby providing a direct route from algorithm developers to users.
 
 # Software description
-Currently, *checkpoint_schedules* is able to generate schedules for the following checkpointing schemes: Revolve [@stumm2009multistage]; disk-revolve [@aupy2016optimal]; periodic-disk revolve [@aupy2017periodicity];  two-level [@pringle2016providing]; H-Revolve [@herrmann2020]; and mixed storage checkpointing [@maddison2023]. In addition, it extends to its capabilities a trivial schedule for forward computation and for all storage data. 
-
-The *checkpoint_schedules* repository contains documentions and notebook available at
-
-
+Currently, *checkpoint_schedules* is able to generate schedules for the
+following checkpointing schemes: Revolve [@stumm2009multistage]; disk-revolve
+[@aupy2016optimal]; periodic-disk revolve [@aupy2017periodicity];  two-level
+[@pringle2016providing]; H-Revolve [@herrmann2020]; and mixed storage
+checkpointing [@maddison2023]. It also contains trivial schedules which store
+the entire forward state. This enables users to support adjoint calculations
+with or without checkpointing via a single code path.
 
 # Acknowledgments
-This work was supported by the Engineering and Physical Sciences Research Council [EP/W029731/1 and EP/W026066/1]. J. R. M. was supported by the Natural Environment Research Council
-[NE/T001607/1].
-
-This research was funded in whole, or in part, by the Natural Environment
-Research Council [NE/T001607/1]. For the purpose of open access, the author has
-applied a creative commons attribution (CC BY) licence to any author accepted
-manuscript version arising.
+This work was supported by the Engineering and Physical Sciences Research
+Council [EP/W029731/1 and EP/W026066/1]. J. R. M. was supported by the Natural
+Environment Research Council [NE/T001607/1].
 
 # References
