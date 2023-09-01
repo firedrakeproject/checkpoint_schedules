@@ -6,17 +6,17 @@ tags:
   - Checkpointing methods
   - Adjoint-based gradient
 authors:
-  - name: D
+  - name: Daiane I. Dolci
     affiliation: 1
-  - name: 
-    affiliation: 1
-  - name: 
-    affiliation: 2
+  # - name: 
+  #   affiliation: 1
+  # - name: 
+  #   affiliation: 2
 affiliations:
- - name: .
-   index: 1
  - name: Imperial College London 
-   index: 2
+   index: 1
+#  - name: 
+#    index: 2
 date:  September 2023
 bibliography: paper.bib
 
