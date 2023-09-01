@@ -104,8 +104,8 @@ and error-prone.
 *checkpointing_schedules* provides a number of checkpointing algorithms
 accessible through a common interface and interchangeable without recoding.
 This can be used in conjunction with an adjoint framework such as tlm_adjoint
-or pyadjoint and a compatible PDE framework, such as Firedrake [@citation] or
-FEniCS [@citation] to enable users to create adjoint solvers for their choice
+or pyadjoint and a compatible PDE framework, such as Firedrake [@FiredrakeUserManual] 
+or FEniCS [@AlnaesEtal2015] to enable users to create adjoint solvers for their choice
 of PDE, numerical methods, and checkpointing algorithm all without recoding the
 underlying algorithms.
 
