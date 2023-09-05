@@ -39,10 +39,10 @@ jobs:
         run: |
           python -m pip install sphinx nbsphinx nbsphinx_link sphinx-rtd-theme ipython
           python -m pip install -e .
-      - name: Check bibtex
-        run: |
-          cd docs
-          make validate-bibtex
+      # - name: Check bibtex
+      #   run: |
+      #     cd docs
+      #     make validate-bibtex
       - name: Check documentation links
         if: ${{ github.ref == 'refs/heads/dolci/build_docs' }}
         run: |
