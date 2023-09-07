@@ -38,7 +38,7 @@ def get_hopt_table(lmax, cvect, wvect, rvect, ub, uf):
     [1] Herrmann, J. and Pallez (Aupy), G.. "H-Revolve: a framework
     for adjoint computation on synchronous hierarchical platforms."
     ACM Transactions on Mathematical Software (TOMS) 46.2 (2020): 1-25.
-    DOI: https://doi.org/10.1145/3378672.
+    DOI: 10.1145/3378672.
 
 
     Returns
@@ -250,7 +250,7 @@ def hrevolve(l, cvect, wvect, rvect, fwd_cost, bwd_cost):  # noqa: E741
     [1] Herrmann, J. and Pallez (Aupy), G.. "H-Revolve: a framework for adjoint
     computation on synchronous hierarchical platforms." ACM Transactions on
     Mathematical Software (TOMS) 46.2 (2020): 1-25.
-    DOI: https://doi.org/10.1145/3378672.
+    DOI: 10.1145/3378672.
 
     Returns
     -------
@@ -273,8 +273,8 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None,  # noqa: E741
     l : int
         Total number of forward step.
     K : int
-        The level of memory. In a two-level memory (RAM and disk) setup,
-        `K = 1` represents disk, and `K = 0` represents RAM.
+        The level of memory. In a two-level memory (`'RAM'` and `'disk'`)
+        setup, `K = 1` represents disk, and `K = 0` represents `'RAM'`.
     cmem : int
         Number of available slots in the K-th level of memory. For two-level
         memory, `cmem` represents the number of checkpoints that should be
@@ -285,9 +285,6 @@ def hrevolve_recurse(l, K, cmem, cvect, wvect, rvect, hoptp=None,  # noqa: E741
         The cost of writing to each level of memory.
     rvect : tuple
         The cost of reading from each level of memory.
-    hoptp : list, optional
-
-    hopt : list, optional
 
     Returns
     -------

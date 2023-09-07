@@ -28,18 +28,15 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
     Notes
     -----
     This schedule is described in:
-
-    - Pringle, G. C., Jones, D. C., Goswami, S., Narayanan, S. H. K., and
-    Goldberg, D. (2016). Providing the ARCHER community with adjoint
-    modelling tools for high-performance oceanographic and cryospheric
-    computation. https://nora.nerc.ac.uk/id/eprint/516314.
-
+        - Pringle, G. C., Jones, D. C., Goswami, S., Narayanan, S. H. K., and\
+        Goldberg, D. (2016). Providing the ARCHER community with adjoint\
+        modelling tools for high-performance oceanographic and cryospheric\
+        computation. https://nora.nerc.ac.uk/id/eprint/516314.
     and in the supporting information for
-
-    - Goldberg, D. N., Smith, T. A., Narayanan, S. H., Heimbach, P.,
-    and Morlighem, M. (2020). Bathymetric Influences on Antarctic
-    Ice‐Shelf Melt Rates. Journal of Geophysical Research: Oceans, 125(11),
-    e2020JC016370. doi: https://doi.org/10.1029/2020JC016370.
+        - Goldberg, D. N., Smith, T. A., Narayanan, S. H., Heimbach, P.,\
+        and Morlighem, M. (2020). Bathymetric Influences on Antarctic\
+        Ice‐Shelf Melt Rates. Journal of Geophysical Research: Oceans, 125(11),\
+        e2020JC016370. DOI: 10.1029/2020JC016370.\
 
 
     Online, unlimited adjoint calculations permitted.

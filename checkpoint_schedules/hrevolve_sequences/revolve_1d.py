@@ -44,7 +44,7 @@ def get_opt_1d_table(lmax, cm, ub, uf, rd, one_read_disk, print_table=None,
     [1] Aupy, G.,  Herrmann, Ju. and Hovland, P. and Robert, Y.
     "Optimal multistage algorithm for adjoint computation". SIAM Journal on
     Scientific Computing, 38(3),
-    C232-C255, (2016). DOI: https://doi.org/10.1145/347837.347846
+    C232-C255, (2016). DOI: 10.1145/347837.347846
 
     Returns
     -------
