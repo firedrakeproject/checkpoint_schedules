@@ -67,7 +67,7 @@ jobs:
   deploy:
     name: Deploy Github pages
     needs: build_docs
-    if: ${{ github.ref == 'refs/heads/master' }}
+    if: ${{ github.ref == 'refs/heads/dolci/build_docs' }}
     permissions:
       pages: write
       id-token: write
