@@ -63,7 +63,7 @@ jobs:
         with:
           name: github-pages
           path: /__w/checkpoint_schedules/checkpoint_schedules/docs/build/html
-          retention-days: 1
+          retention-days: 1      
   deploy:
     name: Deploy Github pages
     needs: build_docs
@@ -73,7 +73,7 @@ jobs:
       id-token: write
     environment:
       name: github-pages
-      url: http://firedrakeproject.github.io/checkpoint_schedules/
+      url: http://firedrakeproject.github.io/checkpoint_schedules/docs
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to GitHub Pages
