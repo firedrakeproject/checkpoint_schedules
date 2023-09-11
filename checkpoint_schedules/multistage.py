@@ -166,11 +166,11 @@ class MultistageCheckpointSchedule(CheckpointSchedule):
     [1] Griewank, A., & Walther, A. (2000). Algorithm 799: revolve: an
     implementation of checkpointing for the reverse or adjoint mode of
     computational differentiation. ACM Transactions on Mathematical
-    Software (TOMS), 26(1), 19-45., doi: https://doi.org/10.1145/347837.347846
+    Software (TOMS), 26(1), 19-45., doi: 10.1145/347837.347846
 
     [2] Stumm, P., & Walther, A. (2009). Multistage approaches for optimal
     offline checkpointing. SIAM Journal on Scientific Computing, 31(3),
-    1946-1967. https://doi.org/10.1137/080718036
+    1946-1967. doi: 10.1137/080718036
     """
 
     def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk, *,

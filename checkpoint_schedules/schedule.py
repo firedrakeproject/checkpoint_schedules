@@ -82,7 +82,7 @@ class CheckpointAction:
 
     Attributes
     ----------
-    *args : Any
+    * args : Any
         Action parameters.
     """
 
@@ -118,25 +118,25 @@ class Forward(CheckpointAction):
 
     Example
     -------
-
     .. code-block ::
 
         Forward(10, 25, True, False, StorageType.RAM)
 
     This action is read as:
 
-        - Advance the forward from the start of step 10 to the start of the
-          step 25 (i.e over steps 10 to 24 inclusive).
+    - Advance the forward from the start of step 10 to the start of the
+        step 25 (i.e over steps 10 to 24 inclusive).
 
-        - Store forward data (`write_ics` is `True`) required to initialize the
-          forward at the start of step 10 and to advance to the start of step
-          25.
+    - Store forward data (`write_ics` is `True`) required to initialize the
+        forward at the start of step 10 and to advance to the start of step
+        25.
 
-        - It is not necessary to store the forward data for the adjoint
-          (`write_adj_deps` is `False`).
+    - It is not necessary to store the forward data for the adjoint
+        (`write_adj_deps` is `False`).
 
-        - The forward data should be stored in memory (`storage` is `
-          StorageType.RAM`).
+    - The forward data should be stored in memory (`storage` is\
+    `StorageType.RAM`).
+
     """
 
     def __init__(self, n0, n1, write_ics, write_adj_deps, storage):
