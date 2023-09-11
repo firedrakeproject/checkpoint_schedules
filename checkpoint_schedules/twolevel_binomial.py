@@ -35,8 +35,8 @@ class TwoLevelCheckpointSchedule(CheckpointSchedule):
     and in the supporting information for
         - Goldberg, D. N., Smith, T. A., Narayanan, S. H., Heimbach, P.,\
         and Morlighem, M. (2020). Bathymetric Influences on Antarctic\
-        Ice‐Shelf Melt Rates. Journal of Geophysical Research: Oceans, 125(11),\
-        e2020JC016370. DOI: 10.1029/2020JC016370.\
+        Ice‐Shelf Melt Rates. Journal of Geophysical Research: Oceans,\
+        125(11), e2020JC016370. DOI: 10.1029/2020JC016370.\
 
 
     Online, unlimited adjoint calculations permitted.
