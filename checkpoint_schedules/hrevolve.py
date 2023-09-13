@@ -329,7 +329,7 @@ class Revolve(RevolveCheckpointSchedule):
 
     def __init__(self, max_n, snapshots_in_ram, uf=1, ub=1, wd=2, rd=2):
         schedule = list(revolve(max_n - 1, snapshots_in_ram, wd, rd, uf, ub))
-        super().__init__(max_n, snapshots_in_ram, None, schedule)
+        super().__init__(max_n, snapshots_in_ram, 0, schedule)
 
 
 def _convert_action(action):
