@@ -8,21 +8,21 @@ tags:
 authors:
   - name: Daiane I. Dolci
     affiliation: 1
-  # - name: 
-  #   affiliation: 1
-  # - name: 
-  #   affiliation: 2
+  - name: James R. Maddison
+    affiliation: 2
+  - name: David A. Ham
+    affiliation: 1
 affiliations:
- - name: Imperial College London 
+ - name: Department of Mathematics, Imperial College London, London, SW72AZ, UK.
    index: 1
-#  - name: 
-#    index: 2
+ - name: School of Mathematics and Maxwell Institute for Mathematical Sciences, The University of Edinburgh, EH9 3FD
+   index: 2
 date:  September 2023
 bibliography: paper.bib
 ---
 
 # Summary
-The *checkpointing_schedules* provides schedules for step based incremental
+*checkpointing_schedules* provides schedules for step based incremental
 checkpointing of the adjoints to computer models. The schedules contain
 instructions indicating the sequence of forward and adjoint steps to be
 executed, and the data storage and retrieval to be performed. These
@@ -30,7 +30,7 @@ instructions are independent of the model implementation, which enables the
 model authors to switch between checkpointing algorithms without recoding.
 Conversely, *checkpointing_schedules* provides developers of checkpointing
 algorithms a direct mechanism to convey their work to model authors.
-*checkpointing_schedules* has been integrated into **tlm_adjoint** [@Maddison2014],
+*checkpointing_schedules* has been integrated into **tlm_adjoint** [@tlm2019],
 a Python library designed for the automated derivation of higher-order
 tangent-linear and adjoint models and work is ongoing to integrate it with
 **pyadjoint** [@Mitusch2019]. This package can be incorporated into other gradient
@@ -68,7 +68,7 @@ of steps to be known in advance, for example [@stumm2009multistage;
 
 # Statement of need
 
-This is situation typical across computational mathematics: there exists a
+This situation is typical across computational mathematics: there exists a
 diversity of algorithms whose applicability and optimality depends on the
 nature and parameters of the problem to be solved. From the perspective of
 users who wish to construct adjoint solvers this creates the need to swap out
@@ -79,7 +79,7 @@ algorithms in their framework. Further, such reimplementation work is wasteful
 and error-prone. 
 
 *checkpointing_schedules* provides a number of checkpointing algorithms
-accessible through a common interface and interchangeable without recoding.
+accessible through a common interface and and these are interchangeable without recoding.
 This can be used in conjunction with an adjoint framework such as tlm_adjoint
 or pyadjoint and a compatible PDE framework, such as Firedrake [@FiredrakeUserManual] 
 or FEniCS [@AlnaesEtal2015] to enable users to create adjoint solvers for their choice
@@ -100,7 +100,9 @@ following checkpointing schemes: Revolve [@stumm2009multistage]; disk-revolve
 [@pringle2016providing]; H-Revolve [@herrmann2020]; and mixed storage
 checkpointing [@maddison2023]. It also contains trivial schedules which store
 the entire forward state. This enables users to support adjoint calculations
-with or without checkpointing via a single code path.
+with or without checkpointing via a single code path. 
+
+The complete documentation for *checkpoint_schedules* is available at https://www.firedrakeproject.org/checkpoint_schedules/.
 
 # Acknowledgments
 This work was supported by the Engineering and Physical Sciences Research

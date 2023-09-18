@@ -27,7 +27,7 @@ docs = ["sphinx", "nbsphinx", "nbsphinx_link", "sphinx-rtd-theme", "ipython"]
 notebooks = ["jupyter", "scipy", "tabulate"]
 
 [project.urls]
-# "Homepage" = "https://www.firedrakeproject.org/checkpoint_schedules/"
+"Homepage" = "https://www.firedrakeproject.org/checkpoint_schedules/"
 "repository" = "https://github.com/firedrakeproject/checkpoint_schedules"
 "Bug Tracker" = "https://github.com/firedrakeproject/checkpoint_schedules/issues"
 

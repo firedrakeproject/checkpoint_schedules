@@ -91,18 +91,25 @@
   doi = {doi.org/10.48550/arXiv.2305.09568},
 }
 
-@article{Maddison2014,
-  title = {Rapid development and adjoining of transient finite element models},
-  journal = {Computer Methods in Applied Mechanics and Engineering},
-  volume = {276},
-  pages = {95-121},
-  year = {2014},
-  issn = {0045-7825},
-  doi = {https://doi.org/10.1016/j.cma.2014.03.010},
-  url = {https://www.sciencedirect.com/science/article/pii/S0045782514000966},
-  author = {J.R. Maddison and P.E. Farrell},
-  keywords = {Automated code generation, Finite element method, Discrete adjoint, Navier–Stokes, Barotropic vorticity, FEniCS},
-  abstract = {Recent advances in high level finite element systems have allowed for the symbolic representation of discretisations and their efficient automated implementation as model source code. This allows for the extremely compact implementation of complex non-linear models in a handful of lines of high level code. In this work we extend the high level finite element FEniCS system to introduce an abstract representation of the temporal discretisation: this enables the similarly rapid development of transient finite element models. Efficiency is achieved via aggressive optimisations that exploit the temporal structure, such as automated pre-assembly and caching of forms, and the robust re-use of matrix factorisations and preconditioner data. The resulting models are as fast or faster than hand-optimised finite element codes. The high level representation of the system remains extremely compact and easily manipulated. This structure is exploited to derive the associated discrete adjoint model automatically, with the adjoint model inheriting the performance advantages of the forward model. Combined, this provides a system for the rapid development of efficient transient models, together with their discrete adjoints.}
+@article{tlm2019,
+author = {Maddison, James R. and Goldberg, Daniel N. and Goddard, Benjamin D.},
+title = {Automated Calculation of Higher Order Partial Differential Equation Constrained Derivative Information},
+journal = {SIAM Journal on Scientific Computing},
+volume = {41},
+number = {5},
+pages = {C417-C445},
+year = {2019},
+doi = {10.1137/18M1209465},
+URL = { 
+    
+        https://doi.org/10.1137/18M1209465
+},
+eprint = { 
+    
+        https://doi.org/10.1137/18M120946
+}
+,
+    abstract = { Developments in automated code generation have allowed extremely compact representations of numerical models and for associated adjoint models to be derived automatically via high level algorithmic differentiation. In this article these principles are extended to enable the calculation of higher order derivative information. The higher order derivative information is computed through the automated derivation of tangent-linear equations, which are then treated as new forward equations, and from which higher order tangent-linear and adjoint information can be derived. The principal emphasis is on the calculation of partial differential equation constrained Hessian actions, but the approach generalizes for derivative information at arbitrary order. The derivative calculations are further combined with an advanced data checkpointing strategy. Applications which make use of partial differential equation constrained Hessian actions are presented. }
 }
 
 @article{schanen2016,

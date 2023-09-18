@@ -27,7 +27,7 @@ It is ready working with the following checkpointing approaches:
 
 * Two-level binomial checkpointing [7] and [8];
 
-Additionally, *checkpoint_schedules* is able to execute solvers through trivial checkpointing, 
+*checkpoint_schedules* is able to execute solvers through trivial checkpointing, 
 which entails the forward data storage of all time steps without any checkpointing method. 
 Furthermore, *checkpoint_schedules* provides an alternative for the cases where no adjoint 
 executions are needed, excluding any actions related to forward data storage and retrieval.
@@ -35,8 +35,8 @@ executions are needed, excluding any actions related to forward data storage and
 *checkpoint_schedules* provides generators enabling easy iteration over the sequence of schedules 
 for any above mentioned checkpointing strategies. 
 
-To advance in the basics of *checkpoint_schedules* usage, we recommend to read the following. 
-:ref:`section <example_checkpoint_schedules>`.
+To advance in the basics of *checkpoint_schedules* usage, we recommend to read the following
+`section <https://nbviewer.org/github/firedrakeproject/checkpoint_schedules/blob/main/docs/notebooks/tutorial.ipynb>`__.
 
 References
 ~~~~~~~~~~
