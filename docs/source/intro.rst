@@ -3,8 +3,8 @@
 Introduction
 ============
 
-*checkpoint_schedules* is a Python package that provides schedules based on checkpointing 
-strategies for adjoint-based gradient problems. The schedules are designed by a sequence 
+*checkpoint_schedules* is a Python package that provides schedules for incremental checkpointing 
+within adjoint solvers. The schedules are designed by a sequence 
 of *checkpoint_schedules* actions, namely: *Forward*, *Reverse*, *EndForward*, *EndReverse*,
 *Move*, and *Copy*. In essence, these actions provide functionalities to time advancing the 
 forward and adjoint solvers, checkpoint data storage and retrieval, and indicate the solver 
@@ -32,12 +32,11 @@ which entails the forward data storage of all time steps without any checkpointi
 Furthermore, *checkpoint_schedules* provides an alternative for the cases where no adjoint 
 executions are needed, excluding any actions related to forward data storage and retrieval.
 
-*checkpoint_schedules* provides generators, which enable easy iteration over the sequence of schedules 
-for any above mentioned checkpointing strategies. That allows users access and employ the wished 
-checkpointing schedule based on their needs and computational requirements. 
+*checkpoint_schedules* provides generators enabling easy iteration over the sequence of schedules 
+for any above mentioned checkpointing strategies. 
 
-To advance in the basics of *checkpoint_schedules* usage, we recommend to read the following. 
-:ref:`section <example_checkpoint_schedules>`.
+To advance in the basics of *checkpoint_schedules* usage, we recommend to read the following
+`section <https://nbviewer.org/github/firedrakeproject/checkpoint_schedules/blob/main/docs/notebooks/tutorial.ipynb>`__.
 
 References
 ~~~~~~~~~~

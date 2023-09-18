@@ -17,7 +17,7 @@ __all__ = \
         "EndForward",
         "EndReverse",
         "CheckpointSchedule",
-        "StorageType"
+        "StorageType",
     ]
 
 

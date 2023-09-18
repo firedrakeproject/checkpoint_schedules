@@ -34,17 +34,17 @@
 }
 
 @article{Jansen2011,
-title = {Adjoint-based optimization of multi-phase flow through porous media – A review},
-journal = {Computers & Fluids},
-volume = {46},
-number = {1},
-pages = {40-51},
-year = {2011},
-note = {10th ICFD Conference Series on Numerical Methods for Fluid Dynamics (ICFD 2010)},
-issn = {0045-7930},
-doi = {doi.org/10.1016/j.compfluid.2010.09.039},
-author = {J.D. Jansen},
-keywords = {Adjoint, Optimization, Optimal control, Subsurface, Porous media, Flow, Petroleum, Reservoir},
+  title = {Adjoint-based optimization of multi-phase flow through porous media – A review},
+  journal = {Computers & Fluids},
+  volume = {46},
+  number = {1},
+  pages = {40-51},
+  year = {2011},
+  note = {10th ICFD Conference Series on Numerical Methods for Fluid Dynamics (ICFD 2010)},
+  issn = {0045-7930},
+  doi = {doi.org/10.1016/j.compfluid.2010.09.039},
+  author = {J.D. Jansen},
+  keywords = {Adjoint, Optimization, Optimal control, Subsurface, Porous media, Flow, Petroleum, Reservoir},
 }
 
 @article{griewank2000algorithm,
@@ -91,29 +91,38 @@ keywords = {Adjoint, Optimization, Optimal control, Subsurface, Porous media, Fl
   doi = {doi.org/10.48550/arXiv.2305.09568},
 }
 
-
-@article{SCHANEN20161147,
-title = {Asynchronous Two-level Checkpointing Scheme for Large-scale Adjoints in the Spectral-Element Solver Nek5000},
-journal = {Procedia Computer Science},
-volume = {80},
-pages = {1147-1158},
-year = {2016},
-note = {International Conference on Computational Science 2016, ICCS 2016, 6-8 June 2016, San Diego, California, USA},
-issn = {1877-0509},
-doi = {doi.org/10.1016/j.procs.2016.05.444},
-author = {Michel Schanen and Oana Marin and Hong Zhang and Mihai Anitescu},
-keywords = {Two-Level Checkpointing, Adjoints, Gradient, Large Scale, Nek5000, CFD},}
-
-@article{wang2009minimal,
-  title = {Minimal repetition dynamic checkpointing algorithm for unsteady adjoint calculation},
-  author = {Wang, Qiqi and Moin, Parviz and Iaccarino, Gianluca},
-  journal = {SIAM Journal on Scientific Computing},
-  volume = {31},
-  number = {4},
-  pages = {2549--2567},
-  year = {2009},
-  publisher = {SIAM},
+@article{tlm2019,
+author = {Maddison, James R. and Goldberg, Daniel N. and Goddard, Benjamin D.},
+title = {Automated Calculation of Higher Order Partial Differential Equation Constrained Derivative Information},
+journal = {SIAM Journal on Scientific Computing},
+volume = {41},
+number = {5},
+pages = {C417-C445},
+year = {2019},
+doi = {10.1137/18M1209465},
+URL = { 
+    
+        https://doi.org/10.1137/18M1209465
+},
+eprint = { 
+    
+        https://doi.org/10.1137/18M120946
 }
+,
+    abstract = { Developments in automated code generation have allowed extremely compact representations of numerical models and for associated adjoint models to be derived automatically via high level algorithmic differentiation. In this article these principles are extended to enable the calculation of higher order derivative information. The higher order derivative information is computed through the automated derivation of tangent-linear equations, which are then treated as new forward equations, and from which higher order tangent-linear and adjoint information can be derived. The principal emphasis is on the calculation of partial differential equation constrained Hessian actions, but the approach generalizes for derivative information at arbitrary order. The derivative calculations are further combined with an advanced data checkpointing strategy. Applications which make use of partial differential equation constrained Hessian actions are presented. }
+}
+
+@article{schanen2016,
+  title = {Asynchronous Two-level Checkpointing Scheme for Large-scale Adjoints in the Spectral-Element Solver Nek5000},
+  journal = {Procedia Computer Science},
+  volume = {80},
+  pages = {1147-1158},
+  year = {2016},
+  note = {International Conference on Computational Science 2016, ICCS 2016, 6-8 June 2016, San Diego, California, USA},
+  issn = {1877-0509},
+  doi = {doi.org/10.1016/j.procs.2016.05.444},
+  author = {Michel Schanen and Oana Marin and Hong Zhang and Mihai Anitescu},
+  keywords = {Two-Level Checkpointing, Adjoints, Gradient, Large Scale, Nek5000, CFD},}
 
 @article{aupy2017periodicity,
   title = {Periodicity in optimal hierarchical checkpointing schemes for adjoint computations},
@@ -147,13 +156,45 @@ keywords = {Two-Level Checkpointing, Adjoints, Gradient, Large Scale, Nek5000, C
 }
 
 @article{Zhang_2023,
-title = {Optimal checkpointing for adjoint multistage time-stepping schemes},
-journal = {Journal of Computational Science},
-volume = {66},
-pages = {101913},
-year = {2023},
-issn = {1877-7503},
-doi = {doi.org/10.1016/j.jocs.2022.101913},
-author = {Hong Zhang and Emil M. Constantinescu},
-keywords = {Checkpointing, Adjoint method, Multistage time-stepping schemes, Dynamic programming, PETSc},
+  title = {Optimal checkpointing for adjoint multistage time-stepping schemes},
+  journal = {Journal of Computational Science},
+  volume = {66},
+  pages = {101913},
+  year = {2023},
+  issn = {1877-7503},
+  doi = {doi.org/10.1016/j.jocs.2022.101913},
+  author = {Hong Zhang and Emil M. Constantinescu},
+  keywords = {Checkpointing, Adjoint method, Multistage time-stepping schemes, Dynamic programming, PETSc},
+}
+
+@article{Mitusch2019, 
+  doi = {10.21105/joss.01292}, 
+  url = {https://doi.org/10.21105/joss.01292}, 
+  year = {2019}, 
+  publisher = {The Open Journal}, 
+  volume = {4}, 
+  number = {38}, 
+  pages = {1292}, 
+  author = {Sebastian K. Mitusch and Simon W. Funke and Jørgen S. Dokken}, 
+  title = {dolfin-adjoint 2018.1: automated adjoints for FEniCS and Firedrake}, 
+  journal = {Journal of Open Source Software} 
+}
+
+@manual{FiredrakeUserManual,
+  title        = {Firedrake User Manual},
+  author       = {David A. Ham and Paul H. J. Kelly and Lawrence Mitchell and Colin J. Cotter and Robert C. Kirby and Koki Sagiyama and Nacime Bouziani and Sophia Vorderwuelbecke and Thomas J. Gregory and Jack Betteridge and Daniel R. Shapero and Reuben W. Nixon-Hill and Connor J. Ward and Patrick E. Farrell and Pablo D. Brubeck and India Marsden and Thomas H. Gibson and Miklós Homolya and Tianjiao Sun and Andrew T. T. McRae and Fabio Luporini and Alastair Gregory and Michael Lange and Simon W. Funke and Florian Rathgeber and Gheorghe-Teodor Bercea and Graham R. Markall},
+  organization = {Imperial College London and University of Oxford and Baylor University and University of Washington},
+  edition      = {First edition},
+  year         = {2023},
+  month        = {5},
+  doi          = {10.25561/104839},
+}
+
+@article{AlnaesEtal2015,
+  title     = {The {FEniCS} Project Version 1.5},
+  author    = {M. S. Alnaes and J. Blechta and J. Hake and A. Johansson and B. Kehlet and A. Logg and C. Richardson and J. Ring and M. E. Rognes and G. N. Wells},
+  journal   = {Archive of Numerical Software},
+  year      = {2015},
+  volume    = {3},
+  doi       = {10.11588/ans.2015.100.20553},
 }

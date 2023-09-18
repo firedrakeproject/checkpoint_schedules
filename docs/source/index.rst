@@ -4,7 +4,7 @@
 ********************
 checkpoint_schedules
 ********************
-:Authors:       Daiane I. Dolci ..
+:Authors:       Daiane I. Dolci, James R. Maddison, David A. Ham.
 :Contact:      d.dolci@imperial.ac.uk
 :GitHub:       https://github.com/firedrakeproject/checkpoint_schedules
 :Date:         |today|
@@ -16,10 +16,10 @@ If you want to quickly get up and running with *checkpoint_schedules* your adjoi
  
 * Install *checkpoint_schedules* via pip ::
 
-  $  pip install checkpoint_schedule
+  $  pip install checkpoint-schedules
 
 * Familiarise with *checkpoint_schedules* by acessing the :ref:`introduction <introduction>`.
-* Go through to a basic :ref:`example <example_checkpoint_schedules>` that explain how *checkpoint_schedule* works in a adjoint problem.
+* Go through to an `illustrative example <https://nbviewer.org/github/firedrakeproject/checkpoint_schedules/blob/main/docs/notebooks/tutorial.ipynb>`__ that explains the usage of *checkpoint_schedules* for step-based incremental checkpointing of the adjoints.
 
 API documentation
 =================

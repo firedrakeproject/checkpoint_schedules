@@ -125,7 +125,7 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
         while True:
             while self._r < self._max_n:
                 n1 = self._max_n - self._r
-                n0 = ((n1 - 1) // sys.maxsize) * sys.maxsize
+                n0 = n1 - 1
 
                 self._n = n0
                 if self._move_data:
