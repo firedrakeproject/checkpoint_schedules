@@ -3,8 +3,8 @@
 Introduction
 ============
 
-*checkpoint_schedules* is a Python package that provides schedules for incremental checkpointing 
-within adjoint solvers. The schedules are designed by a sequence 
+*checkpointing_schedules* provides schedules for step based incremental
+checkpointing of the adjoints to computer models. The schedules are designed by a sequence 
 of *checkpoint_schedules* actions, namely: *Forward*, *Reverse*, *EndForward*, *EndReverse*,
 *Move*, and *Copy*. In essence, these actions provide functionalities to time advancing the 
 forward and adjoint solvers, checkpoint data storage and retrieval, and indicate the solver 
