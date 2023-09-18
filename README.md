@@ -1,2 +1,5 @@
 # checkpoint_schedules
-Schedules for incremental checkpointing of adjoint simulations.
+*checkpointing_schedules* provides schedules for step-based incremental
+checkpointing of the adjoints to computer models. 
+
+The complete documentation for *checkpoint_schedules* is available at https://www.firedrakeproject.org/checkpoint_schedules/.
