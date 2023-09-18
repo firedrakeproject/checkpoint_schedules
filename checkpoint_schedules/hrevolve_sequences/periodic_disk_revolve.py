@@ -84,7 +84,7 @@ def compute_mx(cm, opt_0=None, opt_1d=None, mmax=None, **params):
     [1] Aupy, G.,  Herrmann, J. "Periodicity in optimal hierarchical
     checkpointing schemes for adjoint computations". Optimization Methods and
     Software, 32(3), 594-624, (2017).
-    DOI: http://dx.doi.org/10.1080/10556788.2016.1230612.
+    DOI: 10.1080/10556788.2016.1230612.
 
     Returns
     -------
@@ -137,7 +137,7 @@ def mx_close_formula(cm, rd, wd, opt_0=None, opt_1d=None, **params):
     [1] Aupy, G.,  Herrmann, J. "Periodicity in optimal hierarchical
     checkpointing schemes for adjoint computations". Optimization Methods and
     Software, 32(3), 594-624, (2017).
-    DOI: http://dx.doi.org/10.1080/10556788.2016.1230612.
+    DOI: 10.1080/10556788.2016.1230612.
     """
     def f(x, y, c):
         return int(beta(c + 1, x + y - 1) - sum([beta(c, k)

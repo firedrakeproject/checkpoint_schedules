@@ -218,7 +218,7 @@ class HRevolve(RevolveCheckpointSchedule):
     [1] Herrmann, J. and Pallez (Aupy), G. (2020). H-Revolve:
     a framework for adjoint computation on synchronous hierarchical
     platforms. ACM Transactions on Mathematical Software (TOMS), 46(2),
-    1-25. DOI: https://doi.org/10.1145/3378672.
+    1-25. DOI: 10.1145/3378672.
 
     """
     def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk,
@@ -255,7 +255,7 @@ class DiskRevolve(RevolveCheckpointSchedule):
     [1] Aupy, G., Herrmann, J., Hovland, P., & Robert, Y. (2016).
     Optimal multistage algorithm for adjoint computation. SIAM
     Journal on Scientific Computing, 38(3), C232-C255.
-    DOI: https://doi.org/10.1145/347837.347846.
+    DOI: 10.1145/347837.347846.
     """
 
     def __init__(self, max_n, snapshots_in_ram, uf=1, ub=1, wd=2, rd=2):
@@ -289,7 +289,7 @@ class PeriodicDiskRevolve(RevolveCheckpointSchedule):
     [1] Aupy, G., & Herrmann, J. (2017). Periodicity in optimal
     hierarchical checkpointing schemes for adjoint computations.
     Optimization Methods and Software, 32(3), 594-624.
-    doi: https://doi.org/10.1080/10556788.2016.1230612
+    doi: 10.1080/10556788.2016.1230612
 
     """
 
@@ -324,12 +324,12 @@ class Revolve(RevolveCheckpointSchedule):
     [1] Griewank, A., & Walther, A. (2000). Algorithm 799: revolve: an
     implementation of checkpointing for the reverse or adjoint mode of
     computational differentiation. ACM Transactions on Mathematical Software
-    (TOMS), 26(1), 19-45., doi: https://doi.org/10.1145/347837.347846
+    (TOMS), 26(1), 19-45., doi: 10.1145/347837.347846
     """
 
     def __init__(self, max_n, snapshots_in_ram, uf=1, ub=1, wd=2, rd=2):
         schedule = list(revolve(max_n - 1, snapshots_in_ram, wd, rd, uf, ub))
-        super().__init__(max_n, snapshots_in_ram, None, schedule)
+        super().__init__(max_n, snapshots_in_ram, 0, schedule)
 
 
 def _convert_action(action):

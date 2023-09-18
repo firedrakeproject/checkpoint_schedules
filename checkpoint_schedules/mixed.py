@@ -43,7 +43,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
 
     [1] Maddison, J. R. (2023). On the implementation of checkpointing with
     high-level algorithmic differentiation. arXiv preprint arXiv:2305.09568.
-    https://doi.org/10.48550/arXiv.2305.09568
+    DOI: 10.48550/arXiv.2305.09568
     """
 
     def __init__(self, max_n, snapshots, *, storage=StorageType.DISK):
