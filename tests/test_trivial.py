@@ -34,8 +34,6 @@ def single_memory(n):
      single_memory,
      ]
      )
-
-
 def test_validity(schedule, n=10):
     """Test the checkpoint revolvers.
 
