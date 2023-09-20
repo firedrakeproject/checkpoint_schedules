@@ -5,8 +5,8 @@ Introduction
 
 *checkpointing_schedules* provides schedules for step based incremental
 checkpointing of the adjoints to computer models. The schedules are designed by a sequence 
-of *checkpoint_schedules* actions, namely: *Forward*, *Reverse*, *EndForward*, *EndReverse*,
-*Move*, and *Copy*. In essence, these actions provide functionalities to time advancing the 
+of *checkpoint_schedules* actions, namely: :class:`~.schedules.Forward`, :class:`~.schedules.Reveverse`, :class:`~.schedules.EndForward`, :class:`~.schedules.EndReverse`, :class:`~.schedules.Move`, and :class:`~.schedules.Copy`.
+In essence, these actions provide functionalities to time advancing the 
 forward and adjoint solvers, checkpoint data storage and retrieval, and indicate the solver 
 finalisations. 
 
@@ -40,8 +40,6 @@ To advance in the basics of *checkpoint_schedules* usage, we recommend to read t
 
 References
 ~~~~~~~~~~
-
-### References
 
 [1] Griewank, A., & Walther, A. (2000). Algorithm 799: revolve: an implementation of checkpointing for the reverse or adjoint mode of computational differentiation. ACM Transactions on Mathematical Software (TOMS), 26(1), 19-45., doi: 10.1145/347837.347846
 

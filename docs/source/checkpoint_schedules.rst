@@ -1,7 +1,17 @@
 Schedules
 ==========
 
+.. automodule:: checkpoint_schedules.basic_schedules
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 .. automodule:: checkpoint_schedules.hrevolve
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. autoclass:: checkpoint_schedules.hrevolve.RevolveCheckpointSchedule
    :members:
    :undoc-members:
    :show-inheritance:
@@ -16,32 +26,19 @@ Schedules
    :undoc-members:
    :show-inheritance:
 
-
-.. automodule:: checkpoint_schedules.basic_schedules
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 .. automodule:: checkpoint_schedules.twolevel_binomial
    :members:
    :undoc-members:
    :show-inheritance:
 
-Base Classes to build new schedules
-===================================
+Base Classes to build schedules
+===============================
 .. automodule:: checkpoint_schedules.schedule
    :members:
    :undoc-members:
    :show-inheritance:
 
-Utils
-=====
-.. automodule:: checkpoint_schedules.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-H-Revolve Sequences
+H-Revolve sequences
 ===================
 
 .. automodule:: checkpoint_schedules.hrevolve_sequences.basic_functions
