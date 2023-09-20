@@ -12,15 +12,20 @@ authors:
     affiliation: 2
   - name: David A. Ham
     affiliation: 1
+  - name: Guillaume Pallez (Aupy)
+    affiliation: 3
+  - name: Julien Herrmann
+    affiliation: 3
 affiliations:
  - name: Department of Mathematics, Imperial College London, London, SW72AZ, UK.
    index: 1
  - name: School of Mathematics and Maxwell Institute for Mathematical Sciences, The University of Edinburgh, EH9 3FD
    index: 2
+  - name: Inria & Labri, University of Bordeaux, Talence, France
+   index: 3
 date:  September 2023
 bibliography: paper.bib
 ---
-
 # Summary
 *checkpointing_schedules* provides schedules for step based incremental
 checkpointing of the adjoints to computer models. The schedules contain
