@@ -17,7 +17,7 @@ __all__ = \
 
 
 class RevolveCheckpointSchedule(CheckpointSchedule):
-    """A Revolve checkpointing schedule.
+    """A checkpointing schedule.
     Offline, one adjoint calculation permitted.
 
     Attributes
@@ -33,14 +33,13 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
 
     Notes
     -----
-    This Class is able to convert the H-revolvers algorithmics to
-    *checkpoint_schedules* actions and iterate over them.
-    The revolver algorithmics are: H-Revolve, Disk Revolve,
-    Periodic Disk Revolve and Revolve. Theses algorithms produce a schedule
-    containing a sequence of operations that are converted to
-    *checkpoint_schedules* actions: *Forward*, *Reverse*, *Copy*, *Move*,
-    *EndForward* and *EndReverse*. The schedules are not able to create
-    schedules for `_snapshots_in_ram` equal to zero.
+    This class converts the operations from H-revolve, Disk Revolve, Periodic
+    Disk Revolve and Revolve algorithmics to *checkpoint_schedules* actions,
+    e.g, the operation ``F_0->6`` is converted to the *checkpoint_schedules*
+    action :class:`~.schedules.Forward`.
+
+    **The checkpointing algorithimics mentioned above are able to create
+    schedules for `'_snapshots_in_ram > 0'`.**
     """
 
     def __init__(self, max_n, snapshots_in_ram, snapshots_on_disk, schedule):
@@ -53,7 +52,7 @@ class RevolveCheckpointSchedule(CheckpointSchedule):
         self._schedule = schedule
 
     def _iterator(self):
-        """A checkpoint schedules iterator.
+        """A checkpoint schedule iterator.
 
         Yields
         ------

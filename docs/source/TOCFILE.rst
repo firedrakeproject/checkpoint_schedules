@@ -8,4 +8,9 @@ checkpoint_schedules
 
    checkpoint_schedules
 
+.. toctree::
+   :maxdepth: 4
+
+   intro
+
 
