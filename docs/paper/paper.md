@@ -21,7 +21,7 @@ affiliations:
    index: 1
  - name: School of Mathematics and Maxwell Institute for Mathematical Sciences, The University of Edinburgh, EH9 3FD
    index: 2
-  - name: Inria & Labri, University of Bordeaux, Talence, France
+ - name: Inria & Labri, University of Bordeaux, Talence, France
    index: 3
 date:  September 2023
 bibliography: paper.bib
