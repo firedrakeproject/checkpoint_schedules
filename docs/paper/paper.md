@@ -107,7 +107,8 @@ checkpointing [@maddison2023]. It also contains trivial schedules which store
 the entire forward state. This enables users to support adjoint calculations
 with or without checkpointing via a single code path. 
 
-The complete documentation for *checkpoint_schedules* is available at https://www.firedrakeproject.org/checkpoint_schedules/.
+The complete documentation for *checkpoint_schedules* is available on
+[the project website](https://www.firedrakeproject.org/checkpoint_schedules/).
 
 # Acknowledgments
 This work was supported by the Engineering and Physical Sciences Research
