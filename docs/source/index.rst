@@ -4,7 +4,7 @@
 ********************
 checkpoint_schedules
 ********************
-:Authors:       Daiane I. Dolci, James R. Maddison, David A. Ham, Guillaume Pallez (Aupy), Julien Herrmann
+:Authors:       Daiane I. Dolci, James R. Maddison, David A. Ham, Guillaume Pallez, Julien Herrmann
 :Contact:      d.dolci@imperial.ac.uk
 :GitHub:       https://github.com/firedrakeproject/checkpoint_schedules
 :Date:         |today|
