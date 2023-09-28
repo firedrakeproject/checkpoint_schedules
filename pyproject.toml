@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "checkpoint_schedules"
-version = "0.0.9"
+version = "1.0.0"
 authors = [
   { name="Daiane I. Dolci ", email="ddolci@eimperial.ic.ac.uk" },
   { name="James R. Maddison", email="j.r.maddison@ed.ac.uk" },
