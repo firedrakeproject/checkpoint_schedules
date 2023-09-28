@@ -12,17 +12,19 @@ authors:
     affiliation: 2
   - name: David A. Ham
     affiliation: 1
-  - name: Guillaume Pallez (Aupy)
+  - name: Guillaume Pallez
     affiliation: 3
   - name: Julien Herrmann
-    affiliation: 3
+    affiliation: 4
 affiliations:
  - name: Department of Mathematics, Imperial College London, London, SW72AZ, UK.
    index: 1
  - name: School of Mathematics and Maxwell Institute for Mathematical Sciences, The University of Edinburgh, EH9 3FD
    index: 2
- - name: Inria & Labri, University of Bordeaux, Talence, France
+ - name: Inria, University of Rennes, France.
    index: 3
+ - name: CNRS, IRIT, Université de Toulouse.
+   index: 4
 date:  September 2023
 bibliography: paper.bib
 ---
@@ -113,6 +115,7 @@ The complete documentation for *checkpoint_schedules* is available on
 # Acknowledgments
 This work was supported by the Engineering and Physical Sciences Research
 Council [EP/W029731/1 and EP/W026066/1]. J. R. M. was supported by the Natural
-Environment Research Council [NE/T001607/1].
+Environment Research Council [NE/T001607/1]. G. P. was supported in part by
+the French National Research Agency (ANR) in the frame of DASH (ANR-17-CE25- 0004).
 
 # References
