@@ -1,5 +1,5 @@
 ---
-title: 'checkpoint_schedules: schedules for incremental of adjoint simulations.'
+title: 'checkpoint_schedules: schedules for incrementing adjoint simulations'
 
 tags:
   - Python
@@ -7,12 +7,15 @@ tags:
   - Adjoint-based gradient
 authors:
   - name: Daiane I. Dolci
+    orcid: 0000-0002-1435-9538
     affiliation: 1
   - name: James R. Maddison
     affiliation: 2
   - name: David A. Ham
+    orcid: 0000-0001-9545-9110
     affiliation: 1
   - name: Guillaume Pallez
+    orcid: 0000-0001-8862-3277
     affiliation: 3
   - name: Julien Herrmann
     affiliation: 4
