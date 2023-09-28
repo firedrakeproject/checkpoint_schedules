@@ -1,6 +1,5 @@
 ---
-title: 'checkpoint_schedules: schedules for incrementing adjoint simulations'
-
+title: 'checkpoint_schedules: schedules for incremental checkpointing of adjoint simulations'
 tags:
   - Python
   - Checkpointing methods
