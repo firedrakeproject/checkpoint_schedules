@@ -1,17 +1,17 @@
 # checkpoint_schedules
-*checkpointing_schedules* provides schedules for step based incremental
+*checkpoint_schedules* provides schedules for step-based incremental
 checkpointing of the adjoints to computer models. The schedules contain
 instructions indicating the sequence of forward and adjoint steps to be
 executed, and the data storage and retrieval to be performed. 
 
-The schedules instructions are independent of the checkpointing model implementation,
+The schedule instructions are independent of the checkpointing model implementation,
 which enables the model authors to switch between checkpointing algorithms
-without recoding their adjoint solvers. Conversely, *checkpointing_schedules*
-provides developers of checkpointing algorithms a direct mechanism to convey
+without recoding their adjoint solvers. Conversely, *checkpoint_schedules*
+provides developers of checkpointing algorithms with a direct mechanism to convey
 their work to model authors.
 
 ## Installation
-*checkpointing_schedules* is a Python package and can be installed using pip
+*checkpoint_schedules* is a Python package and can be installed using pip
 ```
 pip install checkpoint-schedules
 ```
