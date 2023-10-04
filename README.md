@@ -4,7 +4,7 @@ checkpointing of the adjoints to computer models. The schedules contain
 instructions indicating the sequence of forward and adjoint steps to be
 executed, and the data storage and retrieval to be performed. 
 
-The schedule instructions are independent of the checkpointing model implementation,
+The schedule instructions are independent of the model implementation,
 which enables the model authors to switch between checkpointing algorithms
 without recoding their adjoint solvers. Conversely, *checkpoint_schedules*
 provides developers of checkpointing algorithms with a direct mechanism to convey
