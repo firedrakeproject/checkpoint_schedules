@@ -28,4 +28,20 @@ The complete list of all the classes and methods in *checkpoint_schedules* is av
 <checkpoint_schedules-api-reference>`.
 
 
+Contributing
+============
+We welcome contributions to *checkpoint_schedules*!
+To contribute please consider the following steps:
+1. Fork the repository.
+2. Make your changes.
+3. Submit a pull request.
+
+Bug reports
+===========
+Please report bugs on the [issue tracker](https://github.com/firedrakeproject/checkpoint_schedules/issues).
+
+
+
+
+
 
