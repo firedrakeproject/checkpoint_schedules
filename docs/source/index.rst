@@ -39,9 +39,3 @@ To contribute please consider the following steps:
 Bug reports
 ===========
 Please report bugs on the [issue tracker](https://github.com/firedrakeproject/checkpoint_schedules/issues).
-
-
-
-
-
-
