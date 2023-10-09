@@ -116,7 +116,7 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
 
         while self._max_n is None:
             n0 = self._n
-            n1 = n0 + sys.maxsize
+            n1 = n0 + 1
             self._n = n1
             yield Forward(n0, n1, False, True, StorageType.DISK)
 
