@@ -216,6 +216,10 @@ def test_validity(schedule, n, S):
     def action_copy(cp_action):
         nonlocal model_n
 
+        # No data is currently stored
+        assert len(ics) == 0
+        assert len(data) == 0
+
         # The checkpoint exists
         assert cp_action.n in snapshots[cp_action.from_storage]
         cp_ics, cp_data = snapshots[cp_action.from_storage][cp_action.n]
@@ -248,6 +252,10 @@ def test_validity(schedule, n, S):
     @action.register(Move)
     def action_move(cp_action):
         nonlocal model_n
+
+        # No data is currently stored
+        assert len(ics) == 0
+        assert len(data) == 0
 
         # The checkpoint exists
         assert cp_action.n in snapshots[cp_action.from_storage]
