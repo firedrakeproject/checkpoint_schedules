@@ -20,7 +20,7 @@ If you want to quickly get up and running with *checkpoint_schedules* your adjoi
 
 * Familiarise with *checkpoint_schedules* by acessing the :ref:`introduction <introduction>`.
 * Go through to an `illustrative example <https://nbviewer.org/github/firedrakeproject/checkpoint_schedules/blob/main/docs/notebooks/tutorial.ipynb>`_ that explains the usage of *checkpoint_schedules* for step-based incremental checkpointing of the adjoints.
-* See an adjoint problem solved using checkpointing algorithmics available in *checkpoint_schedules* in this `application notebook <https://nbviewer.org/github/firedrakeproject/checkpoint_schedules/blob/dolci/schedules_application/docs/notebooks/burger.ipynb>`_.
+* See `here <https://nbviewer.org/github/firedrakeproject/checkpoint_schedules/blob/dolci/schedules_application/docs/notebooks/burger.ipynb>`_ an adjoint problem solved with checkpointing algorithmics available in *checkpoint_schedules*.
 
 API documentation
 =================
