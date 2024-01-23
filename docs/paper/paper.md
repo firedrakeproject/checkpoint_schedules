@@ -69,8 +69,7 @@ forward steps are run more than once. Griewank and Walther (2000) proposed a
 checkpointing algorithm which is optimal under certain assumptions, including
 that the number of steps is known in advance, and that all the storage has
 equal access cost [@griewank2000algorithm]. Subsequent authors have produced checkpointing algorithms that relax these requirements in various ways, such as by accounting for
-different types of storage (e.g. RAM and disk) or by not requiring the number of steps to be
-known in advance, for example [@stumm2009multistage; @aupy2016optimal; @schanen2016; @aupy2017periodicity; @herrmann2020; @maddison2023; @Zhang_2023]. 
+different types of storage (e.g. RAM (Random-Access Memory) and disk) or by not requiring the number of steps to be known in advance, for example [@stumm2009multistage; @aupy2016optimal; @schanen2016; @aupy2017periodicity; @herrmann2020; @maddison2023; @Zhang_2023]. 
 
 # Statement of need
 
