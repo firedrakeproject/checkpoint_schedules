@@ -49,7 +49,7 @@ generate the adjoint model.
 The use of adjoint calculations to compute the gradient of a quantity of
 interest resulting from the solution of a system of partial differential
 equations (PDEs) is widespread and well-established. The resulting gradient may
-be employed for many purposes, include topology
+be employed for many purposes, including topology
 optimisation [@papadopoulos2021computing], inverse problems [@Plessix2006],
 flow control [@Jansen2011]. 
 
@@ -57,7 +57,7 @@ Solving the adjoint to a non-linear time-dependent PDE requires the forward PDE
 to be solved first. The adjoint PDE is then solved in a reverse time
 order, but depends on the forward state. Storing the entire forward state in
 preparation for the adjoint calculation has a memory footprint linear in the
-number of time steps. For sufficiently large problems this will exhaust the
+number of time steps. For sufficiently large problems this can exhaust the
 memory of any computer system. 
 
 In contrast, checkpointing approaches store only the state required to restart
@@ -65,15 +65,12 @@ the forward calculation from a limited set of steps. As the adjoint
 calculation progresses, the forward computation is progressively rerun from the
 latest available stored state up to the current adjoint step. This enables less
 forward state to be stored, at the expense of a higher computational cost as
-forward steps are run more than once. [@griewank2000algorithm] proposed a
+forward steps are run more than once. Griewank and Walther (2000) proposed a
 checkpointing algorithm which is optimal under certain assumptions, including
 that the number of steps is known in advance, and that all the storage has
-equal access cost. Subsequent authors have produced checkpointing algorithms
-that relax these requirements in various ways, such as by accounting for
-different types of storage (e.g. RAM and disk) or by not requiring the number
-of steps to be known in advance, for example [@stumm2009multistage;
-@aupy2016optimal; @schanen2016; @aupy2017periodicity;
-@herrmann2020; @maddison2023; @Zhang_2023]. 
+equal access cost [@griewank2000algorithm]. Subsequent authors have produced checkpointing algorithms that relax these requirements in various ways, such as by accounting for
+different types of storage (e.g. RAM and disk) or by not requiring the number of steps to be
+known in advance, for example [@stumm2009multistage; @aupy2016optimal; @schanen2016; @aupy2017periodicity; @herrmann2020; @maddison2023; @Zhang_2023]. 
 
 # Statement of need
 
