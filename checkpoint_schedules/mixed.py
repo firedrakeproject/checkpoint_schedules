@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: LGPL-3.0-only
-# Copyright (C) 2020 - 2024 The University of Edinburgh and Imperial College London
+# Copyright (C) 2020 - 2024 The University of Edinburgh and Imperial College
+# London
 # Developed originally by James R. Maddison (j.r.maddison@ed.ac.uk).
-# Modified by Daiane I. Dolci (d.dolci@eimperial.ic.ac.uk) and David A. Ham (david.ham@imperial.ac.uk).
+# Modified by Daiane I. Dolci (d.dolci@eimperial.ic.ac.uk)
+# and David A. Ham (david.ham@imperial.ac.uk).
 import warnings
 import functools
 import numpy as np
