@@ -65,7 +65,7 @@ the forward calculation from a limited set of steps. As the adjoint
 calculation progresses, the forward computation is progressively rerun from the
 latest available stored state up to the current adjoint step. This enables less
 forward state to be stored, at the expense of a higher computational cost as
-forward steps are run more than once. Griewank and Walther (2000) proposed a
+forward steps are run more than once. @griewank2000algorithm proposed a
 checkpointing algorithm which is optimal under certain assumptions, including
 that the number of steps is known in advance, and that all the storage has
 equal access cost [@griewank2000algorithm]. Subsequent authors have produced checkpointing algorithms that relax these requirements in various ways, such as by accounting for
