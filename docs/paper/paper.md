@@ -57,7 +57,7 @@ Solving the adjoint to a non-linear time-dependent PDE requires the forward PDE
 to be solved first. The adjoint PDE is then solved in a reverse time
 order, but depends on the forward state. Storing the entire forward state in
 preparation for the adjoint calculation has a memory footprint linear in the
-number of time steps. For sufficiently large problems this can exhaust the
+number of time steps. For sufficiently large problems this will exhaust the
 memory of any computer system. 
 
 In contrast, checkpointing approaches store only the state required to restart
@@ -68,8 +68,12 @@ forward state to be stored, at the expense of a higher computational cost as
 forward steps are run more than once. @griewank2000algorithm proposed a
 checkpointing algorithm which is optimal under certain assumptions, including
 that the number of steps is known in advance, and that all the storage has
-equal access cost [@griewank2000algorithm]. Subsequent authors have produced checkpointing algorithms that relax these requirements in various ways, such as by accounting for
-different types of storage (e.g. RAM (Random-Access Memory) and disk) or by not requiring the number of steps to be known in advance, for example [@stumm2009multistage; @aupy2016optimal; @schanen2016; @aupy2017periodicity; @herrmann2020; @maddison2023; @Zhang_2023]. 
+equal access cost. Subsequent authors have produced checkpointing algorithms
+that relax these requirements in various ways, such as by accounting for
+different types of storage (e.g. RAM (Random-Access Memory) and disk) or by not
+requiring the number of steps to be known in advance, for example 
+[@stumm2009multistage; @aupy2016optimal; @schanen2016; @aupy2017periodicity; 
+@herrmann2020; @maddison2023; @Zhang_2023]. 
 
 # Statement of need
 
