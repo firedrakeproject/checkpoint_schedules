@@ -1,5 +1,10 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# SPDX-License-Identifier: LGPL-3.0-only
+# Copyright (C) 2020 - 2024 The University of Edinburgh and Imperial College
+# London
+# Developed by Daiane I. Dolci (d.dolci@eimperial.ic.ac.uk),
+# James R. Maddison (j.r.maddison@ed.ac.uk)
+# and David A. Ham (david.ham@imperial.ac.uk).
+
 """This module contains the checkpointing schedules for the H-Revolve,
 Disk Revolve, Periodic Disk Revolve and Revolve algorithms.
 """
