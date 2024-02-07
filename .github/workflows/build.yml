@@ -34,4 +34,4 @@ jobs:
         pytest
     - name: Test jupyter notebooks
       run: |
-        pytest --nbval-lax docs/notebooks/tutorial.ipynb
+        pytest --nbval-lax docs/notebooks/
