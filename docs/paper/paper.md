@@ -70,7 +70,7 @@ checkpointing algorithm which is optimal under certain assumptions, including
 that the number of steps is known in advance, and that all the storage has
 equal access cost. Subsequent authors have produced checkpointing algorithms
 that relax these requirements in various ways, such as by accounting for
-different types of storage (e.g. RAM (Random-Access Memory) and disk) or by not
+different types of storage (e.g. memory and disk) or by not
 requiring the number of steps to be known in advance, for example 
 [@stumm2009multistage; @aupy2016optimal; @schanen2016; @aupy2017periodicity; 
 @herrmann2020; @maddison2023; @Zhang_2023]. 
@@ -88,7 +88,7 @@ algorithms in their framework. Further, such reimplementation work is wasteful
 and error-prone. 
 
 *checkpointing_schedules* provides a number of checkpointing algorithms
-accessible through a common interface and and these are interchangeable without recoding.
+accessible through a common interface and these are interchangeable without recoding.
 This can be used in conjunction with an adjoint framework such as tlm_adjoint
 or pyadjoint and a compatible PDE framework, such as Firedrake [@FiredrakeUserManual] 
 or FEniCS [@AlnaesEtal2015] to enable users to create adjoint solvers for their choice
