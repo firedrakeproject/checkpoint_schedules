@@ -16,7 +16,7 @@ authors = [
 description = "Schedules for incremental checkpointing of adjoint simulations."
 readme = "README.md"
 license = {text = "LGPL-3.0"}
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
 ]
