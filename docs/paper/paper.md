@@ -122,6 +122,13 @@ the French National Research Agency (ANR) in the frame of DASH (ANR-17-CE25- 000
 
 # Author contributions
 
-GP and JH wrote the original reference implementation of H-Revolve and related schedules originally published in [@herrmann2020], and contributed to the fixed and enhanced version of that code which is included in *checkpoint_schedules*. DH and JM designed the original *checkpoint_schedules* API, which was implemented DH, JM and DD. The remaining schedules were implemented by JM and DD. DD led the integration of the package, and wrote most of its documentation and test cases. Copyright headers in the respective source files record the contributors to those files.
+GP and JH wrote the original reference implementation of H-Revolve and related
+schedules originally published in [@herrmann2020], and contributed to the fixed
+and enhanced version of that code which is included in *checkpoint_schedules*.
+DH and JM designed the original *checkpoint_schedules* API, which was
+implemented DH, JM and DD. The remaining schedules were implemented by JM and
+DD. DD led the integration of the package, and wrote most of its documentation
+and test cases. Copyright headers in the respective source files record the
+contributors to those files.
 
 # References
