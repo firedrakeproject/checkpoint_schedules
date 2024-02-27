@@ -31,7 +31,7 @@ date:  September 2023
 bibliography: paper.bib
 ---
 # Summary
-*checkpointing_schedules* provides schedules for step based incremental
+*checkpoint_schedules* provides schedules for step based incremental
 checkpointing of the adjoints to computer models. The schedules contain
 instructions indicating the sequence of forward and adjoint steps to be
 executed, and the data storage and retrieval to be performed. These
