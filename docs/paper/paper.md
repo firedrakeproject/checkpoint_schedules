@@ -49,7 +49,7 @@ taken to generate the adjoint model.
 The use of adjoint calculations to compute the gradient of a quantity of
 interest resulting from the solution of a system of partial differential
 equations (PDEs) is widespread and well-established. The resulting gradient may
-be employed for many purposes, include topology
+be employed for many purposes, including topology
 optimisation [@papadopoulos2021computing], inverse problems [@Plessix2006],
 flow control [@Jansen2011]. 
 
@@ -65,14 +65,14 @@ the forward calculation from a limited set of steps. As the adjoint
 calculation progresses, the forward computation is progressively rerun from the
 latest available stored state up to the current adjoint step. This enables less
 forward state to be stored, at the expense of a higher computational cost as
-forward steps are run more than once. [@griewank2000algorithm] proposed a
+forward steps are run more than once. @griewank2000algorithm proposed a
 checkpointing algorithm which is optimal under certain assumptions, including
 that the number of steps is known in advance, and that all the storage has
 equal access cost. Subsequent authors have produced checkpointing algorithms
 that relax these requirements in various ways, such as by accounting for
-different types of storage (e.g. RAM and disk) or by not requiring the number
-of steps to be known in advance, for example [@stumm2009multistage;
-@aupy2016optimal; @schanen2016; @aupy2017periodicity;
+different types of storage (e.g. memory and disk) or by not
+requiring the number of steps to be known in advance, for example 
+[@stumm2009multistage; @aupy2016optimal; @schanen2016; @aupy2017periodicity; 
 @herrmann2020; @maddison2023; @Zhang_2023]. 
 
 # Statement of need
@@ -88,7 +88,7 @@ algorithms in their framework. Further, such reimplementation work is wasteful
 and error-prone. 
 
 *checkpointing_schedules* provides a number of checkpointing algorithms
-accessible through a common interface and and these are interchangeable without
+accessible through a common interface and these are interchangeable without
 recoding. This can be used in conjunction with an adjoint framework such as
 tlm_adjoint or pyadjoint and a compatible PDE framework, such as Firedrake
 [@FiredrakeUserManual] or FEniCS [@AlnaesEtal2015] to enable users to create
