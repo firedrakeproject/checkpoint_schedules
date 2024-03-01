@@ -31,7 +31,7 @@ date:  September 2023
 bibliography: paper.bib
 ---
 # Summary
-*checkpointing_schedules* provides schedules for step based incremental
+*checkpoint_schedules* provides schedules for step based incremental
 checkpointing of the adjoints to computer models. The schedules contain
 instructions indicating the sequence of forward and adjoint steps to be
 executed, and the data storage and retrieval to be performed. These
@@ -42,9 +42,9 @@ algorithms a direct mechanism to convey their work to model authors.
 *checkpointing_schedules* has been integrated into **tlm_adjoint** [@tlm2019],
 a Python library designed for the automated derivation of higher-order
 tangent-linear and adjoint models and work is ongoing to integrate it with
-**pyadjoint** [@Mitusch2019]. This package can be incorporated into other gradient
-solvers based on adjoint methods, regardless of the specific approach taken to
-generate the adjoint model.
+**pyadjoint** [@Mitusch2019]. This package can be incorporated into other
+gradient solvers based on adjoint methods, regardless of the specific approach
+taken to generate the adjoint model.
 
 The use of adjoint calculations to compute the gradient of a quantity of
 interest resulting from the solution of a system of partial differential
@@ -88,12 +88,12 @@ algorithms in their framework. Further, such reimplementation work is wasteful
 and error-prone. 
 
 *checkpointing_schedules* provides a number of checkpointing algorithms
-accessible through a common interface and and these are interchangeable without recoding.
-This can be used in conjunction with an adjoint framework such as tlm_adjoint
-or pyadjoint and a compatible PDE framework, such as Firedrake [@FiredrakeUserManual] 
-or FEniCS [@AlnaesEtal2015] to enable users to create adjoint solvers for their choice
-of PDE, numerical methods, and checkpointing algorithm all without recoding the
-underlying algorithms.
+accessible through a common interface and and these are interchangeable without
+recoding. This can be used in conjunction with an adjoint framework such as
+tlm_adjoint or pyadjoint and a compatible PDE framework, such as Firedrake
+[@FiredrakeUserManual] or FEniCS [@AlnaesEtal2015] to enable users to create
+adjoint solvers for their choice of PDE, numerical methods, and checkpointing
+algorithm all without recoding the underlying algorithms.
 
 Some of the algorithms supported by *checkpointing_schedules* have been
 implemented many times, while for others, such as H-Revolve the only previously
@@ -111,13 +111,25 @@ checkpointing [@maddison2023]. It also contains trivial schedules which store
 the entire forward state. This enables users to support adjoint calculations
 with or without checkpointing via a single code path. 
 
-The complete documentation for *checkpoint_schedules* is available on
-[the Firedrake project website](https://www.firedrakeproject.org/checkpoint_schedules/).
+The complete documentation for *checkpoint_schedules* is available on [the
+Firedrake project
+website](https://www.firedrakeproject.org/checkpoint_schedules/).
 
 # Acknowledgments
 This work was supported by the Engineering and Physical Sciences Research
 Council [EP/W029731/1 and EP/W026066/1]. J. R. M. was supported by the Natural
-Environment Research Council [NE/T001607/1]. G. P. was supported in part by
-the French National Research Agency (ANR) in the frame of DASH (ANR-17-CE25- 0004).
+Environment Research Council [NE/T001607/1]. G. P. was supported in part by the
+French National Research Agency (ANR) in the frame of DASH (ANR-17-CE25-0004).
+
+# Author contributions
+
+GP and JH wrote the original reference implementation of H-Revolve and related
+schedules originally published in [@herrmann2020], and contributed to the fixed
+and enhanced version of that code which is included in *checkpoint_schedules*.
+DH and JM designed the original *checkpoint_schedules* API, which was
+implemented DH, JM and DD. The remaining schedules were implemented by JM and
+DD. DD led the integration of the package, and wrote most of its documentation
+and test cases. Copyright headers in the respective source files record the
+contributors to those files.
 
 # References
