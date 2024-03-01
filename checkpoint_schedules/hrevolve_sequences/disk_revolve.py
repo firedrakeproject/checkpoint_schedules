@@ -1,4 +1,10 @@
-#!/usr/bin/python
+# SPDX-License-Identifier: LGPL-3.0-only
+# Copyright (C) 2020 - 2024 Inria and Imperial College London
+# Developed originally by Guillaume Pallez (guillaume.pallez@inria.fr),
+# Julien Herrmann (jln.herrmann@gmail.com).
+# Modified by Daiane I. Dolci (d.dolci@eimperial.ic.ac.uk)
+# and David A. Ham (david.ham@imperial.ac.uk).
+
 """This module contains the functions to compute the Disk-Revolve schedules.
 """
 from functools import partial

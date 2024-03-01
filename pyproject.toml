@@ -5,9 +5,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "checkpoint_schedules"
-version = "1.0.0"
+version = "1.0.2"
 authors = [
-  { name="Daiane I. Dolci ", email="ddolci@eimperial.ic.ac.uk" },
+  { name="Daiane I. Dolci ", email="d.dolci@eimperial.ic.ac.uk" },
   { name="James R. Maddison", email="j.r.maddison@ed.ac.uk" },
   { name="David A. Ham", email="david.ham@imperial.ac.uk" },
   { name="Guillaume Pallez", email="guillaume.pallez@inria.fr" },
@@ -16,7 +16,7 @@ authors = [
 description = "Schedules for incremental checkpointing of adjoint simulations."
 readme = "README.md"
 license = {text = "LGPL-3.0"}
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
 ]
