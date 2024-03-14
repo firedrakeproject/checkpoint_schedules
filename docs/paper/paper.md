@@ -10,6 +10,7 @@ authors:
     affiliation: 1
   - name: James R. Maddison
     affiliation: 2
+    orcid: 0000-0001-5742-4363
   - name: David A. Ham
     orcid: 0000-0001-9545-9110
     affiliation: 1
@@ -18,6 +19,7 @@ authors:
     affiliation: 3
   - name: Julien Herrmann
     affiliation: 4
+    orcid: 0000-0003-4935-2368
 affiliations:
  - name: Department of Mathematics, Imperial College London, London, SW72AZ, UK.
    index: 1
