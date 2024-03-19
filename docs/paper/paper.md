@@ -21,13 +21,13 @@ authors:
     affiliation: 4
     orcid: 0000-0003-4935-2368
 affiliations:
- - name: Department of Mathematics, Imperial College London, London, SW72AZ, UK.
+ - name: Department of Mathematics, Imperial College London, London, United Kingdom.
    index: 1
- - name: School of Mathematics and Maxwell Institute for Mathematical Sciences, The University of Edinburgh, EH9 3FD
+ - name: School of Mathematics and Maxwell Institute for Mathematical Sciences, The University of Edinburgh, United Kingdom.
    index: 2
- - name: Inria, University of Rennes, France.
+ - name: Inria, University of Rennes, Rennes, France.
    index: 3
- - name: CNRS, IRIT, Université de Toulouse.
+ - name: CNRS, IRIT, Université de Toulouse, Toulouse, France.
    index: 4
 date:  September 2023
 bibliography: paper.bib
