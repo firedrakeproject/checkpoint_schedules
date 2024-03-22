@@ -1,21 +1,52 @@
-cff-version: 1.1.0
-message: "If you use this software, please cite it as below."
+cff-version: "1.2.0"
 authors:
 - family-names: Dolci
   given-names: Daiane I.
-  orcid: https://orcid.org/0000-0002-1435-9538
+  orcid: "https://orcid.org/0000-0002-1435-9538"
 - family-names: Maddison
   given-names: James R.
-  orcid: https://orcid.org/0000-0001-5742-4363
+  orcid: "https://orcid.org/0000-0001-5742-4363"
 - family-names: Ham
   given-names: David A.
-  orcid: https://orcid.org/0000-0001-9545-9110
+  orcid: "https://orcid.org/0000-0001-9545-9110"
 - family-names: Pallez
   given-names: Guillaume
-  orcid: https://orcid.org/0000-0001-8862-3277
+  orcid: "https://orcid.org/0000-0001-8862-3277"
 - family-names: Herrmann
   given-names: Julien
-  orcid: https://orcid.org/0000-0003-4935-2368
-title: "checkpoint_schedules: schedules for incremental checkpointing of adjoint simulations"
-version: v1.0.3
-date-released: 2023-03-14
+  orcid: "https://orcid.org/0000-0003-4935-2368"
+doi: 10.5281/zenodo.10817312
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - family-names: Dolci
+    given-names: Daiane I.
+    orcid: "https://orcid.org/0000-0002-1435-9538"
+  - family-names: Maddison
+    given-names: James R.
+    orcid: "https://orcid.org/0000-0001-5742-4363"
+  - family-names: Ham
+    given-names: David A.
+    orcid: "https://orcid.org/0000-0001-9545-9110"
+  - family-names: Pallez
+    given-names: Guillaume
+    orcid: "https://orcid.org/0000-0001-8862-3277"
+  - family-names: Herrmann
+    given-names: Julien
+    orcid: "https://orcid.org/0000-0003-4935-2368"
+  date-published: 2024-03-22
+  doi: 10.21105/joss.06148
+  issn: 2475-9066
+  issue: 95
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 6148
+  title: "checkpoint_schedules: schedules for incremental checkpointing
+    of adjoint simulations"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.06148"
+  volume: 9
+title: "checkpoint_schedules: schedules for incremental checkpointing of
+  adjoint simulations"

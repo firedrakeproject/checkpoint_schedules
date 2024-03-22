@@ -38,3 +38,8 @@ The complete documentation for checkpoint_schedules is available at [Firedrake p
 
 ## License
 *checkpoint_schedules* is licensed under the GNU LGPL version 3. See the LICENSE file for details.
+
+## Citation
+If you use *checkpoint_schedules* in your research, please cite this paper 
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.06148/status.svg)](https://doi.org/10.21105/joss.06148).
+
