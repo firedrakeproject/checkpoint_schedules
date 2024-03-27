@@ -49,3 +49,7 @@ To contribute please consider the following steps:
 Bug reports
 ===========
 Please report bugs on the `issue tracker <https://github.com/firedrakeproject/checkpoint_schedules/issues>`_.
+
+Citing
+======
+If you use *checkpoint_schedules* in your research, please cite `<JOSS paper https://joss.theoj.org/papers/10.21105/joss.06148>`_.
