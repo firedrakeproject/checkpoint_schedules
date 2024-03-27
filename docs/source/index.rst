@@ -52,4 +52,4 @@ Please report bugs on the `issue tracker <https://github.com/firedrakeproject/ch
 
 Citing
 ======
-If you use *checkpoint_schedules* in your research, please cite `<JOSS paper https://joss.theoj.org/papers/10.21105/joss.06148>`_.
+If you use *checkpoint_schedules* in your research, please cite `JOSS paper <https://joss.theoj.org/papers/10.21105/joss.06148>`_.
