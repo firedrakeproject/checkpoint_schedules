@@ -136,7 +136,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
                 else:
                     raise RuntimeError("Unexpected step type")
             if self._n != self._max_n - self._r:
-                raise InvalidForwardStep
+                raise RuntimeError("Invalid checkpointing state")
             if step_type not in {StepType.NONE, StepType.FORWARD_REVERSE}:
                 raise RuntimeError("Invalid checkpointing state")
 
