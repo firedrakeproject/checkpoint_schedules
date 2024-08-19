@@ -42,8 +42,7 @@ class MixedCheckpointSchedule(CheckpointSchedule):
     Notes
     -----
     Assumes that the data required to restart the forward has the same size as
-    the data required to advance the adjoint over a step. An updated version of
-    the algorithm described in [1].
+    the data required to advance the adjoint over a step. Described in [1].
     This is a offline checkpointing strategy, one adjoint calculation
     permitted.
 
