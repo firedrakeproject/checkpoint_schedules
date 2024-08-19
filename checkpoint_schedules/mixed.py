@@ -42,14 +42,13 @@ class MixedCheckpointSchedule(CheckpointSchedule):
     Notes
     -----
     Assumes that the data required to restart the forward has the same size as
-    the data required to advance the adjoint over a step. An updated version of
-    the algorithm described in [1].
+    the data required to advance the adjoint over a step. Described in [1].
     This is a offline checkpointing strategy, one adjoint calculation
     permitted.
 
-    [1] Maddison, J. R. (2023). On the implementation of checkpointing with
-    high-level algorithmic differentiation. arXiv preprint arXiv:2305.09568.
-    DOI: 10.48550/arXiv.2305.09568
+    [1] Maddison, J. R. (2024). Step-based checkpointing with high-level
+    algorithmic differentiation, Journal of Computational Science 82, 102405,
+    DOI: https://doi.org/10.1016/j.jocs.2024.102405
     """
 
     def __init__(self, max_n, snapshots, *, storage=StorageType.DISK):

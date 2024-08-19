@@ -51,7 +51,7 @@ References
 
 [5] Herrmann, J. and Pallez (Aupy), G. (2020). H-Revolve: a framework for adjoint computation on synchronous hierarchical platforms. ACM Transactions on Mathematical Software (TOMS), 46(2), 1-25. DOI: 10.1145/3378672.
 
-[6] Maddison, J. R. (2023). On the implementation of checkpointing with high-level algorithmic differentiation. arXiv preprint arXiv:2305.09568. 10.48550/arXiv.2305.09568.
+[6] Maddison, J. R. (2024). Step-based checkpointing with high-level algorithmic differentiation, Journal of Computational Science 82, 102405, DOI: https://doi.org/10.1016/j.jocs.2024.102405.
 
 [7] Pringle, G. C., Jones, D. C., Goswami, S., Narayanan, S. H. K., and  Goldberg, D. (2016). Providing the ARCHER community with adjoint modelling tools for high-performance oceanographic and cryospheric computation. https://nora.nerc.ac.uk/id/eprint/516314.
 
