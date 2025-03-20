@@ -103,8 +103,6 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
         `StorageType.DISK` to `StorageType.WORK`, rather than copy the data.
     store_only_adj_deps : bool
         Indicate whether only adjoint dependencies should be stored on disk.
-        This is useful when the forward solver identifies the data needed
-        for the adjoint-based gradient calculations.
 
     Notes
     -----
@@ -112,7 +110,7 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
     one adjoint calculation permitted if `move_data` is `True`.
     """
 
-    def __init__(self, move_data=False, store_only_adj_deps=False):
+    def __init__(self, move_data=False, store_only_adj_deps=True):
         super().__init__()
         self._move_data = move_data
         self._storage = StorageType.DISK
