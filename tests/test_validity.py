@@ -85,14 +85,16 @@ def mixed(n, s):
             {StorageType.RAM: 0, StorageType.DISK: s}, 1)
 
 
-def single_disk_copy(n, s):
-    cp_schedule = SingleDiskStorageSchedule(move_data=False)
+def single_disk_copy(n, s, store_only_adj_deps=True):
+    cp_schedule = SingleDiskStorageSchedule(
+        store_only_adj_deps=store_only_adj_deps, move_data=False)
     return (cp_schedule,
             {StorageType.RAM: 0, StorageType.DISK: n}, 1)
 
 
-def single_disk_move(n, s):
-    cp_schedule = SingleDiskStorageSchedule(move_data=True)
+def single_disk_move(n, s, store_only_adj_deps=True):
+    cp_schedule = SingleDiskStorageSchedule(
+        store_only_adj_deps=store_only_adj_deps, move_data=True)
     return (cp_schedule,
             {StorageType.RAM: 0, StorageType.DISK: n}, 1)
 
