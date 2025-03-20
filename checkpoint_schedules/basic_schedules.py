@@ -89,7 +89,7 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
 
 
 class SingleDiskStorageSchedule(CheckpointSchedule):
-    """A checkpointing schedule where all adjoint dependencies are stored on
+    """A checkpointing schedule where all time step data are stored on
     disk.
 
     Notes
@@ -101,6 +101,10 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
     move_data : bool
         Indicate whether the execution should move the data from
         `StorageType.DISK` to `StorageType.WORK`, rather than copy the data.
+    store_only_adj_deps : bool
+        Indicate whether only adjoint dependencies should be stored on disk.
+        This is useful when the forward solver identifies the data needed
+        for the adjoint-based gradient calculations.
 
     Notes
     -----
@@ -108,10 +112,11 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
     one adjoint calculation permitted if `move_data` is `True`.
     """
 
-    def __init__(self, move_data=False):
+    def __init__(self, move_data=False, store_only_adj_deps=False):
         super().__init__()
         self._move_data = move_data
         self._storage = StorageType.DISK
+        self._store_only_adj_deps = store_only_adj_deps
 
     def _iterator(self):
         """Schedule iterator.
@@ -125,7 +130,10 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
             n0 = self._n
             n1 = n0 + 1
             self._n = n1
-            yield Forward(n0, n1, False, True, StorageType.DISK)
+            if self._store_only_adj_deps:
+                yield Forward(n0, n1, False, True, StorageType.DISK)
+            else:
+                yield Forward(n0, n1, True, True, StorageType.DISK)
 
         yield EndForward()
 
