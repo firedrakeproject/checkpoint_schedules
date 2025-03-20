@@ -89,11 +89,9 @@ class SingleMemoryStorageSchedule(CheckpointSchedule):
 
 
 class SingleDiskStorageSchedule(CheckpointSchedule):
-    """A checkpointing schedule where all time step data are stored on
+    """A checkpointing schedule where all adjoint dependencies are stored on
     disk.
 
-    Notes
-    -----
     Online, unlimited adjoint calculations permitted.
 
     Parameters
@@ -108,6 +106,9 @@ class SingleDiskStorageSchedule(CheckpointSchedule):
     -----
     Online, unlimited adjoint calculations permitted if `move_data` is `False`,
     one adjoint calculation permitted if `move_data` is `True`.
+
+    ``store_only_adj_deps`` set as False will store both all forward data on
+    disk.
     """
 
     def __init__(self, move_data=False, store_only_adj_deps=True):
