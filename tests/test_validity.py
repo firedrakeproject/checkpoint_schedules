@@ -86,7 +86,7 @@ def mixed(n, s):
 
 
 def single_disk_copy(n, s):
-    cp_schedule = SingleDiskStorageSchedule(store_only_adj_deps=True, move_data=False)
+    cp_schedule = SingleDiskStorageSchedule(move_data=False)
     return (cp_schedule,
             {StorageType.RAM: 0, StorageType.DISK: n}, 1)
 
